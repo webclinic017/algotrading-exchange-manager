@@ -19,9 +19,9 @@ const (
 )
 
 func LoginKite() (string, string) {
-	err := godotenv.Load("ENV_ZerodhaSettings.env", "ENV_accesstoken.env")
+	err := godotenv.Load("ENV_Settings.env", "ENV_accesstoken.env")
 	if err != nil {
-		log.Fatal("ENV_ZerodhaSettings.env / ENV_accesstoken.env file(s) not found, Terminating!!!")
+		log.Fatal("ENV_Settings.env / ENV_accesstoken.env file(s) not found, Terminating!!!")
 		return "", ""
 	}
 

@@ -3,10 +3,13 @@ package main
 import (
 	"time"
 
+	"github.com/goTicker/dbticks"
 	"github.com/goTicker/kite"
 )
 
 func main() {
+
+	dbticks.DbInit()
 
 	// Do login and get access token
 	apiKey, accToken := kite.LoginKite()
