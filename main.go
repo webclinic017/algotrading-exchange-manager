@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/goTicker/kite"
 )
 
@@ -15,4 +17,8 @@ func main() {
 	} else {
 		println("No token generated, fail to start Ticker")
 	}
+	time.Sleep(5 * time.Second)
+	kite.CloseTicker()
+	time.Sleep(5 * time.Second)
+
 }

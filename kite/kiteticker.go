@@ -2,6 +2,8 @@ package kite
 
 import (
 	"fmt"
+	"log"
+	"sync"
 	"time"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
@@ -11,6 +13,7 @@ import (
 
 var (
 	ticker *kiteticker.Ticker
+	mu     sync.Mutex
 )
 
 // Triggered when any error is raised
@@ -53,6 +56,7 @@ func onOrderUpdate(order kiteconnect.Order) {
 }
 
 func TickerInitialize(apiKey, accToken string) {
+
 	// Create new Kite ticker instance
 	ticker = kiteticker.New(apiKey, accToken)
 
@@ -66,5 +70,16 @@ func TickerInitialize(apiKey, accToken string) {
 	ticker.OnOrderUpdate(onOrderUpdate)
 
 	// Start the connection
-	ticker.Serve()
+	go ticker.Serve()
+}
+
+func CloseTicker() {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("Terminating ticker:", err)
+		}
+	}()
+	// ticker.SetAutoReconnect(false)
+	ticker.Stop()
+	println("Ticker conn. terminated")
 }
