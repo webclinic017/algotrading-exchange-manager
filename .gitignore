@@ -1,2 +1,1 @@
-ENV_ZerodhaSettings.env
-ENV_accesstoken.env
+*.env
