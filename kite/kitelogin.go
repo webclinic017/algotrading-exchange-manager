@@ -2,7 +2,6 @@ package kite
 
 import (
 	"fmt"
-	"log"
 	"net/url"
 	"os"
 	"regexp"
@@ -18,13 +17,7 @@ const (
 	twofaUrl = "https://kite.zerodha.com/api/twofa"
 )
 
-func LoginKite() (string, string) {
-	err := godotenv.Load("ENV_Settings.env", "ENV_accesstoken.env")
-	if err != nil {
-		log.Fatal("ENV_Settings.env / ENV_accesstoken.env file(s) not found, Terminating!!!")
-		return "", ""
-	}
-
+func LoginKite() (bool, string, string) {
 	// := os.Getenv("TFA_AUTH")
 	apiKey := os.Getenv("API_KEY")
 	apiSecret := os.Getenv("API_SECRET")
@@ -43,7 +36,7 @@ func LoginKite() (string, string) {
 		data, err := kc.GenerateSession(requestToken, apiSecret)
 		if err != nil {
 			fmt.Printf("Session Err: %v", err)
-			return "", ""
+			return false, "", ""
 		}
 
 		// Set access token
@@ -61,13 +54,14 @@ func LoginKite() (string, string) {
 		margins, err := kc.GetUserMargins()
 		if err != nil {
 			fmt.Printf("Error getting margins: %v", err)
+			//return false, "", ""
 		}
 		fmt.Println("margins: ", margins)
 
-		return apiKey, data.AccessToken
+		return true, apiKey, data.AccessToken
 
 	}
-	return "", ""
+	return false, "", ""
 }
 
 func KiteGetRequestToken() string {
