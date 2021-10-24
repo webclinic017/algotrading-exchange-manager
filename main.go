@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/goTicker/dbticks"
-	"github.com/goTicker/kite"
+	db "github.com/goTicker/db"
+	kite "github.com/goTicker/kite"
 	"github.com/joho/godotenv"
 )
 
@@ -17,12 +17,12 @@ var (
 func main() {
 
 	envOk = loadEnv()
-	dbOk = dbticks.DbInit()
+	dbOk = db.DbInit()
 	kiteOk, apiKey, accToken := kite.LoginKite()
-
+	printStatus(envOk, dbOk, kiteOk)
 	// Do login and get access token
 
-	if kiteOk && envOk && dbOk {
+	if envOk && dbOk && kiteOk {
 		// Initate ticker
 		kite.TickerInitialize(apiKey, accToken)
 
@@ -31,9 +31,6 @@ func main() {
 		time.Sleep(5 * time.Second)
 	} else {
 		println("Fail to start Ticker")
-		fmt.Printf("\nEnvironment files found: %t", envOk)
-		fmt.Printf("\nKite Login Succesfull: %t", kiteOk)
-		fmt.Printf("\nDB Connected: %t", dbOk)
 	}
 }
 
@@ -44,4 +41,12 @@ func loadEnv() bool {
 		return false
 	}
 	return true
+}
+
+func printStatus(envOk, dbOk, kiteOk bool) {
+	fmt.Printf("\n--------STATUS---------")
+	fmt.Printf("\nEnvironment files found: %t", envOk)
+	fmt.Printf("\nKite Login Succesfull: %t", kiteOk)
+	fmt.Printf("\nDB Connected: %t", dbOk)
+	fmt.Printf("\n----------------------\n")
 }

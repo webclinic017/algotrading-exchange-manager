@@ -3,7 +3,6 @@ package kite
 import (
 	"fmt"
 	"log"
-	"sync"
 	"time"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
@@ -13,7 +12,6 @@ import (
 
 var (
 	ticker *kiteticker.Ticker
-	mu     sync.Mutex
 )
 
 // Triggered when any error is raised
@@ -29,7 +27,11 @@ func onClose(code int, reason string) {
 // Triggered when connection is established and ready to send and accept data
 func onConnect() {
 	fmt.Println("Connected")
-	err := ticker.Subscribe([]uint32{58924295, 58736391})
+	err := ticker.Subscribe([]uint32{18332418, 18257666, 256265})
+	if err != nil {
+		fmt.Println("err: ", err)
+	}
+	err = ticker.SetMode("full", []uint32{18332418, 18257666, 256265})
 	if err != nil {
 		fmt.Println("err: ", err)
 	}
@@ -38,6 +40,16 @@ func onConnect() {
 // Triggered when tick is recevived
 func onTick(tick kitemodels.Tick) {
 	fmt.Println("Tick: ", tick)
+
+	fmt.Println("Time: ", tick.Timestamp.Time)
+	fmt.Println("Instrument: ", tick.InstrumentToken)
+	fmt.Println("LastPrice: ", tick.LastPrice)
+	fmt.Println("Open: ", tick.OHLC.Open)
+	fmt.Println("High: ", tick.OHLC.High)
+	fmt.Println("Low: ", tick.OHLC.Low)
+	fmt.Println("Close: ", tick.OHLC.Close)
+	fmt.Println("Volumne: ", tick.VolumeTraded)
+
 }
 
 // Triggered when reconnection is attempted which is enabled by default
@@ -81,5 +93,5 @@ func CloseTicker() {
 	}()
 	// ticker.SetAutoReconnect(false)
 	ticker.Stop()
-	println("Ticker conn. terminated")
+	println("Ticker connection closed")
 }
