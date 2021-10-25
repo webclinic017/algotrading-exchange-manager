@@ -5,33 +5,39 @@ import (
 	"log"
 	"time"
 
-	db "github.com/goTicker/db"
-	kite "github.com/goTicker/kite"
+	"github.com/goTicker/cdlconv"
+	"github.com/goTicker/db"
+	"github.com/goTicker/kite"
+
 	"github.com/joho/godotenv"
+	"github.com/robfig/cron"
 )
 
 var (
-	envOk, dbOk, kiteOk bool
+	envOk, dbOk, kiteOk            bool
+	apiKey, accToken               string
+	cdl1min, cdl3min, cdl5min, wdg *cron.Cron
 )
 
 func main() {
 
+	// timeZone, _ := time.LoadLocation("Asia/Calcutta")
+
+	// setup cron for every morning, to get fresh token
 	envOk = loadEnv()
 	dbOk = db.DbInit()
-	kiteOk, apiKey, accToken := kite.LoginKite()
-	printStatus(envOk, dbOk, kiteOk)
-	// Do login and get access token
 
-	if envOk && dbOk && kiteOk {
-		// Initate ticker
-		kite.TickerInitialize(apiKey, accToken)
+	initTicker := cron.New()
+	println(time.Now().String())
+	initTicker.AddFunc("0 23 0 * * *", initTickerToken)
+	initTicker.Start()
 
-		time.Sleep(5 * time.Second)
-		kite.CloseTicker()
-		time.Sleep(5 * time.Second)
-	} else {
-		println("Fail to start Ticker")
-	}
+	closeTicker := cron.New()
+	closeTicker.AddFunc("0 24 0 * * *", theStop)
+	closeTicker.Start()
+
+	select {}
+
 }
 
 func loadEnv() bool {
@@ -49,4 +55,52 @@ func printStatus(envOk, dbOk, kiteOk bool) {
 	fmt.Printf("\nKite Login Succesfull: %t", kiteOk)
 	fmt.Printf("\nDB Connected: %t", dbOk)
 	fmt.Printf("\n----------------------\n")
+}
+
+func initTickerToken() {
+
+	kiteOk, apiKey, accToken = kite.LoginKite()
+	printStatus(envOk, dbOk, kiteOk)
+	// Do login and get access token
+
+	if envOk && dbOk && kiteOk {
+		// Initate ticker
+		kite.TickerInitialize(apiKey, accToken)
+		setupCdlCrons()
+	} else {
+		println("Fail to start Ticker")
+	}
+	wdg = cron.New()
+	wdg.AddFunc("@every 3s", watchdog)
+	wdg.Start()
+}
+
+func theStop() {
+
+	kite.CloseTicker()
+	cdl1min.Stop()
+	cdl3min.Stop()
+	cdl5min.Stop()
+	wdg.Stop()
+}
+
+func setupCdlCrons() {
+
+	cdl1min = cron.New()
+	cdl1min.AddFunc("@every 1m", cdlconv.Convert1MinCandle)
+	cdl1min.Start()
+
+	cdl3min = cron.New()
+	cdl3min.AddFunc("@every 3m", cdlconv.Convert3MinCandle)
+	cdl3min.Start()
+
+	cdl5min = cron.New()
+	cdl5min.AddFunc("@every 5m", cdlconv.Convert5MinCandle)
+	cdl5min.Start()
+}
+
+func watchdog() {
+	// if kite status Nok
+	// --> call initialize Kite
+	fmt.Printf("\nWDG: Kite Login Succesfull: %t", kiteOk)
 }

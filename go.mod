@@ -6,6 +6,7 @@ require (
 	github.com/asmcos/requests v0.0.0-20210319030608-c839e8ae4946
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/joho/godotenv v1.4.0
+	github.com/robfig/cron v1.2.0
 	github.com/zerodha/gokiteconnect/v4 v4.0.5
 )
 
