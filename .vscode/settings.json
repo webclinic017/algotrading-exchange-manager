@@ -1,3 +1,45 @@
 {
-    "go.inferGopath": false
+    "go.inferGopath": false,
+    "todo-tree.regex.regex": "(//|#|<!--|;|/\\*|^|^\\s*(-|\\d+.))\\s*($TAGS)",
+    "todo-tree.general.tags": [
+        "BUG",
+        "HACK",
+        "FIXME",
+        "TODO",
+        "XXX",
+        "[ ]",
+        "[x]"
+    ],
+    "todo-tree.highlights.defaultHighlight": {
+        "icon": "alert",
+        "type": "text",
+        "foreground": "black",
+        "background": "white",
+        "opacity": 50,
+        "iconColour": "blue"
+    },
+    "todo-tree.highlights.customHighlight": {
+        "TODO": {
+            "icon": "check",
+            "type": "line",
+            "iconColour": "red",
+            "gutterIcon": true
+        },
+        "FIXME": {
+            "foreground": "purple",
+            "iconColour": "purple",
+            "type": "line",
+            "gutterIcon": true
+        },
+        "[ ]": {
+            "background": "#ffff0040",
+            "type": "line",
+        },
+        "[x]": {
+            "background": "#00ff0030",
+            "type": "line",
+        }
+    }
+    
 }
+

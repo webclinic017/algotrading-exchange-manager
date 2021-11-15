@@ -100,7 +100,8 @@ func setupCdlCrons() {
 }
 
 func watchdog() {
-	// if kite status Nok
+	// TODO: if kite status Nok
 	// --> call initialize Kite
 	fmt.Printf("\nWDG: Kite Login Succesfull: %t", kiteOk)
+
 }

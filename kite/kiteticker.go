@@ -12,7 +12,19 @@ import (
 
 var (
 	ticker *kiteticker.Ticker
+	ChTick = make(chan TickData, 100)
 )
+
+type TickData struct {
+	Timestamp string
+	Insttoken int32
+	Lastprice float32
+	Open      float32
+	High      float32
+	Low       float32
+	Close     float32
+	Volume    int32
+}
 
 // Triggered when any error is raised
 func onError(err error) {
@@ -40,6 +52,7 @@ func onConnect() {
 // Triggered when tick is recevived
 func onTick(tick kitemodels.Tick) {
 	fmt.Println("Tick: ", tick)
+	ChTick <- TickData{Timestamp: "sfsaf", Insttoken: 1, Lastprice: 1, Open: 1.1, High: 1.2, Low: 1.3, Close: 1.4, Volume: 9}
 
 	fmt.Println("Time: ", tick.Timestamp.Time)
 	fmt.Println("Instrument: ", tick.InstrumentToken)
@@ -83,6 +96,7 @@ func TickerInitialize(apiKey, accToken string) {
 
 	// Start the connection
 	go ticker.Serve()
+
 }
 
 func CloseTicker() {
