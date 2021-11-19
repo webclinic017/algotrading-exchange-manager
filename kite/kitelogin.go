@@ -47,7 +47,7 @@ func LoginKite() (bool, string, string) {
 		env, _ := godotenv.Unmarshal("accessToken=" + data.AccessToken)
 		err = godotenv.Write(env, "./ENV_accesstoken.env")
 		if err != nil {
-			fmt.Printf("Cannot write to accesstoken.env", err)
+			fmt.Println("Cannot write to accesstoken.env", err)
 		}
 
 		// Get margins

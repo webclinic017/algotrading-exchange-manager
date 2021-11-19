@@ -12,7 +12,8 @@ import (
 
 var (
 	ticker *kiteticker.Ticker
-	ChTick = make(chan TickData, 100)
+
+	ChTick = make(chan TickData, 3)
 )
 
 type TickData struct {
@@ -77,7 +78,7 @@ func onNoReconnect(attempt int) {
 
 // Triggered when order update is received
 func onOrderUpdate(order kiteconnect.Order) {
-	fmt.Printf("Order: ", order.OrderID)
+	fmt.Println("Order: ", order.OrderID)
 }
 
 func TickerInitialize(apiKey, accToken string) {

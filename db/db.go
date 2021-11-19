@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/goTicker/kite"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -54,7 +55,10 @@ func DbInit() bool {
 
 }
 
-func StoreTickInDb() bool {
+func StoreTickInDb() {
 
-	return true
+	for v := range kite.ChTick {
+		fmt.Println("\nkite ch data rx ", v)
+	}
+
 }

@@ -27,6 +27,7 @@ func main() {
 	envOk = loadEnv()
 	dbOk = db.DbInit()
 
+	initTickerToken()
 	initTicker := cron.New()
 	println(time.Now().String())
 	initTicker.AddFunc("0 23 0 * * *", initTickerToken)
@@ -36,6 +37,7 @@ func main() {
 	closeTicker.AddFunc("0 24 0 * * *", theStop)
 	closeTicker.Start()
 
+	go db.StoreTickInDb()
 	select {}
 
 }
@@ -102,6 +104,9 @@ func setupCdlCrons() {
 func watchdog() {
 	// TODO: if kite status Nok
 	// --> call initialize Kite
-	fmt.Printf("\nWDG: Kite Login Succesfull: %t", kiteOk)
-
+	fmt.Printf("\nWDG: Kite Login Succesfull ?: %t", kiteOk)
+	// i := 1
+	// for i <= 30 {
+	kite.ChTick <- kite.TickData{Timestamp: "sfsaf", Insttoken: 1, Lastprice: 1, Open: 1.1, High: 1.2, Low: 1.3, Close: 1.4, Volume: 9}
+	// }
 }
