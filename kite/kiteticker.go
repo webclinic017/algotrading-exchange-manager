@@ -17,14 +17,14 @@ var (
 )
 
 type TickData struct {
-	Timestamp string
-	Insttoken int32
-	Lastprice float32
-	Open      float32
-	High      float32
-	Low       float32
-	Close     float32
-	Volume    int32
+	Timestamp time.Time
+	Lastprice float64
+	Insttoken uint32
+	Open      float64
+	High      float64
+	Low       float64
+	Close     float64
+	Volume    uint32
 }
 
 // Triggered when any error is raised
@@ -52,17 +52,27 @@ func onConnect() {
 
 // Triggered when tick is recevived
 func onTick(tick kitemodels.Tick) {
-	fmt.Println("Tick: ", tick)
-	ChTick <- TickData{Timestamp: "sfsaf", Insttoken: 1, Lastprice: 1, Open: 1.1, High: 1.2, Low: 1.3, Close: 1.4, Volume: 9}
+	//fmt.Println("Tick: ", tick)
+	ChTick <- TickData{
+		Timestamp: tick.Timestamp.Time,
+		Insttoken: tick.InstrumentToken,
+		Lastprice: tick.LastPrice,
+		Open:      tick.OHLC.Open,
+		High:      tick.OHLC.High,
+		Low:       tick.OHLC.Low,
+		Close:     tick.OHLC.Close,
+		Volume:    tick.VolumeTraded}
 
-	fmt.Println("Time: ", tick.Timestamp.Time)
-	fmt.Println("Instrument: ", tick.InstrumentToken)
-	fmt.Println("LastPrice: ", tick.LastPrice)
-	fmt.Println("Open: ", tick.OHLC.Open)
-	fmt.Println("High: ", tick.OHLC.High)
-	fmt.Println("Low: ", tick.OHLC.Low)
-	fmt.Println("Close: ", tick.OHLC.Close)
-	fmt.Println("Volumne: ", tick.VolumeTraded)
+	/*
+		fmt.Println("Time: ", tick.Timestamp.Time)
+		fmt.Println("Instrument: ", tick.InstrumentToken)
+		fmt.Println("LastPrice: ", tick.LastPrice)
+		fmt.Println("Open: ", tick.OHLC.Open)
+		fmt.Println("High: ", tick.OHLC.High)
+		fmt.Println("Low: ", tick.OHLC.Low)
+		fmt.Println("Close: ", tick.OHLC.Close)
+		fmt.Println("Volumne: ", tick.VolumeTraded)
+	*/
 
 }
 

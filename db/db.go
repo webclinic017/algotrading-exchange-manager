@@ -23,7 +23,6 @@ func DbInit() bool {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		return false
 	}
-	defer dbPool.Close()
 
 	var greeting string
 	err = dbPool.QueryRow(ctx, "select 'Hello, Timescale!'").Scan(&greeting)
@@ -58,7 +57,20 @@ func DbInit() bool {
 func StoreTickInDb() {
 
 	for v := range kite.ChTick {
-		fmt.Println("\nkite ch data rx ", v)
+		//fmt.Println("\nkite ch data rx ", v)
+
+		ctx := context.Background()
+		//kite.ChTick <- kite.TickData{Timestamp: "2021-11-30 22:12:10", Insttoken: 1, Lastprice: 1, Open: 1.1, High: 1.2, Low: 1.3, Close: 1.4, Volume: 9}
+		queryInsertMetadata := `INSERT INTO ticks (time, symbol, last_price, open, close, low, high, volume) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`
+		_, err := dbPool.Exec(ctx, queryInsertMetadata, v.Timestamp, v.Insttoken, v.Lastprice, v.Open, v.Close, v.Low, v.High, v.Volume)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to insert data into database: %v\n", err)
+			//os.Exit(1)
+		}
 	}
 
+}
+
+func CloseDBPool() {
+	dbPool.Close()
 }

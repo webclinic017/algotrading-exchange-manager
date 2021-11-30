@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/goTicker/cdlconv"
 	"github.com/goTicker/db"
@@ -28,8 +27,8 @@ func main() {
 	dbOk = db.DbInit()
 
 	initTickerToken()
+
 	initTicker := cron.New()
-	println(time.Now().String())
 	initTicker.AddFunc("0 23 0 * * *", initTickerToken)
 	initTicker.Start()
 
@@ -104,9 +103,6 @@ func setupCdlCrons() {
 func watchdog() {
 	// TODO: if kite status Nok
 	// --> call initialize Kite
-	fmt.Printf("\nWDG: Kite Login Succesfull ?: %t", kiteOk)
-	// i := 1
-	// for i <= 30 {
-	kite.ChTick <- kite.TickData{Timestamp: "sfsaf", Insttoken: 1, Lastprice: 1, Open: 1.1, High: 1.2, Low: 1.3, Close: 1.4, Volume: 9}
-	// }
+	fmt.Printf("\nWDG: Kite Logged in - %t", kiteOk)
+
 }
