@@ -45,7 +45,7 @@ func LoginKite() (bool, string, string) {
 
 		// keypair := strings.Join("accessToken", data.AccessToken)
 		env, _ := godotenv.Unmarshal("accessToken=" + data.AccessToken)
-		err = godotenv.Write(env, "./ENV_accesstoken.env")
+		err = godotenv.Write(env, "./config/ENV_accesstoken.env")
 		if err != nil {
 			fmt.Println("Cannot write to accesstoken.env", err)
 		}

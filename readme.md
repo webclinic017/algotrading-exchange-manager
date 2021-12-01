@@ -21,7 +21,11 @@ accessToken=""
 go build
 with VC
 
-// TODO Master list
+# Build docker container (and run)
+DOCKER_BUILDKIT=1 docker build -t goticker .
+docker run --rm -it  goticker:latest        
+
+# TODO Master list
 - [x] Connect to DB
 - [x] Connect to Kite
 - [ ] Setup ticker

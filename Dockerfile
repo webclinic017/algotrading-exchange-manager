@@ -7,10 +7,8 @@ COPY go.mod ./
 COPY go.sum ./
 RUN go mod download
 
-COPY . .
+COPY ./app ./app
 
-RUN go build -o /docker-goticker
+RUN go build -o app/goTicker.go app/goTicker.go
 
-EXPOSE 8080
-
-CMD [ "/docker-goticker" ]
+CMD [ "app/goTicker.go" ]

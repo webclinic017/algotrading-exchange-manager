@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
+	"goTicker/app/cdlconv"
+	"goTicker/app/db"
+	"goTicker/app/kite"
 	"log"
-
-	"github.com/goTicker/cdlconv"
-	"github.com/goTicker/db"
-	"github.com/goTicker/kite"
 
 	"github.com/joho/godotenv"
 	"github.com/robfig/cron"
@@ -42,10 +41,16 @@ func main() {
 }
 
 func loadEnv() bool {
-	err := godotenv.Load("ENV_Settings.env", "ENV_accesstoken.env")
+
+	err := godotenv.Load("app/config/ENV_accesstoken.env")
 	if err != nil {
-		log.Fatal("ENV_Settings.env / ENV_accesstoken.env file(s) not found, Terminating!!!")
-		return false
+		log.Fatal("ENV_accesstoken.env file not found, Terminating!!!")
+		//return false
+	}
+	err = godotenv.Load("app/config/ENV_Settings.env")
+	if err != nil {
+		log.Fatal("ENV_Settings.env file not found, Terminating!!!")
+		//return false
 	}
 	return true
 }
