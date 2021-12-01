@@ -16,8 +16,16 @@ func DbInit() bool {
 
 	ctx := context.Background()
 	var err error
+	var dbUrl string
+	str1 := "1"
 
-	dbPool, err = pgxpool.Connect(ctx, os.Getenv("DATABASE_URL"))
+	if str1 == os.Getenv("PRODUCTION") {
+		dbUrl = os.Getenv("DOCKER_INTERNAL_DATABASE_URL")
+
+	} else {
+		dbUrl = os.Getenv("EXTERNAL_DATABASE_URL")
+	}
+	dbPool, err = pgxpool.Connect(ctx, dbUrl)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
