@@ -2,6 +2,7 @@ package kite
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"regexp"
@@ -73,6 +74,12 @@ func KiteGetRequestToken() string {
 
 	requestToken := ""
 
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("panic occurred:", err)
+		}
+	}()
+
 	// 1. Start login, get reqId
 	data := requests.Datas{
 		"user_id":  userId,
@@ -106,19 +113,30 @@ func KiteGetRequestToken() string {
 	}
 
 	// 3. Post login, access URL to get requestToken
+	req.SetTimeout(5)
 	resp, err = req.Get(reqTokenUrl)
-	//action=login&type=login&status=success&request_token=5cs4Q9q52133Y4iL33FPwkkv37ewpLuV
+	if err != nil {
+		println(err.Error())
+		arr := strings.Split(err.Error(), `"`) // split on '&'
+		requestToken = extractKeyValue(arr[1], "request_token")
+		if requestToken == "" {
+			requestToken = "ERR: Cannot fetch request token"
+			return requestToken
+		}
+	} else {
 
-	m, _ := url.ParseQuery(resp.R.Request.URL.RawQuery)
-	if (err != nil) || (resp.R.StatusCode != 200) {
-		println(resp.R.Request.URL.RawQuery)
-		requestToken = "ERR: Cannot fetch request token"
-		return requestToken
+		m, err := url.ParseQuery(resp.R.Request.URL.RawQuery)
+		if (err != nil) || (resp.R.StatusCode != 200) {
+
+			requestToken = "ERR: Cannot fetch request token"
+			return requestToken
+		}
+
+		fmt.Println("parsed m:", m)
+		requestToken = m["request_token"][0]
 	}
 
-	// fmt.Println(m)
-	requestToken = m["request_token"][0]
-	// fmt.Println(requestToken)
+	fmt.Println("extraced req token:", requestToken)
 
 	return requestToken
 }
@@ -129,4 +147,21 @@ func extractValue(body string, key string) string {
 	match := r.FindString(body)
 	keyValMatch := strings.Split(match, ":")
 	return strings.ReplaceAll(keyValMatch[1], "\"", "")
+}
+
+// Find value based on key, split on '='
+// Example string - https://pathtonowhere.com/?type=login&status=success&request_token=tTy0wqusPbDObGf2zz7J0Wx9J5OYkFlp&action=login":
+
+func extractKeyValue(body string, key string) string {
+	arr := strings.Split(body, `&`) // split on '&'
+
+	for index, _ := range arr {
+		if strings.Contains(arr[index], key) { // if key is found
+			//fmt.Println(arr[index])
+			arrVal := strings.Split(arr[index], `=`)
+			//fmt.Println("Result 1: ", arrVal[1])
+			return arrVal[1] // Extract value
+		}
+	}
+	return ""
 }

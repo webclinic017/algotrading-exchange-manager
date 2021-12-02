@@ -1,2 +1,4 @@
 *.env
-goticker0.1.tar
+*.tar
+*.rar
+goTicker

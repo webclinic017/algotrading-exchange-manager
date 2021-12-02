@@ -24,13 +24,14 @@ with VC
 # Build docker container (and run)
 DOCKER_BUILDKIT=1 docker build -t goticker .
 docker run --rm -it  goticker:latest        
+docker save goticker:latest -o goTickerv0.xx.tar
 
 # TODO Master list
 - [x] Connect to DB
 - [x] Connect to Kite
 - [ ] Setup ticker
-- [ ] Setup message structure
-- [ ] Setup message queue
-- [ ] Setup queue consumer
-- [ ] Setup queue producer
-- [ ] Setup message handler
+- [x] Setup message structure
+- [x] Setup message queue
+- [x] Setup queue consumer
+- [x] Setup queue producer
+- [x] Setup message handler
