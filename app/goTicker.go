@@ -6,52 +6,83 @@ import (
 	"goTicker/app/db"
 	"goTicker/app/kite"
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/robfig/cron"
 )
 
 var (
-	envOk, dbOk, kiteOk            bool
-	apiKey, accToken               string
-	cdl1min, cdl3min, cdl5min, wdg *cron.Cron
+	envOk, dbOk, kiteOk                                     bool
+	apiKey, accToken                                        string
+	cdl1min, cdl3min, cdl5min, wdg, closeTicker, initTicker *cron.Cron
 )
 
 func main() {
 
 	// timeZone, _ := time.LoadLocation("Asia/Calcutta")
 
-	// setup cron for every morning, to get fresh token
-	envOk = loadEnv()
-	dbOk = db.DbInit()
+	initTickerToken() // start now, when docker starts
 
-	initTickerToken()
-
-	initTicker := cron.New()
+	// everyday scheduled start
+	initTicker = cron.New()
 	initTicker.AddFunc("0 23 0 * * *", initTickerToken)
 	initTicker.Start()
 
-	closeTicker := cron.New()
+	// stop connection everyday
+	closeTicker = cron.New()
 	closeTicker.AddFunc("0 24 0 * * *", theStop)
 	closeTicker.Start()
 
-	go db.StoreTickInDb()
+	// start watchdog to recover from connections issues
+	wdg = cron.New()
+	wdg.AddFunc("@every 10s", watchdog)
+	wdg.Start()
+
 	select {}
 
 }
 
 func loadEnv() bool {
 
-	err := godotenv.Load("app/config/ENV_accesstoken.env")
-	if err != nil {
-		log.Fatal("ENV_accesstoken.env file not found, Terminating!!!")
-		//return false
+	// Load .env file, if not in production
+	if 0 >= len(os.Getenv("PRODUCTION")) {
+		err := godotenv.Load("config/ENV_Settings.env")
+		if err != nil {
+			log.Fatal("ENV_Settings.env file not found, Terminating!!!")
+			//return false
+		}
 	}
-	err = godotenv.Load("app/config/ENV_Settings.env")
-	if err != nil {
-		log.Fatal("ENV_Settings.env file not found, Terminating!!!")
-		//return false
+	if 0 >= len(os.Getenv("TFA_AUTH")) {
+		println("TFA_AUTH not set")
+		return false
 	}
+	if 0 >= len(os.Getenv("USER_ID")) {
+		println("USER_ID not set")
+		return false
+	}
+	if 0 >= len(os.Getenv("PASSWORD")) {
+		println("PASSWORD not set")
+		return false
+	}
+	if 0 >= len(os.Getenv("API_KEY")) {
+		println("API_KEY not set")
+		return false
+	}
+	if 0 >= len(os.Getenv("API_SECRET")) {
+		println("API_SECRET not set")
+		return false
+	}
+	if 0 >= len(os.Getenv("REQUEST_TOKEN_URL")) {
+		println("REQUEST_TOKEN_URL not set")
+		return false
+	}
+	if 0 >= len(os.Getenv("EXTERNAL_DATABASE_URL")) {
+		println("EXTERNAL_DATABASE_URL not set")
+		return false
+	}
+	os.Setenv("DATABASE_URL", os.Getenv("EXTERNAL_DATABASE_URL"))
+
 	return true
 }
 
@@ -65,20 +96,25 @@ func printStatus(envOk, dbOk, kiteOk bool) {
 
 func initTickerToken() {
 
-	kiteOk, apiKey, accToken = kite.LoginKite()
-	printStatus(envOk, dbOk, kiteOk)
-	// Do login and get access token
+	envOk = loadEnv()
 
-	if envOk && dbOk && kiteOk {
-		// Initate ticker
-		kite.TickerInitialize(apiKey, accToken)
-		setupCdlCrons()
-	} else {
-		println("Fail to start Ticker")
+	if envOk {
+
+		dbOk = db.DbInit()
+
+		kiteOk, apiKey, accToken = kite.LoginKite()
+		printStatus(envOk, dbOk, kiteOk)
+
+		if envOk && dbOk && kiteOk {
+			// Initate zerodha ticker
+			kite.TickerInitialize(apiKey, accToken)
+			setupCdlCrons()
+			go db.StoreTickInDb()
+
+		} else {
+			println("Fail to start Ticker")
+		}
 	}
-	wdg = cron.New()
-	wdg.AddFunc("@every 3s", watchdog)
-	wdg.Start()
 }
 
 func theStop() {
@@ -88,6 +124,7 @@ func theStop() {
 	cdl3min.Stop()
 	cdl5min.Stop()
 	wdg.Stop()
+	db.CloseDBPool()
 }
 
 func setupCdlCrons() {
@@ -106,8 +143,11 @@ func setupCdlCrons() {
 }
 
 func watchdog() {
-	// TODO: if kite status Nok
-	// --> call initialize Kite
-	fmt.Printf("\nWDG: Kite Logged in - %t", kiteOk)
+	// Initate ticker on error
+	if !envOk || !dbOk || !kiteOk {
+		printStatus(envOk, dbOk, kiteOk)
+		fmt.Println("\nWDG: Initializing Kite", kiteOk)
+		//initTickerToken()
+	}
 
 }

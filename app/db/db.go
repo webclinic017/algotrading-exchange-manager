@@ -16,15 +16,8 @@ func DbInit() bool {
 
 	ctx := context.Background()
 	var err error
-	var dbUrl string
-	str1 := "1"
 
-	if str1 == os.Getenv("PRODUCTION") {
-		dbUrl = os.Getenv("DOCKER_INTERNAL_DATABASE_URL")
-
-	} else {
-		dbUrl = os.Getenv("EXTERNAL_DATABASE_URL")
-	}
+	dbUrl := os.Getenv("DATABASE_URL")
 	dbPool, err = pgxpool.Connect(ctx, dbUrl)
 
 	if err != nil {
@@ -65,16 +58,16 @@ func DbInit() bool {
 func StoreTickInDb() {
 
 	for v := range kite.ChTick {
-		//fmt.Println("\nkite ch data rx ", v)
+		fmt.Println("\nkite ch data rx ", v)
 		//fmt.Println("Timestamp: ", v.Timestamp)
-		ctx := context.Background()
+		// ctx := context.Background()
 		//kite.ChTick <- kite.TickData{Timestamp: "2021-11-30 22:12:10", Insttoken: 1, Lastprice: 1, Open: 1.1, High: 1.2, Low: 1.3, Close: 1.4, Volume: 9}
-		queryInsertMetadata := `INSERT INTO tickstest3 (time, symbol, last_price, open, close, low, high, volume) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`
-		_, err := dbPool.Exec(ctx, queryInsertMetadata, v.Timestamp, v.Insttoken, v.Lastprice, v.Open, v.Close, v.Low, v.High, v.Volume)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to insert data into database: %v\n", err)
-			//os.Exit(1)
-		}
+		// queryInsertMetadata := `INSERT INTO tickst1est3 (time, symbol, last_price, open, close, low, high, volume) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`
+		// _, _ = dbPool.Exec(ctx, queryInsertMetadata, v.Timestamp, v.Insttoken, v.Lastprice, v.Open, v.Close, v.Low, v.High, v.Volume)
+		// if err != nil {
+		// 	fmt.Fprintf(os.Stderr, "Unable to insert data into database: %v\n", err)
+		// 	//os.Exit(1)
+		// }
 	}
 
 }

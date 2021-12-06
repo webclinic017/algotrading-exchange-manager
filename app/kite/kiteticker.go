@@ -40,11 +40,37 @@ func onClose(code int, reason string) {
 // Triggered when connection is established and ready to send and accept data
 func onConnect() {
 	fmt.Println("Connected")
-	err := ticker.Subscribe([]uint32{18257666, 274185})
+	err := ticker.Subscribe([]uint32{273929,
+		274185,
+		274441,
+		274697,
+		274953,
+		275209,
+		275465,
+		275721,
+		275977,
+		136893956,
+		128199684,
+		129276932,
+		136021764,
+	})
 	if err != nil {
 		fmt.Println("err: ", err)
 	}
-	err = ticker.SetMode("full", []uint32{18257666, 274185})
+	err = ticker.SetMode("full", []uint32{273929,
+		274185,
+		274441,
+		274697,
+		274953,
+		275209,
+		275465,
+		275721,
+		275977,
+		136893956,
+		128199684,
+		129276932,
+		136021764,
+	})
 	if err != nil {
 		fmt.Println("err: ", err)
 	}
