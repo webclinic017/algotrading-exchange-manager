@@ -22,6 +22,8 @@ func main() {
 
 	// timeZone, _ := time.LoadLocation("Asia/Calcutta")
 
+	kite.GetSymbols()
+
 	initTickerToken() // start now, when docker starts
 
 	// everyday scheduled start
