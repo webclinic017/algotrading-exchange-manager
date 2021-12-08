@@ -16,13 +16,14 @@ var (
 	envOk, dbOk, kiteOk                                     bool
 	apiKey, accToken                                        string
 	cdl1min, cdl3min, cdl5min, wdg, closeTicker, initTicker *cron.Cron
+	tokens                                                  []string
 )
 
 func main() {
 
 	// timeZone, _ := time.LoadLocation("Asia/Calcutta")
 
-	kite.GetSymbols()
+	tokens = kite.GetSymbols()
 
 	initTickerToken() // start now, when docker starts
 

@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"math"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -29,7 +27,7 @@ const (
 	exchange
 )
 
-func GetSymbols() bool {
+func GetSymbols() []string {
 
 	var (
 		symbolFuturesFilter   []string
@@ -40,20 +38,20 @@ func GetSymbols() bool {
 		instrumentTokensError []string
 	)
 
-	e := os.Remove("config/instruments.csv")
+	e := os.Remove("log/instruments.csv")
 	if e != nil {
 		println("instruments.csv deleted")
 	}
 
 	fileUrl := "http://api.kite.trade/instruments"
-	err := DownloadFile("config/instruments.csv", fileUrl)
+	err := DownloadFile("log/instruments.csv", fileUrl)
 	if err != nil {
 		fmt.Println("Download error: instruments.csv from  " + fileUrl)
 		return false
 	}
 
 	// open file
-	f, err := os.Open("config/instruments.csv")
+	f, err := os.Open("log/instruments.csv")
 	if err != nil {
 		fmt.Println("File error, cannot read instruments.csv")
 		return false
@@ -110,29 +108,36 @@ func GetSymbols() bool {
 	instrumentTokensLog = append(instrumentTokensLog, iTokensLog...)
 	instrumentTokensError = append(instrumentTokensError, iTokensError...)
 
-	saveFiles(instrumentTokens, "/log/instrumentTokens.txt")
-	saveFiles(instrumentTokensLog, "log/instrumentTokensLog.txt")
-	saveFiles(instrumentTokensError, "log/instrumentTokensError.txt")
+	saveFiles(instrumentTokens, "instrumentTokens.txt")
+	saveFiles(instrumentTokensLog, "instrumentTokensLog.txt")
+	saveFiles(instrumentTokensError, "instrumentTokensError.txt")
 
-	return false
+	fmt.Println(instrumentTokensError)
+
+	return instrumentTokens
 }
 
 func saveFiles(data []string, fileName string) bool {
-	myfile, e := os.Create("/log/GeeksforGeeks.txt")
-	if e != nil {
-		log.Fatal(e)
-	}
-	log.Println(myfile)
-	myfile.Close()
+	// logic
+	// 1. delete if file exists
+	// 2. create file
+	// 3. write data to file
+	// 4. close file
 
-	f, err := os.Create(filepath.Base("") + fileName)
+	e := os.Remove("log/" + fileName)
+	if e != nil {
+		println("instruments.csv deleted")
+	}
+
+	f, err := os.Create("log/" + fileName)
+
 	if err != nil {
 		fmt.Println(err)
 		f.Close()
 		return false
 	}
-	// d := []string{"Welcome to the world of Go1.", "Go is a compiled language.", "It is easy to learn Go."}
 
+	fmt.Fprintln(f, "File generated at : "+time.Now().Format("2006-01-02 15:04:05"))
 	for _, v := range data {
 		fmt.Fprintln(f, v)
 		if err != nil {
@@ -145,7 +150,6 @@ func saveFiles(data []string, fileName string) bool {
 		fmt.Println(err)
 		return false
 	}
-	fmt.Println("file written successfully")
 	return true
 }
 
@@ -233,19 +237,25 @@ func sortSymbols(instrumentsList []string) ([]string, []string, []string) {
 	var symbolNseEqFilter []string
 	var storeIn int
 	var symbolFutStr string
+	var symbolMcxFutStr string
 	const (
 		noScan = iota
-		futuresFilter
+		nseFuturesFilter
+		mcxFuturesFilter
 		nseEqFilter
 		indexFilter
 	)
 
 	symbolFutStr = determineFuturesContractsName()
+	symbolMcxFutStr = determineMcxFuturesContractsName()
 
 	for _, element := range instrumentsList {
 		if strings.Contains(element, "START") {
-			if strings.Contains(element, "FUTURES_FILTER") {
-				storeIn = futuresFilter
+			if strings.Contains(element, "NSE_FUTURES") {
+				storeIn = nseFuturesFilter
+				continue
+			} else if strings.Contains(element, "MCX_FUTURES") {
+				storeIn = mcxFuturesFilter
 				continue
 			} else if strings.Contains(element, "NSEEQ_FILTER") {
 				storeIn = nseEqFilter
@@ -259,8 +269,10 @@ func sortSymbols(instrumentsList []string) ([]string, []string, []string) {
 			continue
 		}
 
-		if storeIn == futuresFilter {
+		if storeIn == nseFuturesFilter {
 			symbolFuturesFilter = append(symbolFuturesFilter, element+symbolFutStr)
+		} else if storeIn == mcxFuturesFilter {
+			symbolFuturesFilter = append(symbolFuturesFilter, element+symbolMcxFutStr)
 		} else if storeIn == nseEqFilter {
 			symbolNseEqFilter = append(symbolNseEqFilter, element)
 		} else if storeIn == indexFilter {
@@ -271,9 +283,29 @@ func sortSymbols(instrumentsList []string) ([]string, []string, []string) {
 	return symbolFuturesFilter, symbolNseEqFilter, symbolIndexFilter
 }
 
-// func fetchInstrumentToken(symbolName string) string {
+func determineMcxFuturesContractsName() string {
+	// logic -
+	// 1. Jump to coming thursday
+	// 2. Check if next thurday is in same month
+	// 3. Use current month/year else next month/year
 
-// }-
+	var symbolFutStr string = "FAILED"
+	var jumpToNextContract time.Time
+
+	mnt := time.Now().Month() // current month
+	if mnt == time.February || mnt == time.April || mnt == time.June || mnt == time.August || mnt == time.October || mnt == time.December {
+		jumpToNextContract = time.Now().AddDate(0, 2, 0) // jump to next contract, two months ahead
+	} else {
+		jumpToNextContract = time.Now().AddDate(0, 1, 0)
+	}
+
+	symbolFutStr = jumpToNextContract.Format("06-Jan") + "FUT"
+	symbolFutStr = strings.ReplaceAll(symbolFutStr, "-", "")
+	symbolFutStr = strings.ToUpper(symbolFutStr)
+	fmt.Println("\tMCX Futures Symbol : Decoded :- ", symbolFutStr)
+
+	return symbolFutStr
+}
 
 func determineFuturesContractsName() string {
 	// logic -
