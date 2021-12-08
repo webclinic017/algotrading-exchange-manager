@@ -9,27 +9,54 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
+const (
+	instrument_token = iota
+	exchange_token
+	tradingsymbol
+	name
+	last_price
+	expiry
+	strike
+	tick_size
+	lot_size
+	instrument_type
+	segment
+	exchange
+)
+
 func GetSymbols() bool {
 
-	var symbolFuturesFilter []string
-	var symbolIndexFilter []string
-	var symbolNseEqFilter []string
+	var (
+		symbolFuturesFilter   []string
+		symbolIndexFilter     []string
+		symbolNseEqFilter     []string
+		instrumentTokens      []string
+		instrumentTokensLog   []string
+		instrumentTokensError []string
+	)
+
+	e := os.Remove("config/instruments.csv")
+	if e != nil {
+		println("instruments.csv deleted")
+	}
 
 	fileUrl := "http://api.kite.trade/instruments"
 	err := DownloadFile("config/instruments.csv", fileUrl)
 	if err != nil {
-		panic(err)
+		fmt.Println("Download error: instruments.csv from  " + fileUrl)
+		return false
 	}
-	fmt.Println("Downloaded: " + fileUrl)
 
 	// open file
 	f, err := os.Open("config/instruments.csv")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("File error, cannot read instruments.csv")
+		return false
 	}
 	// remember to close the file at the end of the program
 	defer f.Close()
@@ -37,55 +64,168 @@ func GetSymbols() bool {
 	csvReader := csv.NewReader(f)
 	instrumentsList, err := csvReader.ReadAll()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("File error, cannot read instruments.csv")
+		return false
+	}
+	if len(instrumentsList) < 90000 {
+		fmt.Println("File error, incorrect file downloaded (instruments.csv)")
+		return false
 	}
 
-	const (
-		instrument_token = iota
-		exchange_token
-		tradingsymbol
-		name
-		last_price
-		expiry
-		strike
-		tick_size
-		lot_size
-		instrument_type
-		segment
-		exchange
-	)
 	// instrument_token, exchange_token,	tradingsymbol,	name
 	// last_price,		 expiry,			strike,			tick_size
 	// lot_size,		 instrument_type,	segment,		exchange
 	//  280510214,1095743,EURINR22NOVFUT,"EURINR",0,2022-11-28,0,0.0025,1,FUT,BCD-FUT,BCD
+	// fmt.Print("\n" + instrumentsList[0][instrument_token])
+	// fmt.Print("\n" + instrumentsList[0][exchange_token])
+	// fmt.Print("\n" + instrumentsList[0][tradingsymbol])
+	// fmt.Print("\n" + instrumentsList[0][name])
+	// fmt.Print("\n" + instrumentsList[0][last_price])
+	// fmt.Print("\n" + instrumentsList[0][expiry])
+	// fmt.Print("\n" + instrumentsList[0][strike])
+	// fmt.Print("\n" + instrumentsList[0][tick_size])
+	// fmt.Print("\n" + instrumentsList[0][lot_size])
+	// fmt.Print("\n" + instrumentsList[0][instrument_type])
+	// fmt.Print("\n" + instrumentsList[0][segment])
+	// fmt.Print("\n" + instrumentsList[0][exchange] + "\n")
 
-	fmt.Print("\n" + instrumentsList[0][instrument_token])
-	fmt.Print("\n" + instrumentsList[0][exchange_token])
-	fmt.Print("\n" + instrumentsList[0][tradingsymbol])
-	fmt.Print("\n" + instrumentsList[0][name])
-	fmt.Print("\n" + instrumentsList[0][last_price])
-	fmt.Print("\n" + instrumentsList[0][expiry])
-	fmt.Print("\n" + instrumentsList[0][strike])
-	fmt.Print("\n" + instrumentsList[0][tick_size])
-	fmt.Print("\n" + instrumentsList[0][lot_size])
-	fmt.Print("\n" + instrumentsList[0][instrument_type])
-	fmt.Print("\n" + instrumentsList[0][segment])
-	fmt.Print("\n" + instrumentsList[0][exchange] + "\n")
-
-	dat, err := ioutil.ReadFile("config/symbols.txt")
+	dat, err := ioutil.ReadFile("config/trackSymbols.txt")
 	lines := strings.Split(string(dat), "\n")
 	check(err)
 
 	symbolFuturesFilter, symbolNseEqFilter, symbolIndexFilter = sortSymbols(lines)
 
-	println(symbolFuturesFilter)
-	println(symbolNseEqFilter)
-	println(symbolIndexFilter)
-	// fetchInstrumentToken()
+	iTokens, iTokensLog, iTokensError := getInstrumentTokenUniqueIdentifier(symbolFuturesFilter, instrumentsList)
+	instrumentTokens = append(instrumentTokens, iTokens...)
+	instrumentTokensLog = append(instrumentTokensLog, iTokensLog...)
+	instrumentTokensError = append(instrumentTokensError, iTokensError...)
+
+	iTokens, iTokensLog, iTokensError = getInstrumentTokenNseEquity(symbolNseEqFilter, instrumentsList)
+	instrumentTokens = append(instrumentTokens, iTokens...)
+	instrumentTokensLog = append(instrumentTokensLog, iTokensLog...)
+	instrumentTokensError = append(instrumentTokensError, iTokensError...)
+
+	iTokens, iTokensLog, iTokensError = getInstrumentTokenIndices(symbolIndexFilter, instrumentsList)
+	instrumentTokens = append(instrumentTokens, iTokens...)
+	instrumentTokensLog = append(instrumentTokensLog, iTokensLog...)
+	instrumentTokensError = append(instrumentTokensError, iTokensError...)
+
+	saveFiles(instrumentTokens, "/log/instrumentTokens.txt")
+	saveFiles(instrumentTokensLog, "log/instrumentTokensLog.txt")
+	saveFiles(instrumentTokensError, "log/instrumentTokensError.txt")
 
 	return false
 }
 
+func saveFiles(data []string, fileName string) bool {
+	myfile, e := os.Create("/log/GeeksforGeeks.txt")
+	if e != nil {
+		log.Fatal(e)
+	}
+	log.Println(myfile)
+	myfile.Close()
+
+	f, err := os.Create(filepath.Base("") + fileName)
+	if err != nil {
+		fmt.Println(err)
+		f.Close()
+		return false
+	}
+	// d := []string{"Welcome to the world of Go1.", "Go is a compiled language.", "It is easy to learn Go."}
+
+	for _, v := range data {
+		fmt.Fprintln(f, v)
+		if err != nil {
+			fmt.Println(err)
+			return false
+		}
+	}
+	err = f.Close()
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	fmt.Println("file written successfully")
+	return true
+}
+
+func getInstrumentTokenUniqueIdentifier(symbolList []string, instrumentsList [][]string) ([]string, []string, []string) {
+
+	var instrumentTokens []string
+	var instrumentTokensLog []string
+	var instrumentTokensError []string
+	var i int
+
+	for _, mySymbol := range symbolList {
+
+		for i = 0; i < len(instrumentsList); i++ {
+			if mySymbol == instrumentsList[i][tradingsymbol] {
+				instrumentTokens = append(instrumentTokens, instrumentsList[i][instrument_token])
+				instrumentTokensLog = append(instrumentTokensLog, mySymbol+" : "+instrumentsList[i][instrument_token])
+				break
+			}
+
+		}
+		if i == len(instrumentsList) {
+			instrumentTokensLog = append(instrumentTokensLog, mySymbol+" : Symbol not found!")
+			instrumentTokensError = append(instrumentTokensError, mySymbol+" : Symbol not found!")
+		}
+	}
+
+	return instrumentTokens, instrumentTokensLog, instrumentTokensError
+}
+
+func getInstrumentTokenNseEquity(symbolList []string, instrumentsList [][]string) ([]string, []string, []string) {
+
+	var instrumentTokens []string
+	var instrumentTokensLog []string
+	var instrumentTokensError []string
+	var i int
+
+	for _, mySymbol := range symbolList {
+
+		for i = 0; i < len(instrumentsList); i++ {
+			if mySymbol == instrumentsList[i][tradingsymbol] && "NSE" == instrumentsList[i][exchange] {
+				instrumentTokens = append(instrumentTokens, instrumentsList[i][instrument_token])
+				instrumentTokensLog = append(instrumentTokensLog, mySymbol+" : "+instrumentsList[i][instrument_token])
+				break
+			}
+
+		}
+		if i == len(instrumentsList) {
+			instrumentTokensLog = append(instrumentTokensLog, mySymbol+" : Symbol not found!")
+			instrumentTokensError = append(instrumentTokensError, mySymbol+" : Symbol not found!")
+		}
+	}
+
+	return instrumentTokens, instrumentTokensLog, instrumentTokensError
+}
+
+func getInstrumentTokenIndices(symbolList []string, instrumentsList [][]string) ([]string, []string, []string) {
+
+	var instrumentTokens []string
+	var instrumentTokensLog []string
+	var instrumentTokensError []string
+	var i int
+
+	for _, mySymbol := range symbolList {
+
+		for i = 0; i < len(instrumentsList); i++ {
+			if mySymbol == instrumentsList[i][tradingsymbol] && "INDICES" == instrumentsList[i][segment] {
+				instrumentTokens = append(instrumentTokens, instrumentsList[i][instrument_token])
+				instrumentTokensLog = append(instrumentTokensLog, mySymbol+" : "+instrumentsList[i][instrument_token])
+				break
+			}
+
+		}
+		if i == len(instrumentsList) {
+			instrumentTokensLog = append(instrumentTokensLog, mySymbol+" : Symbol not found!")
+			instrumentTokensError = append(instrumentTokensError, mySymbol+" : Symbol not found!")
+		}
+	}
+
+	return instrumentTokens, instrumentTokensLog, instrumentTokensError
+}
 func sortSymbols(instrumentsList []string) ([]string, []string, []string) {
 	// using for loop
 	var symbolFuturesFilter []string
@@ -133,7 +273,7 @@ func sortSymbols(instrumentsList []string) ([]string, []string, []string) {
 
 // func fetchInstrumentToken(symbolName string) string {
 
-// }
+// }-
 
 func determineFuturesContractsName() string {
 	// logic -
