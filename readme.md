@@ -1,3 +1,24 @@
+Algo Trading Containers [algotrading-ticker-service - algotrading-analysis-service - algotrading-trade-manager]
+
+This container is first part of group of 3 containers to perform algo trading. This container currently supports Zerodha Kite API.
+
+It performs;
+
+    Login
+    Token ID generation. Supports NSE (Eq and FUT) and MCX FUT
+    Subscribe to Ticks as specified by Token file.
+    Save each tick into TimescableDb (To be created as another docker container)
+
+To be done
+
+    Save 1-min Candle based on tick on separate table
+
+----------------- END --------------------------
+
+Source code: https://github.com/parag-b/goTicker
+Visit github project page for documentation support
+
+
 ## ENV_Settings.env
 
 TFA_AUTH = ""
@@ -22,13 +43,14 @@ go build
 with VC
 
 # Build docker container (and run)
-DOCKER_BUILDKIT=1 docker build -t paragba/zerodha_kite_ticker .
-docker run --rm -it paragba/zerodha_kite_ticker
+DOCKER_BUILDKIT=1 docker build -t paragba/algotrading-ticker-service:v0.1 .
+DOCKER_BUILDKIT=1 docker build -t paragba/algotrading-ticker-service:latest .
+docker run --rm -it paragba/algotrading-ticker-service
 
 docker save goticker:latest -o goTickerv0.xx.tar
 
 # Publish to Docker
-docker push paragba/zerodha_kite_ticker:goTicker
+docker push paragba/algotrading-ticker-service:latest
 
 # TODO Master list
 - [x] Connect to DB
