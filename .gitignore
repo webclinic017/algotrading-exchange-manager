@@ -1,8 +1,7 @@
 *.env
 *.tar
 *.rar
-/log/
+app/log/*
+tst.*
 goTicker
 tst.json
-app/config/instruments.csv
-app/config/.~lock.instruments.csv#
