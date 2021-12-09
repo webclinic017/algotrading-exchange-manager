@@ -22,9 +22,12 @@ go build
 with VC
 
 # Build docker container (and run)
-DOCKER_BUILDKIT=1 docker build -t parag-b/goticker .
+DOCKER_BUILDKIT=1 docker build -t paragba/zerodha_kite_ticker .
 docker run --rm -it  goticker:latest        
 docker save goticker:latest -o goTickerv0.xx.tar
+
+# Publish to Docker
+docker push paragba/zerodha_kite_ticker:goTicker
 
 # TODO Master list
 - [x] Connect to DB
