@@ -12,7 +12,7 @@ import (
 
 var (
 	ticker *kiteticker.Ticker
-
+	Tokens []uint32
 	ChTick = make(chan TickData, 3)
 )
 
@@ -40,37 +40,11 @@ func onClose(code int, reason string) {
 // Triggered when connection is established and ready to send and accept data
 func onConnect() {
 	fmt.Println("Connected")
-	err := ticker.Subscribe([]uint32{273929,
-		274185,
-		274441,
-		274697,
-		274953,
-		275209,
-		275465,
-		275721,
-		275977,
-		136893956,
-		128199684,
-		129276932,
-		136021764,
-	})
+	err := ticker.Subscribe(Tokens)
 	if err != nil {
 		fmt.Println("err: ", err)
 	}
-	err = ticker.SetMode("full", []uint32{273929,
-		274185,
-		274441,
-		274697,
-		274953,
-		275209,
-		275465,
-		275721,
-		275977,
-		136893956,
-		128199684,
-		129276932,
-		136021764,
-	})
+	err = ticker.SetMode("full", Tokens)
 	if err != nil {
 		fmt.Println("err: ", err)
 	}

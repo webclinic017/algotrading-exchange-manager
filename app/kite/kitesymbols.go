@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -27,7 +28,7 @@ const (
 	exchange
 )
 
-func GetSymbols() []string {
+func GetSymbols() []uint32 {
 
 	var (
 		symbolFuturesFilter   []string
@@ -36,6 +37,7 @@ func GetSymbols() []string {
 		instrumentTokens      []string
 		instrumentTokensLog   []string
 		instrumentTokensError []string
+		instrumentUint32      []uint32
 	)
 
 	e := os.Remove("log/instruments.csv")
@@ -47,14 +49,14 @@ func GetSymbols() []string {
 	err := DownloadFile("log/instruments.csv", fileUrl)
 	if err != nil {
 		fmt.Println("Download error: instruments.csv from  " + fileUrl)
-		return false
+		return instrumentUint32
 	}
 
 	// open file
 	f, err := os.Open("log/instruments.csv")
 	if err != nil {
 		fmt.Println("File error, cannot read instruments.csv")
-		return false
+		return instrumentUint32
 	}
 	// remember to close the file at the end of the program
 	defer f.Close()
@@ -63,11 +65,11 @@ func GetSymbols() []string {
 	instrumentsList, err := csvReader.ReadAll()
 	if err != nil {
 		fmt.Println("File error, cannot read instruments.csv")
-		return false
+		return instrumentUint32
 	}
 	if len(instrumentsList) < 90000 {
 		fmt.Println("File error, incorrect file downloaded (instruments.csv)")
-		return false
+		return instrumentUint32
 	}
 
 	// instrument_token, exchange_token,	tradingsymbol,	name
@@ -114,7 +116,21 @@ func GetSymbols() []string {
 
 	fmt.Println(instrumentTokensError)
 
-	return instrumentTokens
+	return convertStringArrayToUint32Array(instrumentTokens)
+}
+
+func convertStringArrayToUint32Array(symbolList []string) []uint32 {
+
+	var symbolListUint32 []uint32
+
+	for _, mySymbol := range symbolList {
+		val, err := strconv.Atoi(mySymbol)
+		if err != nil {
+			fmt.Println("\nError converting string to uint32")
+		}
+		symbolListUint32 = append(symbolListUint32, uint32(val))
+	}
+	return symbolListUint32
 }
 
 func saveFiles(data []string, fileName string) bool {
