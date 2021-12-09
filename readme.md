@@ -23,7 +23,8 @@ with VC
 
 # Build docker container (and run)
 DOCKER_BUILDKIT=1 docker build -t paragba/zerodha_kite_ticker .
-docker run --rm -it  goticker:latest        
+docker run --rm -it paragba/zerodha_kite_ticker
+
 docker save goticker:latest -o goTickerv0.xx.tar
 
 # Publish to Docker

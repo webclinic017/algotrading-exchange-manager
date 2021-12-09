@@ -6,8 +6,9 @@ COPY go.mod ./
 COPY go.sum ./
 RUN go mod download
 
-COPY ./app ./app
+COPY app/ ./app
+COPY *.go ./
 
-RUN go build -o app/goTicker.go app/goTicker.go
+RUN go build -o /zerodha_kite_ticker
 
-CMD [ "app/goTicker.go" ]
+CMD [ "/zerodha_kite_ticker" ]

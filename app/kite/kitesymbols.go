@@ -40,20 +40,20 @@ func GetSymbols() []uint32 {
 		instrumentUint32      []uint32
 	)
 
-	e := os.Remove("log/instruments.csv")
+	e := os.Remove("app/log/instruments.csv")
 	if e != nil {
 		println("instruments.csv deleted")
 	}
 
 	fileUrl := "http://api.kite.trade/instruments"
-	err := DownloadFile("log/instruments.csv", fileUrl)
+	err := DownloadFile("app/log/instruments.csv", fileUrl)
 	if err != nil {
 		fmt.Println("Download error: instruments.csv from  " + fileUrl)
 		return instrumentUint32
 	}
 
 	// open file
-	f, err := os.Open("log/instruments.csv")
+	f, err := os.Open("app/log/instruments.csv")
 	if err != nil {
 		fmt.Println("File error, cannot read instruments.csv")
 		return instrumentUint32
@@ -89,7 +89,7 @@ func GetSymbols() []uint32 {
 	// fmt.Print("\n" + instrumentsList[0][segment])
 	// fmt.Print("\n" + instrumentsList[0][exchange] + "\n")
 
-	dat, err := ioutil.ReadFile("config/trackSymbols.txt")
+	dat, err := ioutil.ReadFile("app/config/trackSymbols.txt")
 	lines := strings.Split(string(dat), "\n")
 	check(err)
 
@@ -140,12 +140,12 @@ func saveFiles(data []string, fileName string) bool {
 	// 3. write data to file
 	// 4. close file
 
-	e := os.Remove("log/" + fileName)
+	e := os.Remove("app/log/" + fileName)
 	if e != nil {
-		println("instruments.csv deleted")
+		println(fileName + " deleted")
 	}
 
-	f, err := os.Create("log/" + fileName)
+	f, err := os.Create("app/log/" + fileName)
 
 	if err != nil {
 		fmt.Println(err)
