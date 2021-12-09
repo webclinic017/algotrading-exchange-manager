@@ -22,14 +22,14 @@ go build
 with VC
 
 # Build docker container (and run)
-DOCKER_BUILDKIT=1 docker build -t goticker .
+DOCKER_BUILDKIT=1 docker build -t parag-b/goticker .
 docker run --rm -it  goticker:latest        
 docker save goticker:latest -o goTickerv0.xx.tar
 
 # TODO Master list
 - [x] Connect to DB
 - [x] Connect to Kite
-- [ ] Setup ticker
+- [x] Setup ticker
 - [x] Setup message structure
 - [x] Setup message queue
 - [x] Setup queue consumer

@@ -7,6 +7,7 @@ import (
 	"goTicker/app/kite"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/robfig/cron"
@@ -25,22 +26,23 @@ func main() {
 
 	kite.Tokens = kite.GetSymbols()
 
-	initTickerToken() // start now, when docker starts
+	now := time.Now()
 
+	if (now.Hour() >= 9) && (now.Hour() < 16) &&
+		(now.Weekday() > 0) && (now.Weekday() < 6) {
+		initTickerToken() // start now, when docker starts if its within trading time (9am-4pm Mon-Fri)
+	} else {
+		firstRunConnectionsCheck() // Check if conections are okay
+	}
 	// everyday scheduled start
 	initTicker = cron.New()
-	initTicker.AddFunc("0 23 0 * * *", initTickerToken)
+	initTicker.AddFunc("0 0 9 * * 1-5", initTickerToken) // At 09:00:00 Mon-Fri
 	initTicker.Start()
 
-	// stop connection everyday
+	// everyday scheduled stop
 	closeTicker = cron.New()
-	closeTicker.AddFunc("0 24 0 * * *", theStop)
+	closeTicker.AddFunc("0 16 * * 1-5", theStop) // At 16:00:00 Mon-Fri
 	closeTicker.Start()
-
-	// start watchdog to recover from connections issues
-	wdg = cron.New()
-	wdg.AddFunc("@every 10s", watchdog)
-	wdg.Start()
 
 	select {}
 
@@ -113,10 +115,27 @@ func initTickerToken() {
 			kite.TickerInitialize(apiKey, accToken)
 			setupCdlCrons()
 			go db.StoreTickInDb()
+			// start watchdog to recover from connections issues
+			wdg = cron.New()
+			wdg.AddFunc("@every 10s", watchdog)
+			wdg.Start()
 
 		} else {
 			println("Fail to start Ticker")
 		}
+	}
+}
+
+func firstRunConnectionsCheck() {
+
+	envOk = loadEnv()
+
+	if envOk {
+		dbOk = db.DbInit()
+		kiteOk, apiKey, accToken = kite.LoginKite()
+		printStatus(envOk, dbOk, kiteOk)
+	} else {
+		fmt.Println("ERR: Cannot read ENV varaibles, skipping connections check!")
 	}
 }
 
@@ -150,7 +169,6 @@ func watchdog() {
 	if !envOk || !dbOk || !kiteOk {
 		printStatus(envOk, dbOk, kiteOk)
 		fmt.Println("\nWDG: Initializing Kite", kiteOk)
-		//initTickerToken()
+		initTickerToken()
 	}
-
 }
