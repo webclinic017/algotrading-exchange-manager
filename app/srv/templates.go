@@ -12,8 +12,7 @@ func CheckFiles() {
 	FileCopyIfMissing("app/templates/trackSymbols.txt", "app/config/trackSymbols.txt")
 }
 
-// Copy the src file to dst. Any existing file will be overwritten and will not
-// copy file attributes.
+// Copy the src file to dst. Skipped if file exists
 func FileCopyIfMissing(src, dst string) error {
 
 	_, err := os.Open(dst)

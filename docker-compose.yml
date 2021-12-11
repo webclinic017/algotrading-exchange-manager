@@ -5,6 +5,8 @@ services:
     image: paragba/algotrading-ticker-service:latest
     container_name: goTicker
     restart: unless-stopped
+    environment:
+      TZ: 'Asia/Kolkata'
     volumes:
       - ./dockerTest/config:/app/app/config
       - ./dockerTest/log:/app/app/log

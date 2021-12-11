@@ -1,57 +1,52 @@
-Algo Trading Containers [algotrading-ticker-service - algotrading-analysis-service - algotrading-trade-manager]
+> Algo Trading Containers [algotrading-ticker-service - algotrading-analysis-service - algotrading-trade-manager]
 
-This container is first part of group of 3 containers to perform algo trading. This container currently supports Zerodha Kite API.
+This container is first part of group of 3 containers to perform algo trading. This container currently supports **Zerodha Kite API for NSE EQ, NSE FUTs and MCX FUTs**.
 
 It performs;
 
-    Login
-    Token ID generation. Supports NSE (Eq and FUT) and MCX FUT
-    Subscribe to Ticks as specified by Token file.
-    Save each tick into TimescableDb (To be created as another docker container)
+    * Auto Login
+    * Token ID generation. Supports NSE (Eq and FUT) and MCX FUT
+    * Subscribe to Ticks as specified by Token file.
+    * Save each tick into TimescableDb (To be created as another docker container)
 
 To be done
 
-    Save 1-min Candle based on tick on separate table
+    * Save 1-min Candle based on tick on separate table
 
------------------ END --------------------------
+# How to use
+- Use the docker-compose file
+- On first run, default templates will be created in "config" folder.
+- Update the Zerodha Kite and Database setting.
+- Ensure Timezone is set as per your zone/server
+- Restart the docker.
 
-Source code: https://github.com/parag-b/goTicker
-Visit github project page for documentation support
 
+# Env settings
+*Settings are stored in app/config/ENV_Settings.env file*
 
-## ENV_Settings.env
-
-TFA_AUTH = ""
-USER_ID =""
-PASSWORD = ""
-
-API_KEY = ""
-API_SECRET = ""
-REQUEST_TOKEN_URL ="https://kite.zerodha.com/connect/login?v=3&api_key="
-
-DATABASE_URL = "postgres://username:password@localhost:5432/database_name"
+- TFA_AUTH = ""
+- USER_ID =""
+- PASSWORD = ""
+- API_KEY = ""
+- API_SECRET = ""
+- REQUEST_TOKEN_URL ="https://kite.zerodha.com/connect/login?v=3&api_key="
+- DATABASE_URL = "postgres://username:password@localhost:5432/database_name"
 or
-DATABASE_URL = "postgres://username:password@abc.com:5432/database_name"
+- DATABASE_URL = "postgres://username:password@abc.com:5432/database_name"
 
-## ENV_accesstoken.env
+*Access token from Kite login is stored in app/config/ENV_accessToken.env*
 
-accessToken=""
+#Token File
+*Defulat token/Instruments file is stored at app/config/trackSymbols.txt*
 
-# Compile GO
+# Development
+**Compilation** - `go build main.go`
 
-go build
-with VC
+**Create Docker Image** - `DOCKER_BUILDKIT=1 docker build -t paragba/algotrading-ticker-service:(v0.1/latest) .`
 
-# Build docker container (and run)
-DOCKER_BUILDKIT=1 docker build -t paragba/algotrading-ticker-service:v0.1 .
-DOCKER_BUILDKIT=1 docker build -t paragba/algotrading-ticker-service:latest .
-docker run --rm -it paragba/algotrading-ticker-service
+**Run Docker** `docker run --rm -it paragba/algotrading-ticker-service`
 
-docker exec -it gotickerTest sh
-docker save goticker:latest -o goTickerv0.xx.tar
-
-# Publish to Docker
-docker push paragba/algotrading-ticker-service:latest
+**Enter Docker shell** `docker exec -it gotickerTest sh`
 
 # TODO Master list
 - [x] Connect to DB

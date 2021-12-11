@@ -1,9 +1,5 @@
-*.env
-*.tar
-*.rar
+app/config/*
 app/log/*
-tst.*
 goTicker
-tst.json
 main
 dockerTest
