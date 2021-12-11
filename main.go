@@ -53,22 +53,32 @@ func main() {
 func loadEnv() bool {
 
 	// Load .env file, if not in production
-	if 0 >= len(os.Getenv("PRODUCTION")) {
-		err := godotenv.Load("app/config/ENV_Settings.env")
-		if err != nil {
-			srv.ErrorLogger.Println("ENV_Settings.env file not found, Terminating!!!")
-			//return false
+
+	println("PRODUCTION - ", os.Getenv("PRODUCTION"))
+	if os.Getenv("PRODUCTION") != "true" {
+		srv.InfoLogger.Println("DEVELOPMENT ENV - Ensure ENV variables are set in ENV_settings.env")
+		if 0 < len(os.Getenv("USER_ID")) {
+			srv.ErrorLogger.Println("DEVELOPMENT Mode enabled. > Set {PRODUCTION: 'true'} in docker-compose")
+			return false
 		}
+		srv.FileCopyIfMissing("app/templates/ENV_Settings.env", "app/config/ENV_Settings.env")
+		_ = godotenv.Load("app/config/ENV_Settings.env")
+	} else {
+		srv.InfoLogger.Println("PRODUCTION ENV- Ensure ENV variables are set")
+	}
+
+	srv.InfoLogger.Println("user ID", os.Getenv("USER_ID"))
+
+	if 0 >= len(os.Getenv("USER_ID")) {
+		srv.ErrorLogger.Println("USER_ID not set")
+		return false
 	}
 	if 0 >= len(os.Getenv("TFA_AUTH")) {
 		srv.ErrorLogger.Println("TFA_AUTH not set")
 		return false
 	}
-	if 0 >= len(os.Getenv("USER_ID")) {
-		srv.ErrorLogger.Println("USER_ID not set")
-		return false
-	}
 	if 0 >= len(os.Getenv("PASSWORD")) {
+
 		srv.ErrorLogger.Println("PASSWORD not set")
 		return false
 	}
@@ -80,21 +90,15 @@ func loadEnv() bool {
 		srv.ErrorLogger.Println("API_SECRET not set")
 		return false
 	}
-	if 0 >= len(os.Getenv("REQUEST_TOKEN_URL")) {
-		srv.ErrorLogger.Println("REQUEST_TOKEN_URL not set")
+	if 0 >= len(os.Getenv("DATABASE_URL")) {
+		srv.ErrorLogger.Println("DATABASE_URL not set")
 		return false
 	}
-	if 0 >= len(os.Getenv("EXTERNAL_DATABASE_URL")) {
-		srv.ErrorLogger.Println("EXTERNAL_DATABASE_URL not set")
-		return false
-	}
-	os.Setenv("DATABASE_URL", os.Getenv("EXTERNAL_DATABASE_URL"))
-
 	return true
 }
 
 func printStatus(envOk, dbOk, kiteOk bool) {
-	srv.InfoLogger.Printf("\n--------STATUS---------\nEnvironment files found: %t\nKite Login Succesfull: %t\nDB Connected: %t", envOk, kiteOk, dbOk)
+	srv.InfoLogger.Printf("\n--------STATUS---------\nEnvironment variables set: %t\nKite Login Succesfull: %t\nDB Connected: %t", envOk, kiteOk, dbOk)
 }
 
 func initTickerToken() {

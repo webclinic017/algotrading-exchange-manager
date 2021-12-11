@@ -5,39 +5,42 @@ This container is first part of group of 3 containers to perform algo trading. T
 It performs;
 
     * Auto Login
-    * Token ID generation. Supports NSE (Eq and FUT) and MCX FUT
+    * Token ID generation for NSE (Eq and FUT) and MCX FUT
     * Subscribe to Ticks as specified by Token file.
     * Save each tick into TimescableDb (To be created as another docker container)
+    * Ticker starts tick websocket connection at 9am and closes 4pm on weekdays
 
 To be done
 
     * Save 1-min Candle based on tick on separate table
+    * MCX Silver token generation issue
 
 # How to use
 - Use the docker-compose file
-- On first run, default templates will be created in "config" folder.
-- Update the Zerodha Kite and Database setting.
+- Setup the env variable Zerodha Kite and Database settings
+- Ensure env variable {PRODUCTION: 'true'}
 - Ensure Timezone is set as per your zone/server
-- Restart the docker.
 
-
-# Env settings
+# Settings
 *Settings are stored in app/config/ENV_Settings.env file*
 
-- TFA_AUTH = ""
 - USER_ID =""
+- TFA_AUTH = "" // AKA PIN
 - PASSWORD = ""
 - API_KEY = ""
 - API_SECRET = ""
-- REQUEST_TOKEN_URL ="https://kite.zerodha.com/connect/login?v=3&api_key="
 - DATABASE_URL = "postgres://username:password@localhost:5432/database_name"
-or
-- DATABASE_URL = "postgres://username:password@abc.com:5432/database_name"
 
-*Access token from Kite login is stored in app/config/ENV_accessToken.env*
+# Instrument Symbols/Tokens
+The symbols to be registered for ticks are stored in trackSymbols.txt
+Default token/Instruments file is stored at app/config/trackSymbols.txt
+For Futures, as the contract names changes, the name is generated based on todays date.
+Post that the instrument token in read from Instruments file downloaded from Zerodha API.
+This tokens are used to register the ticks.
 
-#Token File
-*Defulat token/Instruments file is stored at app/config/trackSymbols.txt*
+Source code: https://github.com/parag-b/goTicker
+Visit github project page for documentation support
+
 
 # Development
 **Compilation** - `go build main.go`
@@ -46,9 +49,9 @@ or
 
 **Run Docker** `docker run --rm -it paragba/algotrading-ticker-service`
 
-**Enter Docker shell** `docker exec -it gotickerTest sh`
+**Enter Docker shell** `docker exec -it goTicker sh`
 
-# TODO Master list
+# ToDo List
 - [x] Connect to DB
 - [x] Connect to Kite
 - [x] Setup ticker

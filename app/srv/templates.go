@@ -7,7 +7,7 @@ import (
 
 func CheckFiles() {
 
-	FileCopyIfMissing("app/templates/ENV_Settings.env", "app/config/ENV_Settings.env")
+	//FileCopyIfMissing("app/templates/ENV_Settings.env", "app/config/ENV_Settings.env")
 	FileCopyIfMissing("app/templates/ENV_accesstoken.env", "app/config/ENV_accesstoken.env")
 	FileCopyIfMissing("app/templates/trackSymbols.txt", "app/config/trackSymbols.txt")
 }
