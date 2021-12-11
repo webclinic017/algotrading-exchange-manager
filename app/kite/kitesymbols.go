@@ -3,9 +3,9 @@ package kite
 import (
 	"encoding/csv"
 	"fmt"
+	"goTicker/app/srv"
 	"io"
 	"io/ioutil"
-	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -42,20 +42,20 @@ func GetSymbols() []uint32 {
 
 	e := os.Remove("app/log/instruments.csv")
 	if e != nil {
-		println("instruments.csv deleted")
+		srv.InfoLogger.Println("instruments.csv deleted")
 	}
 
 	fileUrl := "http://api.kite.trade/instruments"
 	err := DownloadFile("app/log/instruments.csv", fileUrl)
 	if err != nil {
-		fmt.Println("Download error: instruments.csv from  " + fileUrl)
+		srv.ErrorLogger.Println("Download error: instruments.csv from  " + fileUrl)
 		return instrumentUint32
 	}
 
 	// open file
 	f, err := os.Open("app/log/instruments.csv")
 	if err != nil {
-		fmt.Println("File error, cannot read instruments.csv")
+		srv.ErrorLogger.Println("File error, cannot read instruments.csv")
 		return instrumentUint32
 	}
 	// remember to close the file at the end of the program
@@ -64,11 +64,11 @@ func GetSymbols() []uint32 {
 	csvReader := csv.NewReader(f)
 	instrumentsList, err := csvReader.ReadAll()
 	if err != nil {
-		fmt.Println("File error, cannot read instruments.csv")
+		srv.ErrorLogger.Println("File error, cannot read instruments.csv")
 		return instrumentUint32
 	}
 	if len(instrumentsList) < 90000 {
-		fmt.Println("File error, incorrect file downloaded (instruments.csv)")
+		srv.ErrorLogger.Println("File error, incorrect file downloaded (instruments.csv)")
 		return instrumentUint32
 	}
 
@@ -110,11 +110,11 @@ func GetSymbols() []uint32 {
 	instrumentTokensLog = append(instrumentTokensLog, iTokensLog...)
 	instrumentTokensError = append(instrumentTokensError, iTokensError...)
 
-	saveFiles(instrumentTokens, "instrumentTokens.txt")
-	saveFiles(instrumentTokensLog, "instrumentTokensLog.txt")
-	saveFiles(instrumentTokensError, "instrumentTokensError.txt")
+	saveFiles(instrumentTokens, "instrumentTokens.log")
+	saveFiles(instrumentTokensLog, "instrumentTokensLog.log")
+	saveFiles(instrumentTokensError, "instrumentTokensError.log")
 
-	fmt.Println(instrumentTokensError)
+	srv.ErrorLogger.Println(instrumentTokensError)
 
 	return convertStringArrayToUint32Array(instrumentTokens)
 }
@@ -126,7 +126,7 @@ func convertStringArrayToUint32Array(symbolList []string) []uint32 {
 	for _, mySymbol := range symbolList {
 		val, err := strconv.Atoi(mySymbol)
 		if err != nil {
-			fmt.Println("\nError converting string to uint32")
+			srv.ErrorLogger.Println("\nError converting string to uint32")
 		}
 		symbolListUint32 = append(symbolListUint32, uint32(val))
 	}
@@ -142,13 +142,13 @@ func saveFiles(data []string, fileName string) bool {
 
 	e := os.Remove("app/log/" + fileName)
 	if e != nil {
-		println(fileName + " deleted")
+		srv.InfoLogger.Println(fileName + " deleted")
 	}
 
 	f, err := os.Create("app/log/" + fileName)
 
 	if err != nil {
-		fmt.Println(err)
+		srv.ErrorLogger.Println(err)
 		f.Close()
 		return false
 	}
@@ -157,13 +157,13 @@ func saveFiles(data []string, fileName string) bool {
 	for _, v := range data {
 		fmt.Fprintln(f, v)
 		if err != nil {
-			fmt.Println(err)
+			srv.ErrorLogger.Println(err)
 			return false
 		}
 	}
 	err = f.Close()
 	if err != nil {
-		fmt.Println(err)
+		srv.ErrorLogger.Println(err)
 		return false
 	}
 	return true
@@ -318,7 +318,7 @@ func determineMcxFuturesContractsName() string {
 	symbolFutStr = jumpToNextContract.Format("06-Jan") + "FUT"
 	symbolFutStr = strings.ReplaceAll(symbolFutStr, "-", "")
 	symbolFutStr = strings.ToUpper(symbolFutStr)
-	fmt.Println("\tMCX Futures Symbol : Decoded :- ", symbolFutStr)
+	srv.InfoLogger.Println("MCX Futures Symbol : Decoded :- ", symbolFutStr)
 
 	return symbolFutStr
 }
@@ -331,8 +331,25 @@ func determineFuturesContractsName() string {
 
 	var symbolFutStr string = "FAILED"
 	// NIFTY21DECFUT
-	dt := time.Now().Weekday()                          // todays day
-	gapForThurday := math.Abs(float64(dt) - float64(4)) // 4 is thursday
+	dt := time.Now().Weekday() // todays day
+	gapForThurday := 0
+
+	if dt == time.Monday {
+		gapForThurday = 3
+	} else if dt == time.Tuesday {
+		gapForThurday = 2
+	} else if dt == time.Wednesday {
+		gapForThurday = 1
+	} else if dt == time.Friday {
+		gapForThurday = 6
+	} else if dt == time.Saturday {
+		gapForThurday = 5
+	} else if dt == time.Sunday {
+		gapForThurday = 4
+	} else {
+		gapForThurday = 0 // its thursday, do nothing
+	}
+
 	jumpToComingThurday := time.Now().AddDate(0, 0, int(gapForThurday))
 
 	if jumpToComingThurday.Weekday().String() == "Thursday" {
@@ -354,7 +371,7 @@ func determineFuturesContractsName() string {
 		}
 		symbolFutStr = strings.ReplaceAll(symbolFutStr, "-", "")
 		symbolFutStr = strings.ToUpper(symbolFutStr)
-		fmt.Println("\n\tFutures Symbol : Decoded :- ", symbolFutStr)
+		srv.InfoLogger.Println("Futures Symbol : Decoded :- ", symbolFutStr)
 	}
 	return symbolFutStr
 }

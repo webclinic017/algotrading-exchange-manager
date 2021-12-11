@@ -1,11 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"goTicker/app/cdlconv"
 	"goTicker/app/db"
 	"goTicker/app/kite"
-	"log"
+	"goTicker/app/srv"
 	"os"
 	"time"
 
@@ -23,6 +22,8 @@ var (
 func main() {
 
 	// timeZone, _ := time.LoadLocation("Asia/Calcutta")
+
+	srv.Init()
 
 	kite.Tokens = kite.GetSymbols()
 
@@ -52,38 +53,38 @@ func loadEnv() bool {
 
 	// Load .env file, if not in production
 	if 0 >= len(os.Getenv("PRODUCTION")) {
-		err := godotenv.Load("config/ENV_Settings.env")
+		err := godotenv.Load("app/config/ENV_Settings.env")
 		if err != nil {
-			log.Fatal("ENV_Settings.env file not found, Terminating!!!")
+			srv.ErrorLogger.Fatal("ENV_Settings.env file not found, Terminating!!!")
 			//return false
 		}
 	}
 	if 0 >= len(os.Getenv("TFA_AUTH")) {
-		println("TFA_AUTH not set")
+		srv.ErrorLogger.Println("TFA_AUTH not set")
 		return false
 	}
 	if 0 >= len(os.Getenv("USER_ID")) {
-		println("USER_ID not set")
+		srv.ErrorLogger.Println("USER_ID not set")
 		return false
 	}
 	if 0 >= len(os.Getenv("PASSWORD")) {
-		println("PASSWORD not set")
+		srv.ErrorLogger.Println("PASSWORD not set")
 		return false
 	}
 	if 0 >= len(os.Getenv("API_KEY")) {
-		println("API_KEY not set")
+		srv.ErrorLogger.Println("API_KEY not set")
 		return false
 	}
 	if 0 >= len(os.Getenv("API_SECRET")) {
-		println("API_SECRET not set")
+		srv.ErrorLogger.Println("API_SECRET not set")
 		return false
 	}
 	if 0 >= len(os.Getenv("REQUEST_TOKEN_URL")) {
-		println("REQUEST_TOKEN_URL not set")
+		srv.ErrorLogger.Println("REQUEST_TOKEN_URL not set")
 		return false
 	}
 	if 0 >= len(os.Getenv("EXTERNAL_DATABASE_URL")) {
-		println("EXTERNAL_DATABASE_URL not set")
+		srv.ErrorLogger.Println("EXTERNAL_DATABASE_URL not set")
 		return false
 	}
 	os.Setenv("DATABASE_URL", os.Getenv("EXTERNAL_DATABASE_URL"))
@@ -92,11 +93,7 @@ func loadEnv() bool {
 }
 
 func printStatus(envOk, dbOk, kiteOk bool) {
-	fmt.Printf("\n--------STATUS---------")
-	fmt.Printf("\nEnvironment files found: %t", envOk)
-	fmt.Printf("\nKite Login Succesfull: %t", kiteOk)
-	fmt.Printf("\nDB Connected: %t", dbOk)
-	fmt.Printf("\n----------------------\n")
+	srv.InfoLogger.Printf("\n--------STATUS---------\nEnvironment files found: %t\nKite Login Succesfull: %t\nDB Connected: %t", envOk, kiteOk, dbOk)
 }
 
 func initTickerToken() {
@@ -121,7 +118,7 @@ func initTickerToken() {
 			wdg.Start()
 
 		} else {
-			println("Fail to start Ticker")
+			srv.ErrorLogger.Println("Fail to start Ticker")
 		}
 	}
 }
@@ -135,7 +132,7 @@ func firstRunConnectionsCheck() {
 		kiteOk, apiKey, accToken = kite.LoginKite()
 		printStatus(envOk, dbOk, kiteOk)
 	} else {
-		fmt.Println("ERR: Cannot read ENV varaibles, skipping connections check!")
+		srv.ErrorLogger.Println("ERR: Cannot read ENV varaibles, skipping connections check!")
 	}
 }
 
@@ -168,7 +165,8 @@ func watchdog() {
 	// Initate ticker on error
 	if !envOk || !dbOk || !kiteOk {
 		printStatus(envOk, dbOk, kiteOk)
-		fmt.Println("\nWDG: Initializing Kite", kiteOk)
+		theStop()
+		srv.ErrorLogger.Println("\nWDG: Re-Initializing Kite", kiteOk)
 		initTickerToken()
 	}
 }

@@ -2,8 +2,8 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"goTicker/app/kite"
+	"goTicker/app/srv"
 	"os"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -21,7 +21,7 @@ func DbInit() bool {
 	dbPool, err = pgxpool.Connect(ctx, dbUrl)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		srv.ErrorLogger.Printf("Unable to connect to database: %v\n", err)
 		return false
 	}
 
@@ -29,10 +29,10 @@ func DbInit() bool {
 	err = dbPool.QueryRow(ctx, "select 'Hello, Timescale!'").Scan(&greeting)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
+		srv.ErrorLogger.Printf("QueryRow failed: %v\n", err)
 		return false
 	}
-	fmt.Println("connected to DB : " + greeting)
+	srv.InfoLogger.Printf("connected to DB : " + greeting)
 
 	// check if table exist, else create it
 	queryCreateTicksTable := `CREATE TABLE dailyTicks (
@@ -66,7 +66,7 @@ func StoreTickInDb() {
 		queryInsertMetadata := `INSERT INTO dailyTicks (time, symbol, last_price, open, close, low, high, volume) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`
 		_, err := dbPool.Exec(ctx, queryInsertMetadata, v.Timestamp, v.Insttoken, v.Lastprice, v.Open, v.Close, v.Low, v.High, v.Volume)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to insert data into database: %v\n", err)
+			srv.ErrorLogger.Printf("Unable to insert data into database: %v\n", err)
 			//os.Exit(1)
 		}
 	}

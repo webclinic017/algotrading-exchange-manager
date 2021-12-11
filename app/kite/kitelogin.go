@@ -1,8 +1,7 @@
 package kite
 
 import (
-	"fmt"
-	"log"
+	"goTicker/app/srv"
 	"net/url"
 	"os"
 	"regexp"
@@ -26,38 +25,38 @@ func LoginKite() (bool, string, string) {
 	requestToken := KiteGetRequestToken()
 
 	if strings.Contains(requestToken, "ERR:") {
-		fmt.Println("Authentication", requestToken)
+		srv.ErrorLogger.Println("Authentication", requestToken)
 	} else {
 
-		fmt.Println("Authentication Succesful:", requestToken)
+		srv.InfoLogger.Println("Authentication Succesful:", requestToken)
 		// Create a new Kite connect instance
 		kc := kiteconnect.New(apiKey)
 
 		// Get user details and access token
 		data, err := kc.GenerateSession(requestToken, apiSecret)
 		if err != nil {
-			fmt.Printf("Session Err: %v", err)
+			srv.ErrorLogger.Printf("Session Err: %v", err)
 			return false, "", ""
 		}
 
 		// Set access token
 		kc.SetAccessToken(data.AccessToken)
-		fmt.Println("AccessToken", data.AccessToken)
+		srv.InfoLogger.Println("AccessToken", data.AccessToken)
 
 		// keypair := strings.Join("accessToken", data.AccessToken)
 		env, _ := godotenv.Unmarshal("accessToken=" + data.AccessToken)
 		err = godotenv.Write(env, "./app/config/ENV_accesstoken.env")
 		if err != nil {
-			fmt.Println("Cannot write to accesstoken.env", err)
+			srv.WarningLogger.Printf("Cannot write to accesstoken.env", err)
 		}
 
 		// Get margins
 		margins, err := kc.GetUserMargins()
 		if err != nil {
-			fmt.Printf("Error getting margins: %v", err)
+			srv.ErrorLogger.Printf("Error getting margins: %v", err)
 			//return false, "", ""
 		}
-		fmt.Println("margins: ", margins)
+		srv.InfoLogger.Println("margins: ", margins)
 
 		return true, apiKey, data.AccessToken
 
@@ -76,7 +75,7 @@ func KiteGetRequestToken() string {
 
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("panic occurred:", err)
+			srv.ErrorLogger.Println("panic occurred:", err)
 		}
 	}()
 
@@ -91,7 +90,7 @@ func KiteGetRequestToken() string {
 
 	if (err != nil) || (resp.R.StatusCode != 200) {
 		requestToken = "ERR: User ID / Password error"
-		println(resp.Text())
+		srv.InfoLogger.Println(resp.Text())
 		return requestToken
 	}
 
@@ -107,7 +106,7 @@ func KiteGetRequestToken() string {
 	resp, err = req.Post(twofaUrl, data)
 
 	if (err != nil) || (resp.R.StatusCode != 200) {
-		println(resp.Text())
+		srv.InfoLogger.Println(resp.Text())
 		requestToken = "ERR: Two factor auth failed"
 		return requestToken
 	}
@@ -116,7 +115,7 @@ func KiteGetRequestToken() string {
 	req.SetTimeout(5)
 	resp, err = req.Get(reqTokenUrl)
 	if err != nil {
-		println(err.Error())
+		srv.WarningLogger.Println(err.Error())
 		arr := strings.Split(err.Error(), `"`) // split on '&'
 		requestToken = extractKeyValue(arr[1], "request_token")
 		if requestToken == "" {
@@ -132,11 +131,11 @@ func KiteGetRequestToken() string {
 			return requestToken
 		}
 
-		fmt.Println("parsed m:", m)
+		srv.InfoLogger.Println("parsed m:", m)
 		requestToken = m["request_token"][0]
 	}
 
-	fmt.Println("extraced req token:", requestToken)
+	srv.InfoLogger.Println("extraced req token:", requestToken)
 
 	return requestToken
 }

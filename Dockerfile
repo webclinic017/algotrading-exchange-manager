@@ -8,7 +8,10 @@ RUN go mod download
 
 COPY app/ ./app
 COPY *.go ./
+RUN rm ./app/config/*.env
+RUN touch ./app/config/ENV_accesstoken.env
 
-RUN go build -o /zerodha_kite_ticker
 
-CMD [ "/zerodha_kite_ticker" ]
+RUN go build -o /ticker
+
+CMD [ "/ticker" ]

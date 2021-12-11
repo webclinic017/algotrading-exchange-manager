@@ -1,8 +1,7 @@
 package kite
 
 import (
-	"fmt"
-	"log"
+	"goTicker/app/srv"
 	"time"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
@@ -29,24 +28,24 @@ type TickData struct {
 
 // Triggered when any error is raised
 func onError(err error) {
-	fmt.Println("Error: ", err)
+	srv.ErrorLogger.Println("Error: ", err)
 }
 
 // Triggered when websocket connection is closed
 func onClose(code int, reason string) {
-	fmt.Println("Close: ", code, reason)
+	srv.InfoLogger.Println("Close: ", code, reason)
 }
 
 // Triggered when connection is established and ready to send and accept data
 func onConnect() {
-	fmt.Println("Connected")
+	srv.InfoLogger.Printf("Connected")
 	err := ticker.Subscribe(Tokens)
 	if err != nil {
-		fmt.Println("err: ", err)
+		srv.ErrorLogger.Println("err: ", err)
 	}
 	err = ticker.SetMode("full", Tokens)
 	if err != nil {
-		fmt.Println("err: ", err)
+		srv.ErrorLogger.Println("err: ", err)
 	}
 }
 
@@ -78,17 +77,17 @@ func onTick(tick kitemodels.Tick) {
 
 // Triggered when reconnection is attempted which is enabled by default
 func onReconnect(attempt int, delay time.Duration) {
-	fmt.Printf("Reconnect attempt %d in %fs\n", attempt, delay.Seconds())
+	srv.InfoLogger.Printf("Reconnect attempt %d in %fs\n", attempt, delay.Seconds())
 }
 
 // Triggered when maximum number of reconnect attempt is made and the program is terminated
 func onNoReconnect(attempt int) {
-	fmt.Printf("Maximum no of reconnect attempt reached: %d", attempt)
+	srv.InfoLogger.Printf("Maximum no of reconnect attempt reached: %d", attempt)
 }
 
 // Triggered when order update is received
 func onOrderUpdate(order kiteconnect.Order) {
-	fmt.Println("Order: ", order.OrderID)
+	srv.InfoLogger.Println("Order: ", order.OrderID)
 }
 
 func TickerInitialize(apiKey, accToken string) {
@@ -106,6 +105,7 @@ func TickerInitialize(apiKey, accToken string) {
 	ticker.OnOrderUpdate(onOrderUpdate)
 
 	// Start the connection
+	srv.InfoLogger.Printf("Connecting to Kite Ticker")
 	go ticker.Serve()
 
 }
@@ -113,10 +113,10 @@ func TickerInitialize(apiKey, accToken string) {
 func CloseTicker() {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("Terminating ticker:", err)
+			srv.InfoLogger.Printf("Terminating ticker:", err)
 		}
 	}()
 	// ticker.SetAutoReconnect(false)
 	ticker.Stop()
-	println("Ticker connection closed")
+	srv.InfoLogger.Printf("Ticker connection closed")
 }
