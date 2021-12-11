@@ -23,6 +23,7 @@ func main() {
 
 	// timeZone, _ := time.LoadLocation("Asia/Calcutta")
 
+	srv.CheckFiles()
 	srv.Init()
 
 	kite.Tokens = kite.GetSymbols()
@@ -55,7 +56,7 @@ func loadEnv() bool {
 	if 0 >= len(os.Getenv("PRODUCTION")) {
 		err := godotenv.Load("app/config/ENV_Settings.env")
 		if err != nil {
-			srv.ErrorLogger.Fatal("ENV_Settings.env file not found, Terminating!!!")
+			srv.ErrorLogger.Println("ENV_Settings.env file not found, Terminating!!!")
 			//return false
 		}
 	}

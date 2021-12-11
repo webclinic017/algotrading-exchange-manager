@@ -47,6 +47,7 @@ DOCKER_BUILDKIT=1 docker build -t paragba/algotrading-ticker-service:v0.1 .
 DOCKER_BUILDKIT=1 docker build -t paragba/algotrading-ticker-service:latest .
 docker run --rm -it paragba/algotrading-ticker-service
 
+docker exec -it gotickerTest sh
 docker save goticker:latest -o goTickerv0.xx.tar
 
 # Publish to Docker

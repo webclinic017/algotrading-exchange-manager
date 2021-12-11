@@ -1,0 +1,23 @@
+version: '3.4'
+
+services:
+  goticker:
+    image: paragba/algotrading-ticker-service:latest
+    container_name: goTicker
+    restart: unless-stopped
+    volumes:
+      - ./dockerTest/config:/app/app/config
+      - ./dockerTest/log:/app/app/log
+    
+# Use the below code to spawn TimescaleDB Container
+
+  # timescaledb:
+  #   image: 'timescale/timescaledb:latest-pg12'
+  #   container_name: timescaledb
+  #   restart: unless-stopped
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - POSTGRES_PASSWORD=pgpwdChangeMe
+  #   ports:
+  #     - "5432:5432"

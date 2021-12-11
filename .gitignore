@@ -6,3 +6,4 @@ tst.*
 goTicker
 tst.json
 main
+dockerTest

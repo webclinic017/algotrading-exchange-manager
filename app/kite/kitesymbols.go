@@ -110,9 +110,9 @@ func GetSymbols() []uint32 {
 	instrumentTokensLog = append(instrumentTokensLog, iTokensLog...)
 	instrumentTokensError = append(instrumentTokensError, iTokensError...)
 
-	saveFiles(instrumentTokens, "instrumentTokens.log")
-	saveFiles(instrumentTokensLog, "instrumentTokensLog.log")
-	saveFiles(instrumentTokensError, "instrumentTokensError.log")
+	saveFiles(instrumentTokens, "instrumentTokensList.log")
+	saveFiles(instrumentTokensLog, "instrumentTokensFound.log")
+	saveFiles(instrumentTokensError, "instrumentTokensParseError.log")
 
 	srv.ErrorLogger.Println(instrumentTokensError)
 
