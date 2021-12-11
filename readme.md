@@ -22,8 +22,6 @@ To be done
 - Ensure Timezone is set as per your zone/server
 
 # Settings
-*Settings are stored in app/config/ENV_Settings.env file*
-
 - USER_ID =""
 - TFA_AUTH = "" // AKA PIN
 - PASSWORD = ""
