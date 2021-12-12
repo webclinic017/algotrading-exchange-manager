@@ -1,33 +1,25 @@
-> Algo Trading Containers [algotrading-ticker-service - algotrading-analysis-service - algotrading-trade-manager]
+# Algo Trading  (Ticker #1/3)
+## [ algotrading-ticker-service | *algotrading-analysis-service* | *algotrading-trade-manager* ]
 
-This container is first part of group of 3 containers to perform algo trading. This container currently supports **Zerodha Kite API for NSE EQ, NSE FUTs and MCX FUTs**.
+This container is first part of 3 micro-services to perform algo trading. This container currently supports **Zerodha Kite API for NSE EQ, NSE FUTs and MCX FUTs**.
 
-It performs;
+### Features
+- Auto Login
+- Ticker service registers websocket connection at 9am and closes 4pm on weekdays
+- Subscribe to instruments as specified by Token file.
+- Daily token ID generation/fetch for NSE (Eq and FUT) and MCX FUT
+- Ticks are saved in Timescable DB (Use the docker compose provided to spawn)
+- *-FUT, *-IDX, *-EQ - Attributes to identify Futures, Index and Equity instruments respectively in DB
+    
 
-    * Auto Login
-    * Token ID generation for NSE (Eq and FUT) and MCX FUT
-    * Subscribe to Ticks as specified by Token file.
-    * Save each tick into TimescableDb (To be created as another docker container)
-    * Ticker starts tick websocket connection at 9am and closes 4pm on weekdays
-
-To be done
-
-    * Save 1-min Candle based on tick on separate table
-    * MCX Silver token generation issue
+### To Do
+- Create 1-min Candle based on tick in separate DB table
+- MCX Silver instrument token generation
 
 # How to use
-- Use the docker-compose file
-- Setup the env variable Zerodha Kite and Database settings
-- Ensure env variable {PRODUCTION: 'true'}
-- Ensure Timezone is set as per your zone/server
-
-# Settings
-- USER_ID =""
-- TFA_AUTH = "" // AKA PIN
-- PASSWORD = ""
-- API_KEY = ""
-- API_SECRET = ""
-- DATABASE_URL = "postgres://username:password@localhost:5432/database_name"
+1. Use the docker-compose file
+2. Setup the env variable Zerodha Kite and Database settings
+3. Ensure env variable {PRODUCTION: 'true'} & Timezone is set correctly
 
 # Instrument Symbols/Tokens
 The symbols to be registered for ticks are stored in trackSymbols.txt
@@ -36,8 +28,44 @@ For Futures, as the contract names changes, the name is generated based on today
 Post that the instrument token in read from Instruments file downloaded from Zerodha API.
 This tokens are used to register the ticks.
 
+
+# Docker Compose
+    version: '3.4'
+
+    services:
+    goticker:
+        image: paragba/algotrading-ticker-service:latest
+        container_name: goTicker
+        restart: unless-stopped
+        environment:
+        TZ: 'Asia/Kolkata'
+        PRODUCTION: 'true'
+        USER_ID: ""
+        PASSWORD: ""
+        TFA_AUTH: ""  # PIN
+        API_KEY: ""
+        API_SECRET: ""
+        DATABASE_URL: "postgres://postgres:pgpwdChangeMe@mysite.com:5432/stockdb"
+        volumes:
+        - ./dockerTest/config:/app/app/config
+        - ./dockerTest/log:/app/app/log
+        
+    # Use the below code to spawn TimescaleDB Container
+    timescaledb:
+        image: 'timescale/timescaledb:latest-pg12'
+        container_name: timescaledb
+        restart: unless-stopped
+        environment:
+        - PUID=1000
+        - PGID=1000
+        - POSTGRES_PASSWORD=pgpwdChangeMe
+        ports:
+        - "5432:5432"
+
+
 Source code: https://github.com/parag-b/goTicker
-Visit github project page for documentation support
+`Visit github project page for documentation support `
+
 
 
 # Development
