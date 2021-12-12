@@ -26,7 +26,7 @@ func main() {
 	srv.CheckFiles()
 	srv.Init()
 
-	kite.Tokens = kite.GetSymbols()
+	kite.Tokens, kite.InsNamesMap = kite.GetSymbols()
 
 	now := time.Now()
 

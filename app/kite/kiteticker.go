@@ -1,7 +1,9 @@
 package kite
 
 import (
+	"fmt"
 	"goTicker/app/srv"
+	"strings"
 	"time"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
@@ -10,20 +12,26 @@ import (
 )
 
 var (
-	ticker *kiteticker.Ticker
-	Tokens []uint32
-	ChTick = make(chan TickData, 3)
+	ticker          *kiteticker.Ticker
+	Tokens          []uint32
+	TokensWithNames []string
+	ChTick          = make(chan TickData, 3)
+	InsNamesMap     = make(map[string]string)
+	symbolFutStr    string
+	symbolMcxFutStr string
 )
 
 type TickData struct {
-	Timestamp time.Time
-	Lastprice float64
-	Insttoken uint32
-	Open      float64
-	High      float64
-	Low       float64
-	Close     float64
-	Volume    uint32
+	Timestamp          time.Time
+	Lastprice          float64
+	Insttoken          uint32
+	InstrumentName     string
+	InstrumentCurrName string
+	Open               float64
+	High               float64
+	Low                float64
+	Close              float64
+	Volume             uint32
 }
 
 // Triggered when any error is raised
@@ -52,15 +60,21 @@ func onConnect() {
 // Triggered when tick is recevived
 func onTick(tick kitemodels.Tick) {
 	//fmt.Println("Tick: ", tick)
+	insCurrName := InsNamesMap[fmt.Sprint(tick.InstrumentToken)]
+	insFlatName := strings.ReplaceAll(insCurrName, symbolFutStr, "")
+	insFlatName = strings.ReplaceAll(insFlatName, symbolMcxFutStr, "")
+
 	ChTick <- TickData{
-		Timestamp: tick.Timestamp.Time,
-		Insttoken: tick.InstrumentToken,
-		Lastprice: tick.LastPrice,
-		Open:      tick.OHLC.Open,
-		High:      tick.OHLC.High,
-		Low:       tick.OHLC.Low,
-		Close:     tick.OHLC.Close,
-		Volume:    tick.LastTradedQuantity}
+		Timestamp:          tick.Timestamp.Time,
+		Insttoken:          tick.InstrumentToken,
+		InstrumentCurrName: insCurrName,
+		InstrumentName:     insFlatName,
+		Lastprice:          tick.LastPrice,
+		Open:               tick.OHLC.Open,
+		High:               tick.OHLC.High,
+		Low:                tick.OHLC.Low,
+		Close:              tick.OHLC.Close,
+		Volume:             tick.LastTradedQuantity}
 
 	/*
 		fmt.Println("Time: ", tick.Timestamp.Time)

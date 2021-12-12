@@ -28,7 +28,7 @@ const (
 	exchange
 )
 
-func GetSymbols() []uint32 {
+func GetSymbols() ([]uint32, map[string]string) {
 
 	var (
 		symbolFuturesFilter   []string
@@ -40,6 +40,8 @@ func GetSymbols() []uint32 {
 		instrumentUint32      []uint32
 	)
 
+	insMap := make(map[string]string)
+
 	e := os.Remove("app/log/instruments.csv")
 	if e != nil {
 		srv.InfoLogger.Println("instruments.csv deleted")
@@ -49,14 +51,14 @@ func GetSymbols() []uint32 {
 	err := DownloadFile("app/log/instruments.csv", fileUrl)
 	if err != nil {
 		srv.ErrorLogger.Println("Download error: instruments.csv from  " + fileUrl)
-		return instrumentUint32
+		return instrumentUint32, insMap
 	}
 
 	// open file
 	f, err := os.Open("app/log/instruments.csv")
 	if err != nil {
 		srv.ErrorLogger.Println("File error, cannot read instruments.csv")
-		return instrumentUint32
+		return instrumentUint32, insMap
 	}
 	// remember to close the file at the end of the program
 	defer f.Close()
@@ -65,11 +67,11 @@ func GetSymbols() []uint32 {
 	instrumentsList, err := csvReader.ReadAll()
 	if err != nil {
 		srv.ErrorLogger.Println("File error, cannot read instruments.csv")
-		return instrumentUint32
+		return instrumentUint32, insMap
 	}
 	if len(instrumentsList) < 90000 {
 		srv.ErrorLogger.Println("File error, incorrect file downloaded (instruments.csv)")
-		return instrumentUint32
+		return instrumentUint32, insMap
 	}
 
 	// instrument_token, exchange_token,	tradingsymbol,	name
@@ -93,19 +95,22 @@ func GetSymbols() []uint32 {
 	lines := strings.Split(string(dat), "\n")
 	check(err)
 
-	symbolFuturesFilter, symbolNseEqFilter, symbolIndexFilter = sortSymbols(lines)
+	symbolFutStr = determineFuturesContractsName()
+	symbolMcxFutStr = determineMcxFuturesContractsName()
 
-	iTokens, iTokensLog, iTokensError := getInstrumentTokenUniqueIdentifier(symbolFuturesFilter, instrumentsList)
+	symbolFuturesFilter, symbolNseEqFilter, symbolIndexFilter = sortSymbols(lines, symbolFutStr, symbolMcxFutStr)
+
+	iTokens, iTokensLog, iTokensError := getInstrumentTokenUniqueIdentifier(symbolFuturesFilter, instrumentsList, insMap)
 	instrumentTokens = append(instrumentTokens, iTokens...)
 	instrumentTokensLog = append(instrumentTokensLog, iTokensLog...)
 	instrumentTokensError = append(instrumentTokensError, iTokensError...)
 
-	iTokens, iTokensLog, iTokensError = getInstrumentTokenNseEquity(symbolNseEqFilter, instrumentsList)
+	iTokens, iTokensLog, iTokensError = getInstrumentTokenNseEquity(symbolNseEqFilter, instrumentsList, insMap)
 	instrumentTokens = append(instrumentTokens, iTokens...)
 	instrumentTokensLog = append(instrumentTokensLog, iTokensLog...)
 	instrumentTokensError = append(instrumentTokensError, iTokensError...)
 
-	iTokens, iTokensLog, iTokensError = getInstrumentTokenIndices(symbolIndexFilter, instrumentsList)
+	iTokens, iTokensLog, iTokensError = getInstrumentTokenIndices(symbolIndexFilter, instrumentsList, insMap)
 	instrumentTokens = append(instrumentTokens, iTokens...)
 	instrumentTokensLog = append(instrumentTokensLog, iTokensLog...)
 	instrumentTokensError = append(instrumentTokensError, iTokensError...)
@@ -116,7 +121,7 @@ func GetSymbols() []uint32 {
 
 	srv.ErrorLogger.Println(instrumentTokensError)
 
-	return convertStringArrayToUint32Array(instrumentTokens)
+	return convertStringArrayToUint32Array(instrumentTokens), insMap
 }
 
 func convertStringArrayToUint32Array(symbolList []string) []uint32 {
@@ -169,7 +174,7 @@ func saveFiles(data []string, fileName string) bool {
 	return true
 }
 
-func getInstrumentTokenUniqueIdentifier(symbolList []string, instrumentsList [][]string) ([]string, []string, []string) {
+func getInstrumentTokenUniqueIdentifier(symbolList []string, instrumentsList [][]string, insMap map[string]string) ([]string, []string, []string) {
 
 	var instrumentTokens []string
 	var instrumentTokensLog []string
@@ -181,7 +186,8 @@ func getInstrumentTokenUniqueIdentifier(symbolList []string, instrumentsList [][
 		for i = 0; i < len(instrumentsList); i++ {
 			if mySymbol == instrumentsList[i][tradingsymbol] {
 				instrumentTokens = append(instrumentTokens, instrumentsList[i][instrument_token])
-				instrumentTokensLog = append(instrumentTokensLog, mySymbol+" : "+instrumentsList[i][instrument_token])
+				instrumentTokensLog = append(instrumentTokensLog, mySymbol+","+instrumentsList[i][instrument_token])
+				insMap[instrumentsList[i][instrument_token]] = mySymbol + "-FUT"
 				break
 			}
 
@@ -195,7 +201,7 @@ func getInstrumentTokenUniqueIdentifier(symbolList []string, instrumentsList [][
 	return instrumentTokens, instrumentTokensLog, instrumentTokensError
 }
 
-func getInstrumentTokenNseEquity(symbolList []string, instrumentsList [][]string) ([]string, []string, []string) {
+func getInstrumentTokenNseEquity(symbolList []string, instrumentsList [][]string, insMap map[string]string) ([]string, []string, []string) {
 
 	var instrumentTokens []string
 	var instrumentTokensLog []string
@@ -207,7 +213,8 @@ func getInstrumentTokenNseEquity(symbolList []string, instrumentsList [][]string
 		for i = 0; i < len(instrumentsList); i++ {
 			if mySymbol == instrumentsList[i][tradingsymbol] && "NSE" == instrumentsList[i][exchange] {
 				instrumentTokens = append(instrumentTokens, instrumentsList[i][instrument_token])
-				instrumentTokensLog = append(instrumentTokensLog, mySymbol+" : "+instrumentsList[i][instrument_token])
+				instrumentTokensLog = append(instrumentTokensLog, mySymbol+","+instrumentsList[i][instrument_token])
+				insMap[instrumentsList[i][instrument_token]] = mySymbol + "-EQ"
 				break
 			}
 
@@ -221,7 +228,7 @@ func getInstrumentTokenNseEquity(symbolList []string, instrumentsList [][]string
 	return instrumentTokens, instrumentTokensLog, instrumentTokensError
 }
 
-func getInstrumentTokenIndices(symbolList []string, instrumentsList [][]string) ([]string, []string, []string) {
+func getInstrumentTokenIndices(symbolList []string, instrumentsList [][]string, insMap map[string]string) ([]string, []string, []string) {
 
 	var instrumentTokens []string
 	var instrumentTokensLog []string
@@ -233,7 +240,8 @@ func getInstrumentTokenIndices(symbolList []string, instrumentsList [][]string) 
 		for i = 0; i < len(instrumentsList); i++ {
 			if mySymbol == instrumentsList[i][tradingsymbol] && "INDICES" == instrumentsList[i][segment] {
 				instrumentTokens = append(instrumentTokens, instrumentsList[i][instrument_token])
-				instrumentTokensLog = append(instrumentTokensLog, mySymbol+" : "+instrumentsList[i][instrument_token])
+				instrumentTokensLog = append(instrumentTokensLog, mySymbol+","+instrumentsList[i][instrument_token])
+				insMap[instrumentsList[i][instrument_token]] = mySymbol + "-IDX"
 				break
 			}
 
@@ -246,14 +254,14 @@ func getInstrumentTokenIndices(symbolList []string, instrumentsList [][]string) 
 
 	return instrumentTokens, instrumentTokensLog, instrumentTokensError
 }
-func sortSymbols(instrumentsList []string) ([]string, []string, []string) {
+func sortSymbols(instrumentsList []string, symbolFutStr string, symbolMcxFutStr string) ([]string, []string, []string) {
 	// using for loop
 	var symbolFuturesFilter []string
 	var symbolIndexFilter []string
 	var symbolNseEqFilter []string
 	var storeIn int
-	var symbolFutStr string
-	var symbolMcxFutStr string
+	// var symbolFutStr string
+	// var symbolMcxFutStr string
 	const (
 		noScan = iota
 		nseFuturesFilter
@@ -261,9 +269,6 @@ func sortSymbols(instrumentsList []string) ([]string, []string, []string) {
 		nseEqFilter
 		indexFilter
 	)
-
-	symbolFutStr = determineFuturesContractsName()
-	symbolMcxFutStr = determineMcxFuturesContractsName()
 
 	for _, element := range instrumentsList {
 		if strings.Contains(element, "START") {
