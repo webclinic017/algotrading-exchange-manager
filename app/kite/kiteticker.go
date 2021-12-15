@@ -27,7 +27,6 @@ type TickData struct {
 	LastPrice          float64
 	Buy_Demand         uint32
 	Sell_Demand        uint32
-	VolumeTillNow      uint32
 	LastTradedQuantity uint32
 	OpenInterest       uint32
 }
@@ -46,7 +45,7 @@ func onClose(code int, reason string) {
 func onConnect() {
 	srv.InfoLogger.Printf("Connected")
 	err := ticker.Subscribe(Tokens)
-	// err := ticker.Subscribe([]uint32{18257666})
+	//err := ticker.Subscribe([]uint32{18257666})
 	if err != nil {
 		srv.ErrorLogger.Println("err: ", err)
 	}
@@ -66,7 +65,6 @@ func onTick(tick kitemodels.Tick) {
 		LastTradedPrice:    tick.LastPrice,
 		Buy_Demand:         tick.TotalBuyQuantity,
 		Sell_Demand:        tick.TotalSellQuantity,
-		VolumeTillNow:      tick.VolumeTraded,
 		LastTradedQuantity: tick.LastTradedQuantity,
 		OpenInterest:       tick.OI}
 

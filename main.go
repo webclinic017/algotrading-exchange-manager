@@ -99,7 +99,7 @@ func loadEnv() bool {
 }
 
 func printStatus(envOk, dbOk, kiteOk bool) {
-	srv.InfoLogger.Printf("\n--------STATUS---------\nEnvironment variables set: %t\nKite Login Succesfull: %t\nDB Connected: %t", envOk, kiteOk, dbOk)
+	srv.InfoLogger.Printf("\n\n\t--------------STATUS---------------\n\t| Environment variables set: %t |\n\t| Kite Login Succesfull: %t     |\n\t| DB Connected: %t              |\n\t-----------------------------------\n\n", envOk, kiteOk, dbOk)
 }
 
 func initTickerToken() {
@@ -109,6 +109,7 @@ func initTickerToken() {
 	if envOk {
 
 		dbOk = db.DbInit()
+		db.OptimiseDbSettings()
 		db.StoreSymbolsInDb(symbolFutStr, symbolMcxFutStr)
 
 		kiteOk, apiKey, accToken = kite.LoginKite()

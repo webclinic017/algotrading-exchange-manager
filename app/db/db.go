@@ -43,7 +43,6 @@ func DbInit() bool {
 									last_traded_price double precision NOT NULL,
 									buy_demand int NOT NULL,
 									sell_demand int NOT NULL,
-									volume_till_now int NOT NULL,
 									last_traded_quantity int NOT NULL,
 									open_interest int NOT NULL
 								);
@@ -79,10 +78,34 @@ func DbInit() bool {
 func OptimiseDbSettings() {
 
 	ctx := context.Background()
-	queryInsertMetadata := `INSERT;`
-	_, err := dbPool.Exec(ctx, queryInsertMetadata)
+	queryCreateAggregate := `CREATE MATERIALIZED VIEW one_min_candles_time
+								WITH (timescaledb.continuous) AS
+								select time_bucket('1 minutes', time) AS bucket, 
+									symbol,
+									FIRST(time, time) as first_time,
+									FIRST(last_traded_price, time) as open,
+									MAX(last_traded_price) as high,
+									MIN(last_traded_price) as low,
+									LAST(last_traded_price, time) as close,
+									LAST(time, time) as last_time
+								from
+									zerodha_nse_mcx_ticks
+								GROUP by
+									symbol, bucket;
+								`
+	_, err := dbPool.Exec(ctx, queryCreateAggregate)
 	if err != nil {
-		srv.WarningLogger.Printf("Unable to optimise DB: %v\n", err)
+		srv.WarningLogger.Printf("Unable to create 1-Min Table (Conitnous Aggregate) DB: %v\n", err)
+	}
+
+	queryAddCaPolicy := `SELECT add_continuous_aggregate_policy('one_min_candles_time',
+									start_offset => NULL,
+									end_offset => NULL,
+									schedule_interval => INTERVAL '1 minutes');`
+
+	_, err = dbPool.Exec(ctx, queryAddCaPolicy)
+	if err != nil {
+		srv.WarningLogger.Printf("Unable to create 1-Min Table (Conitnous Aggregate) DB: %v\n", err)
 	}
 }
 
@@ -94,7 +117,6 @@ func StoreTickInDb() {
 		LastTradedPrice:    tick.LastPrice,
 		Buy_Demand:         tick.TotalBuyQuantity,
 		Sell_Demand:        tick.TotalSellQuantity,
-		VolumeTillNow:      tick.VolumeTraded,
 		LastTradedQuantity: tick.LastTradedQuantity,
 		OpenInterest:       tick.OI
 	*/
@@ -110,17 +132,17 @@ func StoreTickInDb() {
 			symbol, 
 			last_traded_price,
 			buy_demand, sell_demand, 
-			volume_till_now, last_traded_quantity,
+			last_traded_quantity,
 			open_interest)
 			VALUES 
-			($1, $2, $3, $4, $5, $6, $7, $8);`
+			($1, $2, $3, $4, $5, $6, $7);`
 
 		_, err := dbPool.Exec(ctx, queryInsertMetadata,
 			v.Timestamp,
 			v.Symbol,
 			v.LastTradedPrice,
 			v.Buy_Demand, v.Sell_Demand,
-			v.VolumeTillNow, v.LastTradedQuantity,
+			v.LastTradedQuantity,
 			v.OpenInterest)
 		if err != nil {
 			srv.ErrorLogger.Printf("Unable to insert data into database: %v\n", err)
