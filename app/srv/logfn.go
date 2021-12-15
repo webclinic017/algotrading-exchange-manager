@@ -23,5 +23,5 @@ func Init() {
 	WarningLogger = log.New(mw, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
 	ErrorLogger = log.New(mw, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	InfoLogger.Println("\n\nNew Instance of GoTicker v0.4\n\n")
+	InfoLogger.Println("\n\nNew Instance of GoTicker v0.41\n\n")
 }

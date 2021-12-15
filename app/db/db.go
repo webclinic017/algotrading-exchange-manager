@@ -35,8 +35,13 @@ func DbInit() bool {
 	}
 	srv.InfoLogger.Printf("connected to DB : " + greeting)
 
-	// check if table exist, else create it
-	queryCreateTicksTable := `CREATE TABLE 
+	_, table_check := dbPool.Query(ctx, "select * from "+"zerodha_ticks"+";")
+
+	if table_check != nil {
+		srv.InfoLogger.Printf("DB Does not exist, creating now!: %v\n", err)
+
+		// check if table exist, else create it
+		queryCreateTicksTable := `CREATE TABLE 
 								zerodha_ticks (
 									time TIMESTAMP NOT NULL,
 									symbol VARCHAR(30) NOT NULL,
@@ -50,14 +55,19 @@ func DbInit() bool {
 						SELECT set_chunk_time_interval('zerodha_ticks', INTERVAL '24 hours');
 						`
 
-	//execute statement, fails if table already exists
-	_, err = dbPool.Exec(ctx, queryCreateTicksTable)
-	if err != nil {
-		srv.WarningLogger.Printf("DB CREATE: %v\n", err)
+		//execute statement, fails if table already exists
+		_, err = dbPool.Exec(ctx, queryCreateTicksTable)
+		if err != nil {
+			srv.WarningLogger.Printf("DB CREATE: %v\n", err)
+		}
+		createViews()
+		setupDbCompression()
 	}
-
 	// check if table exist, else create it
-	queryCreateSymbolsTable := `CREATE TABLE 
+	_, table_check = dbPool.Query(ctx, "select * from "+"zerodha_ticks_id_daily"+";")
+
+	if table_check != nil {
+		queryCreateSymbolsTable := `CREATE TABLE 
 									zerodha_ticks_id_daily (
 									time TIMESTAMP NULL,
 									nse_symbol VARCHAR(30) NULL,
@@ -67,13 +77,12 @@ func DbInit() bool {
 						SELECT set_chunk_time_interval('zerodha_ticks_id_daily', INTERVAL '1 YEAR');
 						`
 
-	//execute statement, fails if table already exists
-	_, err = dbPool.Exec(ctx, queryCreateSymbolsTable)
-	if err != nil {
-		srv.WarningLogger.Printf("DB CREATE: %v\n", err)
+		//execute statement, fails if table already exists
+		_, err = dbPool.Exec(ctx, queryCreateSymbolsTable)
+		if err != nil {
+			srv.WarningLogger.Printf("DB CREATE: %v\n", err)
+		}
 	}
-	createViews()
-	setupDbCompression()
 
 	return true
 }
