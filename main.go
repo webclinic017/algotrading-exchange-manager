@@ -1,7 +1,6 @@
 package main
 
 import (
-	"goTicker/app/cdlconv"
 	"goTicker/app/db"
 	"goTicker/app/kite"
 	"goTicker/app/srv"
@@ -13,11 +12,11 @@ import (
 )
 
 var (
-	envOk, dbOk, kiteOk                                     bool
-	apiKey, accToken                                        string
-	cdl1min, cdl3min, cdl5min, wdg, closeTicker, initTicker *cron.Cron
-	symbolFutStr, symbolMcxFutStr                           string
-	Tokens                                                  []uint32
+	envOk, dbOk, kiteOk           bool
+	apiKey, accToken              string
+	wdg, closeTicker, initTicker  *cron.Cron
+	symbolFutStr, symbolMcxFutStr string
+	Tokens                        []uint32
 )
 
 func main() {
@@ -117,7 +116,6 @@ func initTickerToken() {
 		if envOk && dbOk && kiteOk {
 			// Initate zerodha ticker
 			kite.TickerInitialize(apiKey, accToken)
-			setupCdlCrons()
 			go db.StoreTickInDb()
 			// start watchdog to recover from connections issues
 			wdg = cron.New()
@@ -146,26 +144,8 @@ func firstRunConnectionsCheck() {
 func theStop() {
 
 	kite.CloseTicker()
-	cdl1min.Stop()
-	cdl3min.Stop()
-	cdl5min.Stop()
 	wdg.Stop()
 	db.CloseDBPool()
-}
-
-func setupCdlCrons() {
-
-	cdl1min = cron.New()
-	cdl1min.AddFunc("@every 1m", cdlconv.Convert1MinCandle)
-	cdl1min.Start()
-
-	cdl3min = cron.New()
-	cdl3min.AddFunc("@every 3m", cdlconv.Convert3MinCandle)
-	cdl3min.Start()
-
-	cdl5min = cron.New()
-	cdl5min.AddFunc("@every 5m", cdlconv.Convert5MinCandle)
-	cdl5min.Start()
 }
 
 func watchdog() {
