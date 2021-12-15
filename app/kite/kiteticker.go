@@ -3,7 +3,6 @@ package kite
 import (
 	"fmt"
 	"goTicker/app/srv"
-	"strings"
 	"time"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
@@ -23,15 +22,14 @@ var (
 
 type TickData struct {
 	Timestamp          time.Time
-	Lastprice          float64
-	Insttoken          uint32
-	InstrumentName     string
-	InstrumentCurrName string
-	Open               float64
-	High               float64
-	Low                float64
-	Close              float64
-	Volume             uint32
+	LastTradedPrice    float64
+	Symbol             string
+	LastPrice          float64
+	Buy_Demand         uint32
+	Sell_Demand        uint32
+	VolumeTillNow      uint32
+	LastTradedQuantity uint32
+	OpenInterest       uint32
 }
 
 // Triggered when any error is raised
@@ -48,10 +46,12 @@ func onClose(code int, reason string) {
 func onConnect() {
 	srv.InfoLogger.Printf("Connected")
 	err := ticker.Subscribe(Tokens)
+	// err := ticker.Subscribe([]uint32{18257666})
 	if err != nil {
 		srv.ErrorLogger.Println("err: ", err)
 	}
 	err = ticker.SetMode("full", Tokens)
+	//err = ticker.SetMode("full", []uint32{18257666})
 	if err != nil {
 		srv.ErrorLogger.Println("err: ", err)
 	}
@@ -59,33 +59,33 @@ func onConnect() {
 
 // Triggered when tick is recevived
 func onTick(tick kitemodels.Tick) {
-	//fmt.Println("Tick: ", tick)
-	insCurrName := InsNamesMap[fmt.Sprint(tick.InstrumentToken)]
-	insFlatName := strings.ReplaceAll(insCurrName, symbolFutStr, "")
-	insFlatName = strings.ReplaceAll(insFlatName, symbolMcxFutStr, "")
 
 	ChTick <- TickData{
 		Timestamp:          tick.Timestamp.Time,
-		Insttoken:          tick.InstrumentToken,
-		InstrumentCurrName: insCurrName,
-		InstrumentName:     insFlatName,
-		Lastprice:          tick.LastPrice,
-		Open:               tick.OHLC.Open,
-		High:               tick.OHLC.High,
-		Low:                tick.OHLC.Low,
-		Close:              tick.OHLC.Close,
-		Volume:             tick.LastTradedQuantity}
+		Symbol:             InsNamesMap[fmt.Sprint(tick.InstrumentToken)],
+		LastTradedPrice:    tick.LastPrice,
+		Buy_Demand:         tick.TotalBuyQuantity,
+		Sell_Demand:        tick.TotalSellQuantity,
+		VolumeTillNow:      tick.VolumeTraded,
+		LastTradedQuantity: tick.LastTradedQuantity,
+		OpenInterest:       tick.OI}
 
-	/*
-		fmt.Println("Time: ", tick.Timestamp.Time)
-		fmt.Println("Instrument: ", tick.InstrumentToken)
-		fmt.Println("LastPrice: ", tick.LastPrice)
-		fmt.Println("Open: ", tick.OHLC.Open)
-		fmt.Println("High: ", tick.OHLC.High)
-		fmt.Println("Low: ", tick.OHLC.Low)
-		fmt.Println("Close: ", tick.OHLC.Close)
-		fmt.Println("Volumne: ", tick.VolumeTraded)
-	*/
+	// fmt.Println("Time: ", tick.Timestamp.Time)
+	// fmt.Println("Instrument: ", tick.InstrumentToken)
+	// fmt.Println("LastPrice: ", tick.LastPrice)
+	// fmt.Println("Open: ", tick.OHLC.Open)
+	// fmt.Println("High: ", tick.OHLC.High)
+	// fmt.Println("Low: ", tick.OHLC.Low)
+	// fmt.Println("Close: ", tick.OHLC.Close)
+
+	// Total Buy Quantity, Total Sell quantity, Volume traded, Turnover, Open Interest
+	// fmt.Println("Total Buy Quantity: ", tick.TotalBuyQuantity)
+	// fmt.Println("Total Sell Quantity: ", tick.TotalSellQuantity)
+	// fmt.Println("VolumeTraded: ", tick.VolumeTraded)
+	// fmt.Println("LastTradedQuantity: ", tick.LastTradedQuantity)
+	// fmt.Println("TotalBuy: ", tick.TotalBuy)
+	// fmt.Println("TotalSell: ", tick.TotalSell)
+	// fmt.Println("OI: ", tick.OI)
 
 }
 

@@ -16,6 +16,7 @@ var (
 	envOk, dbOk, kiteOk                                     bool
 	apiKey, accToken                                        string
 	cdl1min, cdl3min, cdl5min, wdg, closeTicker, initTicker *cron.Cron
+	symbolFutStr, symbolMcxFutStr                           string
 	Tokens                                                  []uint32
 )
 
@@ -26,7 +27,7 @@ func main() {
 	srv.CheckFiles()
 	srv.Init()
 
-	kite.Tokens, kite.InsNamesMap = kite.GetSymbols()
+	kite.Tokens, kite.InsNamesMap, symbolFutStr, symbolMcxFutStr = kite.GetSymbols()
 
 	now := time.Now()
 
@@ -108,6 +109,7 @@ func initTickerToken() {
 	if envOk {
 
 		dbOk = db.DbInit()
+		db.StoreSymbolsInDb(symbolFutStr, symbolMcxFutStr)
 
 		kiteOk, apiKey, accToken = kite.LoginKite()
 		printStatus(envOk, dbOk, kiteOk)

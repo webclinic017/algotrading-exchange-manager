@@ -28,7 +28,7 @@ const (
 	exchange
 )
 
-func GetSymbols() ([]uint32, map[string]string) {
+func GetSymbols() ([]uint32, map[string]string, string, string) {
 
 	var (
 		symbolNseFuturesFilter []string
@@ -52,14 +52,14 @@ func GetSymbols() ([]uint32, map[string]string) {
 	err := DownloadFile("app/log/instruments.csv", fileUrl)
 	if err != nil {
 		srv.ErrorLogger.Println("Download error: instruments.csv from  " + fileUrl)
-		return instrumentUint32, insMap
+		return instrumentUint32, insMap, symbolFutStr, symbolMcxFutStr
 	}
 
 	// open file
 	f, err := os.Open("app/log/instruments.csv")
 	if err != nil {
 		srv.ErrorLogger.Println("File error, cannot read instruments.csv")
-		return instrumentUint32, insMap
+		return instrumentUint32, insMap, symbolFutStr, symbolMcxFutStr
 	}
 	// remember to close the file at the end of the program
 	defer f.Close()
@@ -68,11 +68,11 @@ func GetSymbols() ([]uint32, map[string]string) {
 	instrumentsList, err := csvReader.ReadAll()
 	if err != nil {
 		srv.ErrorLogger.Println("File error, cannot read instruments.csv")
-		return instrumentUint32, insMap
+		return instrumentUint32, insMap, symbolFutStr, symbolMcxFutStr
 	}
 	if len(instrumentsList) < 90000 {
 		srv.ErrorLogger.Println("File error, incorrect file downloaded (instruments.csv)")
-		return instrumentUint32, insMap
+		return instrumentUint32, insMap, symbolFutStr, symbolMcxFutStr
 	}
 
 	// instrument_token, exchange_token,	tradingsymbol,	name
@@ -127,7 +127,7 @@ func GetSymbols() ([]uint32, map[string]string) {
 
 	srv.ErrorLogger.Println(instrumentTokensError)
 
-	return convertStringArrayToUint32Array(instrumentTokens), insMap
+	return convertStringArrayToUint32Array(instrumentTokens), insMap, symbolFutStr, symbolMcxFutStr
 }
 
 func convertStringArrayToUint32Array(symbolList []string) []uint32 {
