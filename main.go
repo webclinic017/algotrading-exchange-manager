@@ -30,7 +30,7 @@ func main() {
 	kite.Tokens, kite.InsNamesMap, symbolFutStr, symbolMcxFutStr = kite.GetSymbols()
 
 	now := time.Now()
-
+	initTickerToken()
 	if (now.Hour() >= 9) && (now.Hour() < 16) &&
 		(now.Weekday() > 0) && (now.Weekday() < 6) {
 		initTickerToken() // start now, when docker starts if its within trading time (9am-4pm Mon-Fri)
@@ -109,7 +109,6 @@ func initTickerToken() {
 	if envOk {
 
 		dbOk = db.DbInit()
-		db.OptimiseDbSettings()
 		db.StoreSymbolsInDb(symbolFutStr, symbolMcxFutStr)
 
 		kiteOk, apiKey, accToken = kite.LoginKite()

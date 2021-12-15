@@ -72,10 +72,28 @@ func DbInit() bool {
 	if err != nil {
 		srv.WarningLogger.Printf("DB CREATE: %v\n", err)
 	}
+	createViews()
+	setupDbCompression()
+
 	return true
 }
 
-func OptimiseDbSettings() {
+func setupDbCompression() {
+
+	ctx := context.Background()
+	_, err := dbPool.Exec(ctx, `ALTER TABLE zerodha_ticks SET (
+									timescaledb.compress,
+									timescaledb.compress_segmentby = 'symbol'); 
+								
+									SELECT add_compression_policy('zerodha_ticks', INTERVAL '7 days');
+								`)
+	if err != nil {
+		srv.WarningLogger.Printf("Error setting up DB Compression: %v\n", err)
+	}
+
+}
+
+func createViews() {
 
 	ctx := context.Background()
 
