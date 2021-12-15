@@ -9,11 +9,13 @@ This container is first part of 3 micro-services to perform algo trading. This c
 - Subscribe to instruments as specified by Token file.
 - Daily token ID generation/fetch for NSE (Eq and FUT) and MCX FUT
 - Ticks are saved in Timescable DB (Use the docker compose provided to spawn)
-- *-FUT, *-IDX, *-EQ - Attributes to identify Futures, Index and Equity instruments respectively in DB
+- *-FUT, *-MCXFUT, *-IDX - Attributes to identify Futures, Index and Equity instruments respectively in DB
+- 1/3/5/10/15-min Candle tables built-in for faster processing (Continuous Aggregation of Timescale DB)
+- Compression Policy applied - Data before 7 days will be auto compressed.
     
 
 ### To Do
-- Create 1-min Candle based on tick in separate DB table
+
 - MCX Silver instrument token generation
 
 # How to use
@@ -24,9 +26,10 @@ This container is first part of 3 micro-services to perform algo trading. This c
 # Instrument Symbols/Tokens
 The symbols to be registered for ticks are stored in trackSymbols.txt
 Default token/Instruments file is stored at app/config/trackSymbols.txt
-For Futures, as the contract names changes, the name is generated based on todays date.
-Post that the instrument token in read from Instruments file downloaded from Zerodha API.
-This tokens are used to register the ticks.
+
+For Futures, as the contract names changes, the name is generated based on today's date.
+And the current ID is fetched from Instruments file downloaded from Zerodha API.
+This tokens are used to register for the ticks.
 
 
 # Docker Compose
