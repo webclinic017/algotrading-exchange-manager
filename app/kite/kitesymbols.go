@@ -31,13 +31,14 @@ const (
 func GetSymbols() ([]uint32, map[string]string) {
 
 	var (
-		symbolFuturesFilter   []string
-		symbolIndexFilter     []string
-		symbolNseEqFilter     []string
-		instrumentTokens      []string
-		instrumentTokensLog   []string
-		instrumentTokensError []string
-		instrumentUint32      []uint32
+		symbolNseFuturesFilter []string
+		symbolMcxFuturesFilter []string
+		symbolIndexFilter      []string
+		symbolNseEqFilter      []string
+		instrumentTokens       []string
+		instrumentTokensLog    []string
+		instrumentTokensError  []string
+		instrumentUint32       []uint32
 	)
 
 	insMap := make(map[string]string)
@@ -98,9 +99,14 @@ func GetSymbols() ([]uint32, map[string]string) {
 	symbolFutStr = determineFuturesContractsName()
 	symbolMcxFutStr = determineMcxFuturesContractsName()
 
-	symbolFuturesFilter, symbolNseEqFilter, symbolIndexFilter = sortSymbols(lines, symbolFutStr, symbolMcxFutStr)
+	symbolNseFuturesFilter, symbolMcxFuturesFilter, symbolNseEqFilter, symbolIndexFilter = sortSymbols(lines, symbolFutStr, symbolMcxFutStr)
 
-	iTokens, iTokensLog, iTokensError := getInstrumentTokenUniqueIdentifier(symbolFuturesFilter, instrumentsList, insMap)
+	iTokens, iTokensLog, iTokensError := getInstrumentTokenNseFutures(symbolNseFuturesFilter, instrumentsList, insMap)
+	instrumentTokens = append(instrumentTokens, iTokens...)
+	instrumentTokensLog = append(instrumentTokensLog, iTokensLog...)
+	instrumentTokensError = append(instrumentTokensError, iTokensError...)
+
+	iTokens, iTokensLog, iTokensError = getInstrumentTokenMcxFutures(symbolMcxFuturesFilter, instrumentsList, insMap)
 	instrumentTokens = append(instrumentTokens, iTokens...)
 	instrumentTokensLog = append(instrumentTokensLog, iTokensLog...)
 	instrumentTokensError = append(instrumentTokensError, iTokensError...)
@@ -174,7 +180,7 @@ func saveFiles(data []string, fileName string) bool {
 	return true
 }
 
-func getInstrumentTokenUniqueIdentifier(symbolList []string, instrumentsList [][]string, insMap map[string]string) ([]string, []string, []string) {
+func getInstrumentTokenNseFutures(symbolList []string, instrumentsList [][]string, insMap map[string]string) ([]string, []string, []string) {
 
 	var instrumentTokens []string
 	var instrumentTokensLog []string
@@ -187,7 +193,38 @@ func getInstrumentTokenUniqueIdentifier(symbolList []string, instrumentsList [][
 			if mySymbol == instrumentsList[i][tradingsymbol] {
 				instrumentTokens = append(instrumentTokens, instrumentsList[i][instrument_token])
 				instrumentTokensLog = append(instrumentTokensLog, mySymbol+","+instrumentsList[i][instrument_token])
-				insMap[instrumentsList[i][instrument_token]] = mySymbol + "-FUT"
+				insFlatName := strings.ReplaceAll(mySymbol, symbolFutStr, "")
+				insFlatName = strings.ReplaceAll(insFlatName, symbolMcxFutStr, "")
+				insMap[instrumentsList[i][instrument_token]] = insFlatName + "-FUT"
+				break
+			}
+
+		}
+		if i == len(instrumentsList) {
+			instrumentTokensLog = append(instrumentTokensLog, mySymbol+" : Symbol not found!")
+			instrumentTokensError = append(instrumentTokensError, mySymbol+" : Symbol not found!")
+		}
+	}
+
+	return instrumentTokens, instrumentTokensLog, instrumentTokensError
+}
+
+func getInstrumentTokenMcxFutures(symbolList []string, instrumentsList [][]string, insMap map[string]string) ([]string, []string, []string) {
+
+	var instrumentTokens []string
+	var instrumentTokensLog []string
+	var instrumentTokensError []string
+	var i int
+
+	for _, mySymbol := range symbolList {
+
+		for i = 0; i < len(instrumentsList); i++ {
+			if mySymbol == instrumentsList[i][tradingsymbol] {
+				instrumentTokens = append(instrumentTokens, instrumentsList[i][instrument_token])
+				instrumentTokensLog = append(instrumentTokensLog, mySymbol+","+instrumentsList[i][instrument_token])
+				insFlatName := strings.ReplaceAll(mySymbol, symbolFutStr, "")
+				insFlatName = strings.ReplaceAll(insFlatName, symbolMcxFutStr, "")
+				insMap[instrumentsList[i][instrument_token]] = insFlatName + "-MCXFUT"
 				break
 			}
 
@@ -214,7 +251,7 @@ func getInstrumentTokenNseEquity(symbolList []string, instrumentsList [][]string
 			if mySymbol == instrumentsList[i][tradingsymbol] && "NSE" == instrumentsList[i][exchange] {
 				instrumentTokens = append(instrumentTokens, instrumentsList[i][instrument_token])
 				instrumentTokensLog = append(instrumentTokensLog, mySymbol+","+instrumentsList[i][instrument_token])
-				insMap[instrumentsList[i][instrument_token]] = mySymbol + "-EQ"
+				insMap[instrumentsList[i][instrument_token]] = mySymbol
 				break
 			}
 
@@ -254,9 +291,10 @@ func getInstrumentTokenIndices(symbolList []string, instrumentsList [][]string, 
 
 	return instrumentTokens, instrumentTokensLog, instrumentTokensError
 }
-func sortSymbols(instrumentsList []string, symbolFutStr string, symbolMcxFutStr string) ([]string, []string, []string) {
+func sortSymbols(instrumentsList []string, symbolFutStr string, symbolMcxFutStr string) ([]string, []string, []string, []string) {
 	// using for loop
-	var symbolFuturesFilter []string
+	var symbolNseFuturesFilter []string
+	var symbolMcxFuturesFilter []string
 	var symbolIndexFilter []string
 	var symbolNseEqFilter []string
 	var storeIn int
@@ -291,9 +329,9 @@ func sortSymbols(instrumentsList []string, symbolFutStr string, symbolMcxFutStr 
 		}
 
 		if storeIn == nseFuturesFilter {
-			symbolFuturesFilter = append(symbolFuturesFilter, element+symbolFutStr)
+			symbolNseFuturesFilter = append(symbolNseFuturesFilter, element+symbolFutStr)
 		} else if storeIn == mcxFuturesFilter {
-			symbolFuturesFilter = append(symbolFuturesFilter, element+symbolMcxFutStr)
+			symbolMcxFuturesFilter = append(symbolMcxFuturesFilter, element+symbolMcxFutStr)
 		} else if storeIn == nseEqFilter {
 			symbolNseEqFilter = append(symbolNseEqFilter, element)
 		} else if storeIn == indexFilter {
@@ -301,7 +339,7 @@ func sortSymbols(instrumentsList []string, symbolFutStr string, symbolMcxFutStr 
 		}
 	}
 
-	return symbolFuturesFilter, symbolNseEqFilter, symbolIndexFilter
+	return symbolNseFuturesFilter, symbolMcxFuturesFilter, symbolNseEqFilter, symbolIndexFilter
 }
 
 func determineMcxFuturesContractsName() string {
