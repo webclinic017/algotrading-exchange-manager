@@ -37,17 +37,17 @@ func DbInit() bool {
 
 	// check if table exist, else create it
 	queryCreateTicksTable := `CREATE TABLE 
-								zerodha_nse_mcx_ticks (
+								zerodha_ticks (
 									time TIMESTAMP NOT NULL,
 									symbol VARCHAR(30) NOT NULL,
 									last_traded_price double precision NOT NULL,
-									buy_demand int NOT NULL,
-									sell_demand int NOT NULL,
-									last_traded_quantity int NOT NULL,
-									open_interest int NOT NULL
+									buy_demand bigint NOT NULL,
+									sell_demand bigint NOT NULL,
+									trades_till_now bigint NOT NULL,
+									open_interest bigint NOT NULL
 								);
-						SELECT create_hypertable('zerodha_nse_mcx_ticks', 'time');
-						SELECT set_chunk_time_interval('zerodha_nse_mcx_ticks', INTERVAL '24 hours');
+						SELECT create_hypertable('zerodha_ticks', 'time');
+						SELECT set_chunk_time_interval('zerodha_ticks', INTERVAL '24 hours');
 						`
 
 	//execute statement, fails if table already exists
@@ -58,13 +58,13 @@ func DbInit() bool {
 
 	// check if table exist, else create it
 	queryCreateSymbolsTable := `CREATE TABLE 
-									zerodha_nse_mcx_symbols_id_daily (
+									zerodha_ticks_id_daily (
 									time TIMESTAMP NULL,
 									nse_symbol VARCHAR(30) NULL,
 									mcx_symbol VARCHAR(30) NULL									
 								);
-						SELECT create_hypertable('zerodha_nse_mcx_symbols_id_daily', 'time');
-						SELECT set_chunk_time_interval('zerodha_nse_mcx_symbols_id_daily', INTERVAL '1 YEAR');
+						SELECT create_hypertable('zerodha_ticks_id_daily', 'time');
+						SELECT set_chunk_time_interval('zerodha_ticks_id_daily', INTERVAL '1 YEAR');
 						`
 
 	//execute statement, fails if table already exists
@@ -78,35 +78,129 @@ func DbInit() bool {
 func OptimiseDbSettings() {
 
 	ctx := context.Background()
-	queryCreateAggregate := `CREATE MATERIALIZED VIEW one_min_candles_time
+
+	_, err := dbPool.Exec(ctx, `CREATE MATERIALIZED VIEW candles_1min
 								WITH (timescaledb.continuous) AS
-								select time_bucket('1 minutes', time) AS bucket, 
+								SELECT time_bucket('1 minutes', time) AS bucket, 
 									symbol,
 									FIRST(time, time) as first_time,
 									FIRST(last_traded_price, time) as open,
 									MAX(last_traded_price) as high,
 									MIN(last_traded_price) as low,
 									LAST(last_traded_price, time) as close,
+									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume,
 									LAST(time, time) as last_time
-								from
-									zerodha_nse_mcx_ticks
+								FROM
+									zerodha_ticks
 								GROUP by
-									symbol, bucket;
-								`
-	_, err := dbPool.Exec(ctx, queryCreateAggregate)
-	if err != nil {
-		srv.WarningLogger.Printf("Unable to create 1-Min Table (Conitnous Aggregate) DB: %v\n", err)
-	}
+									symbol, bucket
+								WITH NO DATA;
 
-	queryAddCaPolicy := `SELECT add_continuous_aggregate_policy('one_min_candles_time',
+								SELECT add_continuous_aggregate_policy('candles_1min',
 									start_offset => NULL,
 									end_offset => NULL,
-									schedule_interval => INTERVAL '1 minutes');`
-
-	_, err = dbPool.Exec(ctx, queryAddCaPolicy)
+									schedule_interval => INTERVAL '1 minutes');
+								`)
 	if err != nil {
-		srv.WarningLogger.Printf("Unable to create 1-Min Table (Conitnous Aggregate) DB: %v\n", err)
+		srv.WarningLogger.Printf("Error creating candles_1min: %v\n", err)
 	}
+
+	_, err = dbPool.Exec(ctx, `CREATE MATERIALIZED VIEW candles_3min
+								WITH (timescaledb.continuous) AS
+								SELECT time_bucket('3 minutes', time) AS bucket, 
+									symbol,
+									FIRST(last_traded_price, time) as open,
+									MAX(last_traded_price) as high,
+									MIN(last_traded_price) as low,
+									LAST(last_traded_price, time) as close,
+									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
+								FROM
+									zerodha_ticks
+								GROUP by
+									symbol, bucket
+								WITH NO DATA;
+
+								SELECT add_continuous_aggregate_policy('candles_3min',
+									start_offset => NULL,
+									end_offset => NULL,
+									schedule_interval => INTERVAL '3 minutes');
+	`)
+	if err != nil {
+		srv.WarningLogger.Printf("Error creating candles_3min: %v\n", err)
+	}
+
+	_, err = dbPool.Exec(ctx, `CREATE MATERIALIZED VIEW candles_5min
+								WITH (timescaledb.continuous) AS
+								SELECT time_bucket('5 minutes', time) AS bucket, 
+									symbol,
+									FIRST(last_traded_price, time) as open,
+									MAX(last_traded_price) as high,
+									MIN(last_traded_price) as low,
+									LAST(last_traded_price, time) as close,
+									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
+								FROM
+									zerodha_ticks
+								GROUP by
+									symbol, bucket
+								WITH NO DATA;
+
+								SELECT add_continuous_aggregate_policy('candles_5min',
+									start_offset => NULL,
+									end_offset => NULL,
+									schedule_interval => INTERVAL '5 minutes');
+	`)
+	if err != nil {
+		srv.WarningLogger.Printf("Error creating candles_5min: %v\n", err)
+	}
+
+	_, err = dbPool.Exec(ctx, `CREATE MATERIALIZED VIEW candles_10min
+								WITH (timescaledb.continuous) AS
+								SELECT time_bucket('10 minutes', time) AS bucket, 
+									symbol,
+									FIRST(last_traded_price, time) as open,
+									MAX(last_traded_price) as high,
+									MIN(last_traded_price) as low,
+									LAST(last_traded_price, time) as close,
+									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
+								FROM
+									zerodha_ticks
+								GROUP by
+									symbol, bucket
+								WITH NO DATA;
+
+								SELECT add_continuous_aggregate_policy('candles_10min',
+									start_offset => NULL,
+									end_offset => NULL,
+									schedule_interval => INTERVAL '10 minutes');
+	`)
+	if err != nil {
+		srv.WarningLogger.Printf("Error creating candles_10min: %v\n", err)
+	}
+
+	_, err = dbPool.Exec(ctx, `CREATE MATERIALIZED VIEW candles_15min
+								WITH (timescaledb.continuous) AS
+								SELECT time_bucket('15 minutes', time) AS bucket, 
+									symbol,
+									FIRST(last_traded_price, time) as open,
+									MAX(last_traded_price) as high,
+									MIN(last_traded_price) as low,
+									LAST(last_traded_price, time) as close,
+									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
+								FROM
+									zerodha_ticks
+								GROUP by
+									symbol, bucket
+								WITH NO DATA;
+
+								SELECT add_continuous_aggregate_policy('candles_15min',
+									start_offset => NULL,
+									end_offset => NULL,
+									schedule_interval => INTERVAL '15 minutes');
+	`)
+	if err != nil {
+		srv.WarningLogger.Printf("Error creating candles_15min: %v\n", err)
+	}
+
 }
 
 func StoreTickInDb() {
@@ -127,12 +221,12 @@ func StoreTickInDb() {
 		ctx := context.Background()
 		// kite.ChTick <- kite.TickData{Timestamp: "2021-11-30 22:12:10", Insttoken: 1, Lastprice: 1, Open: 1.1, High: 1.2, Low: 1.3, Close: 1.4, Volume: 9}
 
-		queryInsertMetadata := `INSERT INTO zerodha_nse_mcx_ticks (
+		queryInsertMetadata := `INSERT INTO zerodha_ticks (
 			time,
 			symbol, 
 			last_traded_price,
 			buy_demand, sell_demand, 
-			last_traded_quantity,
+			trades_till_now,
 			open_interest)
 			VALUES 
 			($1, $2, $3, $4, $5, $6, $7);`
@@ -142,10 +236,10 @@ func StoreTickInDb() {
 			v.Symbol,
 			v.LastTradedPrice,
 			v.Buy_Demand, v.Sell_Demand,
-			v.LastTradedQuantity,
+			v.TradesTillNow,
 			v.OpenInterest)
 		if err != nil {
-			srv.ErrorLogger.Printf("Unable to insert data into database: %v\n", err)
+			srv.ErrorLogger.Printf("Unable to insert data into ticker DB: %v\n", err)
 		}
 	}
 }
@@ -153,7 +247,7 @@ func StoreTickInDb() {
 func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
 	ctx := context.Background()
 	timestamp := time.Now()
-	queryInsertMetadata := `INSERT INTO zerodha_nse_mcx_symbols_id_daily (
+	queryInsertMetadata := `INSERT INTO zerodha_ticks_id_daily (
 		time,
 		nse_symbol, 
 		mcx_symbol)
@@ -167,7 +261,6 @@ func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
 	if err != nil {
 		srv.ErrorLogger.Printf("Unable to insert data into 'symbol ID' database: %v\n", err)
 	}
-
 }
 
 func CloseDBPool() {

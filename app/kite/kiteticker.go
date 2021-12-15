@@ -21,14 +21,14 @@ var (
 )
 
 type TickData struct {
-	Timestamp          time.Time
-	LastTradedPrice    float64
-	Symbol             string
-	LastPrice          float64
-	Buy_Demand         uint32
-	Sell_Demand        uint32
-	LastTradedQuantity uint32
-	OpenInterest       uint32
+	Timestamp       time.Time
+	LastTradedPrice float64
+	Symbol          string
+	LastPrice       float64
+	Buy_Demand      uint32
+	Sell_Demand     uint32
+	TradesTillNow   uint32
+	OpenInterest    uint32
 }
 
 // Triggered when any error is raised
@@ -60,13 +60,13 @@ func onConnect() {
 func onTick(tick kitemodels.Tick) {
 
 	ChTick <- TickData{
-		Timestamp:          tick.Timestamp.Time,
-		Symbol:             InsNamesMap[fmt.Sprint(tick.InstrumentToken)],
-		LastTradedPrice:    tick.LastPrice,
-		Buy_Demand:         tick.TotalBuyQuantity,
-		Sell_Demand:        tick.TotalSellQuantity,
-		LastTradedQuantity: tick.LastTradedQuantity,
-		OpenInterest:       tick.OI}
+		Timestamp:       tick.Timestamp.Time,
+		Symbol:          InsNamesMap[fmt.Sprint(tick.InstrumentToken)],
+		LastTradedPrice: tick.LastPrice,
+		Buy_Demand:      tick.TotalBuyQuantity,
+		Sell_Demand:     tick.TotalSellQuantity,
+		TradesTillNow:   tick.VolumeTraded,
+		OpenInterest:    tick.OI}
 
 	// fmt.Println("Time: ", tick.Timestamp.Time)
 	// fmt.Println("Instrument: ", tick.InstrumentToken)
