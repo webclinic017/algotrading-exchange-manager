@@ -26,8 +26,6 @@ func main() {
 	srv.CheckFiles()
 	srv.Init()
 
-	kite.Tokens, kite.InsNamesMap, symbolFutStr, symbolMcxFutStr = kite.GetSymbols()
-
 	now := time.Now()
 
 	if (now.Hour() >= 9) && (now.Hour() < 16) &&
@@ -110,6 +108,8 @@ func initTickerToken() {
 		dbOk = db.DbInit()
 		db.StoreSymbolsInDb(symbolFutStr, symbolMcxFutStr)
 
+		kite.Tokens, kite.InsNamesMap, symbolFutStr, symbolMcxFutStr = kite.GetSymbols()
+
 		kiteOk, apiKey, accToken = kite.LoginKite()
 		printStatus(envOk, dbOk, kiteOk)
 
@@ -121,7 +121,6 @@ func initTickerToken() {
 			wdg = cron.New()
 			wdg.AddFunc("@every 10s", watchdog)
 			wdg.Start()
-
 		} else {
 			srv.ErrorLogger.Println("Fail to start Ticker")
 		}
