@@ -4,9 +4,15 @@ import (
 	"goTicker/app/db"
 	"goTicker/app/kite"
 	"goTicker/app/srv"
+	"goTicker/graph"
+	"goTicker/graph/generated"
+	"log"
+	"net/http"
 	"os"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/joho/godotenv"
 	"github.com/robfig/cron"
 )
@@ -44,8 +50,26 @@ func main() {
 	closeTicker.AddFunc("0 16 * * 1-5", theStop) // At 16:00:00 Mon-Fri
 	closeTicker.Start()
 
-	select {}
+	startGraphQL()
 
+}
+
+func startGraphQL() {
+
+	const defaultPort = "5555"
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
+	}
+
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+
+	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	http.Handle("/query", srv)
+
+	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
 func loadEnv() bool {
