@@ -11,13 +11,14 @@ import (
 )
 
 var (
-	ticker          *kiteticker.Ticker
-	Tokens          []uint32
-	TokensWithNames []string
-	ChTick          = make(chan TickData, 3)
-	InsNamesMap     = make(map[string]string)
-	symbolFutStr    string
-	symbolMcxFutStr string
+	ticker               *kiteticker.Ticker
+	Tokens               []uint32
+	TokensWithNames      []string
+	ChTick               = make(chan TickData, 3)
+	InsNamesMap          = make(map[string]string)
+	symbolFutStr         string
+	symbolMcxFutStr      string
+	KiteConnectionStatus bool = false
 )
 
 type TickData struct {
@@ -38,6 +39,7 @@ func onError(err error) {
 
 // Triggered when websocket connection is closed
 func onClose(code int, reason string) {
+	KiteConnectionStatus = false
 	srv.InfoLogger.Println("Close: ", code, reason)
 }
 
@@ -95,6 +97,8 @@ func onReconnect(attempt int, delay time.Duration) {
 // Triggered when maximum number of reconnect attempt is made and the program is terminated
 func onNoReconnect(attempt int) {
 	srv.InfoLogger.Printf("Maximum no of reconnect attempt reached: %d", attempt)
+	KiteConnectionStatus = false
+
 }
 
 // Triggered when order update is received
@@ -118,6 +122,7 @@ func TickerInitialize(apiKey, accToken string) {
 
 	// Start the connection
 	srv.InfoLogger.Printf("Connecting to Kite Ticker")
+	KiteConnectionStatus = true
 	go ticker.Serve()
 
 }
@@ -125,10 +130,12 @@ func TickerInitialize(apiKey, accToken string) {
 func CloseTicker() {
 	defer func() {
 		if err := recover(); err != nil {
-			srv.InfoLogger.Printf("Terminating ticker:", err)
+			srv.InfoLogger.Printf("Terminating ticker")
 		}
 	}()
 	// ticker.SetAutoReconnect(false)
+	KiteConnectionStatus = false
+
 	ticker.Stop()
 	srv.InfoLogger.Printf("Ticker connection closed")
 }

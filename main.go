@@ -32,22 +32,21 @@ func main() {
 	srv.CheckFiles()
 	srv.Init()
 
-	now := time.Now()
+	initTickerToken(false) // Check if conections are okay
 
-	if (now.Hour() >= 9) && (now.Hour() < 16) &&
-		(now.Weekday() > 0) && (now.Weekday() < 6) {
-		initTickerToken() // start now, when docker starts if its within trading time (9am-4pm Mon-Fri)
-	} else {
-		firstRunConnectionsCheck() // Check if conections are okay
-	}
-	// everyday scheduled start
+	// start watchdog to recover from connections issues
+	wdg = cron.New()
+	wdg.AddFunc("@every 10s", checkConnection)
+	wdg.Start()
+
+	// everyday scheduled start At 09:00:00 Mon-Fri
 	initTicker = cron.New()
-	initTicker.AddFunc("0 0 9 * * 1-5", initTickerToken) // At 09:00:00 Mon-Fri
+	initTicker.AddFunc("0 0 9 * * 1-5", initalizeKite)
 	initTicker.Start()
 
-	// everyday scheduled stop
+	// everyday scheduled stop At 16:00:00 Mon-Fri
 	closeTicker = cron.New()
-	closeTicker.AddFunc("0 0 16 * * 1-5", theStop) // At 16:00:00 Mon-Fri
+	closeTicker.AddFunc("0 0 16 * * 1-5", StopKite)
 	closeTicker.Start()
 
 	startGraphQL()
@@ -79,10 +78,6 @@ func loadEnv() bool {
 	println("PRODUCTION - ", os.Getenv("PRODUCTION"))
 	if os.Getenv("PRODUCTION") != "true" {
 		srv.InfoLogger.Println("DEVELOPMENT ENV - Ensure ENV variables are set in ENV_settings.env")
-		if 0 < len(os.Getenv("USER_ID")) {
-			srv.ErrorLogger.Println("DEVELOPMENT Mode enabled. > Set {PRODUCTION: 'true'} in docker-compose")
-			return false
-		}
 		srv.FileCopyIfMissing("app/templates/ENV_Settings.env", "app/config/ENV_Settings.env")
 		_ = godotenv.Load("app/config/ENV_Settings.env")
 	} else {
@@ -119,11 +114,7 @@ func loadEnv() bool {
 	return true
 }
 
-func printStatus(envOk, dbOk, kiteOk bool) {
-	srv.InfoLogger.Printf("\n\n\t--------------STATUS---------------\n\t| Environment variables set: %t |\n\t| Kite Login Succesfull: %t     |\n\t| DB Connected: %t              |\n\t-----------------------------------\n\n", envOk, kiteOk, dbOk)
-}
-
-func initTickerToken() {
+func initTickerToken(check bool) {
 
 	envOk = loadEnv()
 
@@ -135,48 +126,36 @@ func initTickerToken() {
 		kite.Tokens, kite.InsNamesMap, symbolFutStr, symbolMcxFutStr = kite.GetSymbols()
 
 		kiteOk, apiKey, accToken = kite.LoginKite()
-		printStatus(envOk, dbOk, kiteOk)
 
-		if envOk && dbOk && kiteOk {
+		if envOk && dbOk && kiteOk && check {
 			// Initate zerodha ticker
 			kite.TickerInitialize(apiKey, accToken)
 			go db.StoreTickInDb()
 			// start watchdog to recover from connections issues
-			wdg = cron.New()
-			wdg.AddFunc("@every 10s", watchdog)
-			wdg.Start()
-		} else {
-			srv.ErrorLogger.Println("Fail to start Ticker")
 		}
 	}
 }
-
-func firstRunConnectionsCheck() {
-
-	envOk = loadEnv()
-
-	if envOk {
-		dbOk = db.DbInit()
-		kiteOk, apiKey, accToken = kite.LoginKite()
-		printStatus(envOk, dbOk, kiteOk)
-	} else {
-		srv.ErrorLogger.Println("ERR: Cannot read ENV varaibles, skipping connections check!")
-	}
-}
-
-func theStop() {
-
+func StopKite() {
 	kite.CloseTicker()
-	wdg.Stop()
 	db.CloseDBPool()
 }
 
-func watchdog() {
-	// Initate ticker on error
-	if !envOk || !dbOk || !kiteOk {
-		printStatus(envOk, dbOk, kiteOk)
-		theStop()
-		srv.ErrorLogger.Println("\nWDG: Re-Initializing Kite", kiteOk)
-		initTickerToken()
+func initalizeKite() {
+	kite.CloseTicker()
+	srv.InfoLogger.Println("\nInitializing Kite", kiteOk)
+	initTickerToken(true)
+	srv.InfoLogger.Printf("\n\n\t--------------STATUS---------------\n\t| Environment variables set: %t |\n\t| Kite Login Succesfull: %t     |\n\t| DB Connected: %t              |\n\t-----------------------------------\n\n", envOk, kiteOk, dbOk)
+}
+
+func checkConnection() {
+
+	if !kite.KiteConnectionStatus {
+
+		now := time.Now()
+
+		if (now.Hour() >= 9) && (now.Hour() < 16) &&
+			(now.Weekday() > 0) && (now.Weekday() < 6) {
+			initalizeKite()
+		}
 	}
 }
