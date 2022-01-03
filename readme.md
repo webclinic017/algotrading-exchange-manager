@@ -1,4 +1,4 @@
-# Algo Trading  (Ticker #1/3)
+# Algo Trading
 ## [ algotrading-exchange-manager | *algotrading-analysis-service* | *algotrading-trade-manager* ]
 
 This container is first part of 3 micro-services to perform algo trading. This container currently supports **Zerodha Kite API for NSE EQ, NSE FUTs and MCX FUTs**.
@@ -10,8 +10,8 @@ This container is first part of 3 micro-services to perform algo trading. This c
 - Daily token ID generation/fetch for NSE (Eq and FUT) and MCX FUT
 - Ticks are saved in Timescable DB (Use the docker compose provided to spawn)
 - *-FUT, *-MCXFUT, *-IDX - Attributes to identify Futures, Index and Equity instruments respectively in DB
-- 1/3/5/10/15-min Candle tables built-in for faster processing (Continuous Aggregation of Timescale DB)
-- Compression Policy applied - Data before 7 days will be auto compressed.
+- 1/3/5/10/15-min Candle tables built-in for faster processing (using Continuous Aggregation of Timescale DB)
+- Compression Policy applied - Data before 7 days will be auto compressed. Saves up to 90% of disk space.
     
 
 ### To Do
@@ -28,7 +28,7 @@ The symbols to be registered for ticks are stored in trackSymbols.txt
 Default token/Instruments file is stored at app/config/trackSymbols.txt
 
 For Futures, as the contract names changes, the name is generated based on today's date.
-And the current ID is fetched from Instruments file downloaded from Zerodha API.
+And the current ID is fetched from Instruments file downloaded from Zerodha API.-
 This tokens are used to register for the ticks.
 
 
