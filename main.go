@@ -47,7 +47,7 @@ func main() {
 
 	// everyday scheduled stop
 	closeTicker = cron.New()
-	closeTicker.AddFunc("0 16 * * 1-5", theStop) // At 16:00:00 Mon-Fri
+	closeTicker.AddFunc("0 0 16 * * 1-5", theStop) // At 16:00:00 Mon-Fri
 	closeTicker.Start()
 
 	startGraphQL()
