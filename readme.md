@@ -1,5 +1,5 @@
 # Algo Trading  (Ticker #1/3)
-## [ algotrading-ticker-service | *algotrading-analysis-service* | *algotrading-trade-manager* ]
+## [ algotrading-exchange-manager | *algotrading-analysis-service* | *algotrading-trade-manager* ]
 
 This container is first part of 3 micro-services to perform algo trading. This container currently supports **Zerodha Kite API for NSE EQ, NSE FUTs and MCX FUTs**.
 
@@ -37,8 +37,8 @@ This tokens are used to register for the ticks.
 
     services:
     goticker:
-        image: paragba/algotrading-ticker-service:latest
-        container_name: goTicker
+        image: paragba/algotrading-exchange-manager:latest
+        container_name: algotrading-exchange-manager
         restart: unless-stopped
         environment:
         TZ: 'Asia/Kolkata'
@@ -79,6 +79,9 @@ Source code: https://github.com/parag-b/goTicker
 **Run Docker** `docker run --rm -it paragba/algotrading-ticker-service`
 
 **Enter Docker shell** `docker exec -it goTicker sh`
+
+**Update libs** `go get -u all && go mod tidy`
+**Update specific lib** `go get -u gopkg.in/yaml.v2`
 
 # ToDo List
 - [x] Connect to DB
