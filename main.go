@@ -4,15 +4,9 @@ import (
 	"goTicker/app/db"
 	"goTicker/app/kite"
 	"goTicker/app/srv"
-	"goTicker/graph"
-	"goTicker/graph/generated"
-	"log"
-	"net/http"
 	"os"
 	"time"
 
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/joho/godotenv"
 	"github.com/robfig/cron"
 )
@@ -36,7 +30,7 @@ func main() {
 
 	// start watchdog to recover from connections issues
 	wdg = cron.New()
-	wdg.AddFunc("@every 10s", checkConnection)
+	wdg.AddFunc("@every 30s", checkConnection)
 	wdg.Start()
 
 	// everyday scheduled start At 09:00:00 Mon-Fri
@@ -49,26 +43,8 @@ func main() {
 	closeTicker.AddFunc("0 0 16 * * 1-5", StopKite)
 	closeTicker.Start()
 
-	startGraphQL()
+	select {}
 
-}
-
-func startGraphQL() {
-
-	const defaultPort = "5555"
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
-
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
-
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
-
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
 func loadEnv() bool {

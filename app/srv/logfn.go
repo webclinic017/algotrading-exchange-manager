@@ -23,5 +23,5 @@ func Init() {
 	WarningLogger = log.New(mw, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
 	ErrorLogger = log.New(mw, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	InfoLogger.Println("\n\nNew Instance of algotrading-exchange-manager v0.51\n\n")
+	InfoLogger.Println("\n\nNew Instance of algotrading-exchange-manager v0.1\n\n")
 }

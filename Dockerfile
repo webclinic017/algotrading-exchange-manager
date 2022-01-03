@@ -10,6 +10,6 @@ COPY app/ ./app
 COPY *.go ./
 RUN rm ./app/config/*.env
 
-RUN go build -o /ticker
+RUN go build -o /algotrading-exchange-manager
 
-CMD [ "/ticker" ]
+CMD [ "/algotrading-exchange-manager" ]
