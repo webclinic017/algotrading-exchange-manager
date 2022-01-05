@@ -131,11 +131,11 @@ func KiteGetRequestToken() string {
 			return requestToken
 		}
 
-		srv.InfoLogger.Println("parsed m:", m)
+		// srv.InfoLogger.Println("parsed m:", m)
 		requestToken = m["request_token"][0]
 	}
 
-	srv.InfoLogger.Println("extraced req token:", requestToken)
+	// srv.InfoLogger.Println("extraced req token:", requestToken)
 
 	return requestToken
 }

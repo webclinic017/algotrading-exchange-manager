@@ -127,7 +127,7 @@ func createViews() {
 								WITH NO DATA;
 
 								SELECT add_continuous_aggregate_policy('candles_1min',
-									start_offset => NULL,
+									start_offset => INTERVAL '1 days',
 									end_offset => NULL,
 									schedule_interval => INTERVAL '1 minutes');
 								`)
@@ -151,7 +151,7 @@ func createViews() {
 								WITH NO DATA;
 
 								SELECT add_continuous_aggregate_policy('candles_3min',
-									start_offset => NULL,
+									start_offset => INTERVAL '1 days',
 									end_offset => NULL,
 									schedule_interval => INTERVAL '3 minutes');
 	`)
@@ -175,7 +175,7 @@ func createViews() {
 								WITH NO DATA;
 
 								SELECT add_continuous_aggregate_policy('candles_5min',
-									start_offset => NULL,
+									start_offset => INTERVAL '1 days',
 									end_offset => NULL,
 									schedule_interval => INTERVAL '5 minutes');
 	`)
@@ -199,7 +199,7 @@ func createViews() {
 								WITH NO DATA;
 
 								SELECT add_continuous_aggregate_policy('candles_10min',
-									start_offset => NULL,
+									start_offset => INTERVAL '1 days',
 									end_offset => NULL,
 									schedule_interval => INTERVAL '10 minutes');
 	`)
@@ -223,7 +223,7 @@ func createViews() {
 								WITH NO DATA;
 
 								SELECT add_continuous_aggregate_policy('candles_15min',
-									start_offset => NULL,
+									start_offset => INTERVAL '1 days',
 									end_offset => NULL,
 									schedule_interval => INTERVAL '15 minutes');
 	`)

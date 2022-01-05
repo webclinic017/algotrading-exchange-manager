@@ -53,7 +53,8 @@ func loadEnv() bool {
 
 	println("PRODUCTION - ", os.Getenv("PRODUCTION"))
 	if os.Getenv("PRODUCTION") != "true" {
-		srv.InfoLogger.Println("DEVELOPMENT ENV - Ensure ENV variables are set in ENV_settings.env")
+		srv.WarningLogger.Println("DEVELOPMENT ENV")
+		srv.InfoLogger.Println("Ensure ENV variables are set in ENV_settings.env")
 		srv.FileCopyIfMissing("app/templates/ENV_Settings.env", "app/config/ENV_Settings.env")
 		_ = godotenv.Load("app/config/ENV_Settings.env")
 	} else {
