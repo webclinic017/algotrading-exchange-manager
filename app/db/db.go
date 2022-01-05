@@ -2,15 +2,18 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"goTicker/app/kite"
 	"goTicker/app/srv"
 	"os"
 	"time"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 var dbPool *pgxpool.Pool
+var dbTick []kite.TickData
 
 func DbInit() bool {
 	// urlExample := "postgres://username:password@localhost:5432/database_name"
@@ -232,41 +235,10 @@ func createViews() {
 
 func StoreTickInDb() {
 
-	/*
-		Timestamp:          tick.Timestamp.Time,
-		Symbol:             InsNamesMap[fmt.Sprint(tick.InstrumentToken)],
-		LastTradedPrice:    tick.LastPrice,
-		Buy_Demand:         tick.TotalBuyQuantity,
-		Sell_Demand:        tick.TotalSellQuantity,
-		LastTradedQuantity: tick.LastTradedQuantity,
-		OpenInterest:       tick.OI
-	*/
-
-	for v := range kite.ChTick {
-		// fmt.Println("\nkite ch data rx ", v)
-		//fmt.Println("Timestamp: ", v.Timestamp)
-		ctx := context.Background()
-		// kite.ChTick <- kite.TickData{Timestamp: "2021-11-30 22:12:10", Insttoken: 1, Lastprice: 1, Open: 1.1, High: 1.2, Low: 1.3, Close: 1.4, Volume: 9}
-
-		queryInsertMetadata := `INSERT INTO zerodha_ticks (
-			time,
-			symbol, 
-			last_traded_price,
-			buy_demand, sell_demand, 
-			trades_till_now,
-			open_interest)
-			VALUES 
-			($1, $2, $3, $4, $5, $6, $7);`
-
-		_, err := dbPool.Exec(ctx, queryInsertMetadata,
-			v.Timestamp,
-			v.Symbol,
-			v.LastTradedPrice,
-			v.Buy_Demand, v.Sell_Demand,
-			v.TradesTillNow,
-			v.OpenInterest)
-		if err != nil {
-			srv.ErrorLogger.Printf("Unable to insert data into ticker DB: %v\n", err)
+	for v := range kite.ChTick { // read from tick channel
+		dbTick = append(dbTick, v)
+		if len(dbTick) > 100 {
+			executeBatch()
 		}
 	}
 }
@@ -289,7 +261,45 @@ func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
 		srv.ErrorLogger.Printf("Unable to insert data into 'symbol ID' database: %v\n", err)
 	}
 }
-
 func CloseDBPool() {
+	executeBatch() // execute the last batch
 	dbPool.Close()
+}
+
+func executeBatch() {
+	batch := &pgx.Batch{}
+
+	queryInsertTimeseriesData := `INSERT INTO zerodha_ticks (
+				time,
+				symbol,
+				last_traded_price,
+				buy_demand, sell_demand,
+				trades_till_now,
+				open_interest)
+				VALUES
+				($1, $2, $3, $4, $5, $6, $7);`
+
+	for i := range dbTick {
+		var ct kite.TickData = dbTick[i]
+
+		batch.Queue(queryInsertTimeseriesData,
+			ct.Timestamp,
+			ct.Symbol,
+			ct.LastTradedPrice,
+			ct.Buy_Demand,
+			ct.Sell_Demand,
+			ct.TradesTillNow,
+			ct.OpenInterest)
+	}
+
+	dbTick = nil
+
+	ctx := context.Background()
+	br := dbPool.SendBatch(ctx, batch)
+	_, err := br.Exec()
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to execute statement in batch queue %v\n", err)
+		os.Exit(1)
+	}
 }

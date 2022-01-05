@@ -14,7 +14,7 @@ var (
 	ticker               *kiteticker.Ticker
 	Tokens               []uint32
 	TokensWithNames      []string
-	ChTick               = make(chan TickData, 3)
+	ChTick               = make(chan TickData, 500)
 	InsNamesMap          = make(map[string]string)
 	symbolFutStr         string
 	symbolMcxFutStr      string
