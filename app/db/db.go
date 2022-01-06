@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"goTicker/app/kite"
 	"goTicker/app/srv"
 	"os"
@@ -237,10 +236,14 @@ func StoreTickInDb() {
 
 	for v := range kite.ChTick { // read from tick channel
 		dbTick = append(dbTick, v)
-		if len(dbTick) > 100 {
-			executeBatch()
+		if len(dbTick) > 1000 {
+			go executeBatch(dbTick)
+			dbTick = nil
 		}
 	}
+	// execute the last batch, when channel closed
+	go executeBatch(dbTick)
+	dbTick = nil
 }
 
 func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
@@ -262,11 +265,18 @@ func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
 	}
 }
 func CloseDBPool() {
-	executeBatch() // execute the last batch
+	// executeBatch() // execute the last batch
 	dbPool.Close()
 }
 
-func executeBatch() {
+func executeBatch(dataTick []kite.TickData) {
+
+	defer func() {
+		if err := recover(); err != nil {
+			srv.WarningLogger.Printf("DB Not intialised: ", err)
+		}
+	}()
+
 	batch := &pgx.Batch{}
 
 	queryInsertTimeseriesData := `INSERT INTO zerodha_ticks (
@@ -279,9 +289,10 @@ func executeBatch() {
 				VALUES
 				($1, $2, $3, $4, $5, $6, $7);`
 
-	for i := range dbTick {
-		var ct kite.TickData = dbTick[i]
+	for i := range dataTick {
+		var ct kite.TickData = dataTick[i]
 
+		// println("Tick data: ", i, "  > ", ct.Timestamp.String(), ct.Symbol, ct.LastTradedPrice)
 		batch.Queue(queryInsertTimeseriesData,
 			ct.Timestamp,
 			ct.Symbol,
@@ -292,14 +303,13 @@ func executeBatch() {
 			ct.OpenInterest)
 	}
 
-	dbTick = nil
-
 	ctx := context.Background()
 	br := dbPool.SendBatch(ctx, batch)
 	_, err := br.Exec()
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to execute statement in batch queue %v\n", err)
+		srv.WarningLogger.Printf("Unable to execute statement in batch queue %v\n", err)
 		os.Exit(1)
 	}
+
 }

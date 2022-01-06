@@ -14,7 +14,7 @@ var (
 	ticker               *kiteticker.Ticker
 	Tokens               []uint32
 	TokensWithNames      []string
-	ChTick               = make(chan TickData, 500)
+	ChTick               = make(chan TickData, 2000)
 	InsNamesMap          = make(map[string]string)
 	symbolFutStr         string
 	symbolMcxFutStr      string
@@ -136,6 +136,25 @@ func CloseTicker() {
 	// ticker.SetAutoReconnect(false)
 	KiteConnectionStatus = false
 
+	close(ChTick) // Close the channel
+
 	ticker.Stop()
 	srv.InfoLogger.Printf("Ticker connection closed")
+}
+
+func TestTicker() {
+
+	for i := 1; i < 3800; i++ {
+		ChTick <- TickData{
+			Timestamp:       time.Now(),
+			Symbol:          "TEST_Signal",
+			LastTradedPrice: 10,
+			Buy_Demand:      11,
+			Sell_Demand:     12,
+			TradesTillNow:   13,
+			OpenInterest:    14}
+
+		time.Sleep(time.Millisecond * 1)
+	}
+	close(ChTick)
 }

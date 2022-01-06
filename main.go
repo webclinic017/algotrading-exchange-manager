@@ -26,6 +26,8 @@ func main() {
 	srv.CheckFiles()
 	srv.Init()
 
+	// testTickingFunction()
+
 	initTickerToken(false) // Check if conections are okay
 
 	// start watchdog to recover from connections issues
@@ -135,4 +137,12 @@ func checkConnection() {
 			initalizeKite()
 		}
 	}
+}
+
+func testTickingFunction() {
+
+	go db.StoreTickInDb()
+	go kite.TestTicker()
+
+	select {}
 }
