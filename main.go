@@ -26,7 +26,8 @@ func main() {
 	srv.CheckFiles()
 	srv.Init()
 
-	// testTickingFunction()
+	// testTickerData()
+	// testDbFunction()
 
 	initTickerToken(false) // Check if conections are okay
 
@@ -37,12 +38,12 @@ func main() {
 
 	// everyday scheduled start At 09:00:00 Mon-Fri
 	initTicker = cron.New()
-	initTicker.AddFunc("0 0 9 * * 1-5", initalizeKite)
+	initTicker.AddFunc("0 0 9 * * 1-5", startKite)
 	initTicker.Start()
 
 	// everyday scheduled stop At 16:00:00 Mon-Fri
 	closeTicker = cron.New()
-	closeTicker.AddFunc("0 0 16 * * 1-5", StopKite)
+	closeTicker.AddFunc("0 0 16 * * 1-5", stopKite)
 	closeTicker.Start()
 
 	select {}
@@ -114,12 +115,11 @@ func initTickerToken(check bool) {
 		}
 	}
 }
-func StopKite() {
+func stopKite() {
 	kite.CloseTicker()
-	db.CloseDBPool()
 }
 
-func initalizeKite() {
+func startKite() {
 	kite.CloseTicker()
 	srv.InfoLogger.Println("\nInitializing Kite", kiteOk)
 	initTickerToken(true)
@@ -134,15 +134,34 @@ func checkConnection() {
 
 		if (now.Hour() >= 9) && (now.Hour() < 16) &&
 			(now.Weekday() > 0) && (now.Weekday() < 6) {
-			initalizeKite()
+			startKite()
 		}
 	}
 }
 
-func testTickingFunction() {
+func testDbFunction() {
 
+	kite.ChTick = make(chan kite.TickData, 1000)
+
+	_ = loadEnv()
+	_ = db.DbInit()
 	go db.StoreTickInDb()
 	go kite.TestTicker()
+	println("Testing Done")
+
+	select {}
+}
+
+func testTickerData() {
+
+	startKite()
+	time.Sleep(time.Second * 20)
+	stopKite()
+	time.Sleep(time.Second * 20)
+	startKite()
+	time.Sleep(time.Second * 20)
+	stopKite()
+	println("Testing Done")
 
 	select {}
 }

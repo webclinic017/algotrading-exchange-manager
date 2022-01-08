@@ -14,7 +14,7 @@ var (
 	ticker               *kiteticker.Ticker
 	Tokens               []uint32
 	TokensWithNames      []string
-	ChTick               = make(chan TickData, 2000)
+	ChTick               chan TickData
 	InsNamesMap          = make(map[string]string)
 	symbolFutStr         string
 	symbolMcxFutStr      string
@@ -110,6 +110,7 @@ func TickerInitialize(apiKey, accToken string) {
 
 	// Create new Kite ticker instance
 	ticker = kiteticker.New(apiKey, accToken)
+	ChTick = make(chan TickData, 1000)
 
 	// Assign callbacks
 	ticker.OnError(onError)
@@ -144,12 +145,12 @@ func CloseTicker() {
 
 func TestTicker() {
 
-	for i := 1; i < 3800; i++ {
+	for i := 1; i < 3866; i++ {
 		ChTick <- TickData{
 			Timestamp:       time.Now(),
 			Symbol:          "TEST_Signal",
-			LastTradedPrice: 10,
-			Buy_Demand:      11,
+			LastTradedPrice: float64(i),
+			Buy_Demand:      uint32(3866 - i),
 			Sell_Demand:     12,
 			TradesTillNow:   13,
 			OpenInterest:    14}

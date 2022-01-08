@@ -56,7 +56,7 @@ func LoginKite() (bool, string, string) {
 			srv.ErrorLogger.Printf("Error getting margins: %v", err)
 			//return false, "", ""
 		}
-		srv.InfoLogger.Println("margins: ", margins)
+		srv.InfoLogger.Println("Cash Balance (Net): ", margins.Equity.Net)
 
 		return true, apiKey, data.AccessToken
 

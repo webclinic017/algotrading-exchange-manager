@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-var dbPool *pgxpool.Pool
+var dbpool *pgxpool.Pool
 var dbTick []kite.TickData
 
 func DbInit() bool {
@@ -21,7 +21,9 @@ func DbInit() bool {
 	var err error
 
 	dbUrl := os.Getenv("DATABASE_URL")
-	dbPool, err = pgxpool.Connect(ctx, dbUrl)
+	dbpool, err = pgxpool.Connect(ctx, dbUrl)
+	myCon, _ := dbpool.Acquire(ctx)
+	defer myCon.Release()
 
 	if err != nil {
 		srv.ErrorLogger.Printf("Unable to connect to database: %v\n", err)
@@ -29,7 +31,7 @@ func DbInit() bool {
 	}
 
 	var greeting string
-	err = dbPool.QueryRow(ctx, "select 'Hello, Timescale!'").Scan(&greeting)
+	err = myCon.QueryRow(ctx, "select 'Hello, Timescale!'").Scan(&greeting)
 
 	if err != nil {
 		srv.ErrorLogger.Printf("QueryRow failed: %v\n", err)
@@ -37,7 +39,7 @@ func DbInit() bool {
 	}
 	srv.InfoLogger.Printf("connected to DB : " + greeting)
 
-	_, table_check := dbPool.Query(ctx, "select * from "+"zerodha_ticks"+";")
+	_, table_check := myCon.Query(ctx, "select * from "+"zerodha_ticks"+";")
 
 	if table_check != nil {
 		srv.InfoLogger.Printf("DB Does not exist, creating now!: %v\n", err)
@@ -58,15 +60,16 @@ func DbInit() bool {
 						`
 
 		//execute statement, fails if table already exists
-		_, err = dbPool.Exec(ctx, queryCreateTicksTable)
+		_, err = myCon.Exec(ctx, queryCreateTicksTable)
 		if err != nil {
 			srv.WarningLogger.Printf("DB CREATE: %v\n", err)
 		}
 		createViews()
 		setupDbCompression()
+
 	}
 	// check if table exist, else create it
-	_, table_check = dbPool.Query(ctx, "select * from "+"zerodha_ticks_id_daily"+";")
+	_, table_check = myCon.Query(ctx, "select * from "+"zerodha_ticks_id_daily"+";")
 
 	if table_check != nil {
 		queryCreateSymbolsTable := `CREATE TABLE 
@@ -80,7 +83,7 @@ func DbInit() bool {
 						`
 
 		//execute statement, fails if table already exists
-		_, err = dbPool.Exec(ctx, queryCreateSymbolsTable)
+		_, err = myCon.Exec(ctx, queryCreateSymbolsTable)
 		if err != nil {
 			srv.WarningLogger.Printf("DB CREATE: %v\n", err)
 		}
@@ -92,7 +95,10 @@ func DbInit() bool {
 func setupDbCompression() {
 
 	ctx := context.Background()
-	_, err := dbPool.Exec(ctx, `ALTER TABLE zerodha_ticks SET (
+	myCon, _ := dbpool.Acquire(ctx)
+	defer myCon.Release()
+
+	_, err := myCon.Exec(ctx, `ALTER TABLE zerodha_ticks SET (
 									timescaledb.compress,
 									timescaledb.compress_segmentby = 'symbol'); 
 								
@@ -101,14 +107,15 @@ func setupDbCompression() {
 	if err != nil {
 		srv.WarningLogger.Printf("Error setting up DB Compression: %v\n", err)
 	}
-
 }
 
 func createViews() {
 
 	ctx := context.Background()
+	myCon, _ := dbpool.Acquire(ctx)
+	defer myCon.Release()
 
-	_, err := dbPool.Exec(ctx, `CREATE MATERIALIZED VIEW candles_1min
+	_, err := myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_1min
 								WITH (timescaledb.continuous) AS
 								SELECT time_bucket('1 minutes', time) AS bucket, 
 									symbol,
@@ -134,7 +141,7 @@ func createViews() {
 		srv.WarningLogger.Printf("Error creating candles_1min: %v\n", err)
 	}
 
-	_, err = dbPool.Exec(ctx, `CREATE MATERIALIZED VIEW candles_3min
+	_, err = myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_3min
 								WITH (timescaledb.continuous) AS
 								SELECT time_bucket('3 minutes', time) AS bucket, 
 									symbol,
@@ -158,7 +165,7 @@ func createViews() {
 		srv.WarningLogger.Printf("Error creating candles_3min: %v\n", err)
 	}
 
-	_, err = dbPool.Exec(ctx, `CREATE MATERIALIZED VIEW candles_5min
+	_, err = myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_5min
 								WITH (timescaledb.continuous) AS
 								SELECT time_bucket('5 minutes', time) AS bucket, 
 									symbol,
@@ -182,7 +189,7 @@ func createViews() {
 		srv.WarningLogger.Printf("Error creating candles_5min: %v\n", err)
 	}
 
-	_, err = dbPool.Exec(ctx, `CREATE MATERIALIZED VIEW candles_10min
+	_, err = myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_10min
 								WITH (timescaledb.continuous) AS
 								SELECT time_bucket('10 minutes', time) AS bucket, 
 									symbol,
@@ -206,7 +213,7 @@ func createViews() {
 		srv.WarningLogger.Printf("Error creating candles_10min: %v\n", err)
 	}
 
-	_, err = dbPool.Exec(ctx, `CREATE MATERIALIZED VIEW candles_15min
+	_, err = myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_15min
 								WITH (timescaledb.continuous) AS
 								SELECT time_bucket('15 minutes', time) AS bucket, 
 									symbol,
@@ -229,34 +236,34 @@ func createViews() {
 	if err != nil {
 		srv.WarningLogger.Printf("Error creating candles_15min: %v\n", err)
 	}
-
 }
 
 func StoreTickInDb() {
-
 	for v := range kite.ChTick { // read from tick channel
 		dbTick = append(dbTick, v)
-		if len(dbTick) > 1000 {
+		if len(dbTick) > 250 {
 			go executeBatch(dbTick)
 			dbTick = nil
 		}
 	}
-	// execute the last batch, when channel closed
 	go executeBatch(dbTick)
 	dbTick = nil
 }
 
 func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
 	ctx := context.Background()
+	myCon, _ := dbpool.Acquire(ctx)
+	defer myCon.Release()
+
 	timestamp := time.Now()
 	queryInsertMetadata := `INSERT INTO zerodha_ticks_id_daily (
 		time,
-		nse_symbol, 
+		nse_symbol,
 		mcx_symbol)
-		VALUES 
+		VALUES
 		($1, $2, $3);`
 
-	_, err := dbPool.Exec(ctx, queryInsertMetadata,
+	_, err := myCon.Exec(ctx, queryInsertMetadata,
 		timestamp,
 		nse_symbol,
 		mcx_symbol)
@@ -264,12 +271,12 @@ func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
 		srv.ErrorLogger.Printf("Unable to insert data into 'symbol ID' database: %v\n", err)
 	}
 }
-func CloseDBPool() {
-	// executeBatch() // execute the last batch
-	dbPool.Close()
+func CloseDBpool() {
+
 }
 
 func executeBatch(dataTick []kite.TickData) {
+	// start := time.Now()
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -280,19 +287,18 @@ func executeBatch(dataTick []kite.TickData) {
 	batch := &pgx.Batch{}
 
 	queryInsertTimeseriesData := `INSERT INTO zerodha_ticks (
-				time,
-				symbol,
-				last_traded_price,
-				buy_demand, sell_demand,
-				trades_till_now,
-				open_interest)
-				VALUES
-				($1, $2, $3, $4, $5, $6, $7);`
+					time,
+					symbol,
+					last_traded_price,
+					buy_demand, sell_demand,
+					trades_till_now,
+					open_interest)
+					VALUES
+					($1, $2, $3, $4, $5, $6, $7);`
 
 	for i := range dataTick {
 		var ct kite.TickData = dataTick[i]
 
-		// println("Tick data: ", i, "  > ", ct.Timestamp.String(), ct.Symbol, ct.LastTradedPrice)
 		batch.Queue(queryInsertTimeseriesData,
 			ct.Timestamp,
 			ct.Symbol,
@@ -304,12 +310,20 @@ func executeBatch(dataTick []kite.TickData) {
 	}
 
 	ctx := context.Background()
-	br := dbPool.SendBatch(ctx, batch)
+
+	myCon, _ := dbpool.Acquire(ctx)
+	defer myCon.Release()
+
+	// stat := dbpool.Stat()
+
+	br := myCon.SendBatch(ctx, batch)
 	_, err := br.Exec()
 
 	if err != nil {
 		srv.WarningLogger.Printf("Unable to execute statement in batch queue %v\n", err)
-		os.Exit(1)
 	}
+
+	// elapsed := time.Since(start)
+	// fmt.Printf("AcquiredConns: %d TotalConns: %d DB operations took %s\n", stat.AcquiredConns(), stat.TotalConns(), elapsed)
 
 }

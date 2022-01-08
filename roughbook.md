@@ -93,7 +93,71 @@ kite ch data rx  {2021-11-30 16:35:21 +0530 IST 2414 18332418 2463.95 2479 2401 
 
 kite ch data rx  {2021-11-30 16:35:20 +0530 IST 35711 18257666 36144.75 36849 35645.7 36100.45 5527825}
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                                        	// fmt.Printf("AcquireCount: %d\n", stat.AcquireCount())
+	// fmt.Printf("AcquireDuration: %d\n", stat.AcquireDuration())
+	fmt.Printf("AcquiredConns: %d\n", stat.AcquiredConns())
+	// fmt.Printf("CanceledAcquireCount: %d\n", stat.CanceledAcquireCount())
+	// fmt.Printf("ConstructingConns: %d\n", stat.ConstructingConns())
+	// fmt.Printf("EmptyAcquireCount: %d\n", stat.EmptyAcquireCount())
+	// fmt.Printf("IdleConns: %d\n", stat.IdleConns())
+	// fmt.Printf("MaxConns: %d\n", stat.MaxConns())
+	fmt.Printf("TotalConns: %d\n", stat.TotalConns())                                                                                                                                                       
+
+{
+	{ 
+		true 45454.7 
+		{
+			0 
+			45454.7 
+			0 
+			0 
+			45454.7 
+			45454.7
+		}
+		{
+			0
+			0 
+			0 
+			0 
+			0 
+			0 
+			0 
+			0 
+			0 
+			0 
+			0 
+			0
+		}
+	}
+	{
+		true
+		0
+		{
+			0
+			0
+			0
+			0
+			0
+			0
+		}
+		{
+			0
+			0
+			0
+			0
+			0
+			0
+			0
+			0
+			0
+			0
+			0
+			0
+		}
+	}
+}                                                                                         
+
+
 
 
 
