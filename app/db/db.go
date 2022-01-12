@@ -11,65 +11,13 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-var dbpool *pgxpool.Pool
+var dbPool *pgxpool.Pool
 var dbTick []kite.TickData
 
-func DbInit() bool {
-	// urlExample := "postgres://username:password@localhost:5432/database_name"
-
-	srv.InfoLogger.Println("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Db Checks~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
-	ctx := context.Background()
-	var err error
-
-	dbBaseUrl := "postgres://" + os.Getenv("TIMESCALEDB_USERNAME") + ":" + os.Getenv("TIMESCALEDB_PASSWORD") + "@" + os.Getenv("TIMESCALEDB_ADDRESS") + ":" + os.Getenv("TIMESCALEDB_PORT") + "/"
-	dbDefaultDb := dbBaseUrl + "postgres"
-	// dbUrl := os.Getenv("DATABASE_URL")
-	dbPoolDef, err := pgxpool.Connect(ctx, dbDefaultDb)
-	if err != nil {
-		srv.ErrorLogger.Printf("Unable to connect to 'postgres' Timescale DB: %v\n", err)
-		return false
-	}
-	myCon, err := dbPoolDef.Acquire(ctx)
-	defer dbPoolDef.Close()
-	defer myCon.Release()
-
-	if err != nil {
-		srv.ErrorLogger.Printf("Unable to connect to database: %v\n", err)
-		return false
-	}
-
-	_, table_check := myCon.Query(ctx, "SELECT datname FROM pg_catalog.pg_database  WHERE lower(datname) = lower('algotrading12');")
-
-	if table_check == nil {
-		srv.InfoLogger.Printf("algotrading DB Does not exist in DB, creating now!: %v\n", err)
-
-		queryCreateDb := `CREATE DATABASE algotrading12;`
-
-		//execute statement, fails if table already exists
-		_, err = myCon.Exec(ctx, queryCreateDb)
-		if err != nil {
-			srv.ErrorLogger.Printf("DB CREATE: %v\n", err)
-			return false
-		}
-	}
-
-	var greeting string
-	err = myCon.QueryRow(ctx, "select 'Hello, Timescale!'").Scan(&greeting)
-
-	if err != nil {
-		srv.ErrorLogger.Printf("QueryRow failed: %v\n", err)
-		return false
-	}
-	srv.InfoLogger.Printf("connected to DB : " + greeting)
-
-	_, table_check = myCon.Query(ctx, "select * from "+"zerodha_ticks"+";")
-
-	if table_check != nil {
-		srv.InfoLogger.Printf("DB Does not exist, creating now!: %v\n", err)
-
-		// check if table exist, else create it
-		queryCreateTicksTable := `CREATE TABLE 
-								zerodha_ticks (
+var DB_EXISTS_QUERY = "SELECT datname FROM pg_catalog.pg_database  WHERE lower(datname) = lower('algotrading12');"
+var DB_CREATE_QUERY = "CREATE DATABASE algotrading12;"
+var DB_CREATE_TABLE_TICKER = `CREATE TABLE 
+								zerodha_ticks_2 (
 									time TIMESTAMP NOT NULL,
 									symbol VARCHAR(30) NOT NULL,
 									last_traded_price double precision NOT NULL,
@@ -77,54 +25,116 @@ func DbInit() bool {
 									sell_demand bigint NOT NULL,
 									trades_till_now bigint NOT NULL,
 									open_interest bigint NOT NULL
-								);
-						SELECT create_hypertable('zerodha_ticks', 'time');
-						SELECT set_chunk_time_interval('zerodha_ticks', INTERVAL '24 hours');
-						`
+								);`
 
-		//execute statement, fails if table already exists
-		_, err = myCon.Exec(ctx, queryCreateTicksTable)
-		if err != nil {
-			srv.WarningLogger.Printf("DB CREATE: %v\n", err)
-		}
-		// createViews()
-		// setupDbCompression()
+//SELECT create_hypertable('zerodha_ticks', 'time');
+//SELECT set_chunk_time_interval('zerodha_ticks', INTERVAL '24 hours');`
 
-	}
-	// check if table exist, else create it
-	_, table_check = myCon.Query(ctx, "select * from "+"zerodha_ticks_id_daily"+";")
+func connectDB() bool {
+	ctx := context.Background()
+	dbUrl := "postgres://" + os.Getenv("TIMESCALEDB_USERNAME") + ":" + os.Getenv("TIMESCALEDB_PASSWORD") + "@" + os.Getenv("TIMESCALEDB_ADDRESS") + ":" + os.Getenv("TIMESCALEDB_PORT") + "/postgres"
 
-	if table_check != nil {
-		queryCreateSymbolsTable := `CREATE TABLE 
-									zerodha_ticks_id_daily (
-									time TIMESTAMP NULL,
-									nse_symbol VARCHAR(30) NULL,
-									mcx_symbol VARCHAR(30) NULL									
-								);
-						SELECT create_hypertable('zerodha_ticks_id_daily', 'time');
-						SELECT set_chunk_time_interval('zerodha_ticks_id_daily', INTERVAL '1 YEAR');
-						`
-
-		//execute statement, fails if table already exists
-		_, err = myCon.Exec(ctx, queryCreateSymbolsTable)
-		if err != nil {
-			srv.WarningLogger.Printf("DB CREATE: %v\n", err)
-		}
-	}
-
-	dbAlgoUrl := dbBaseUrl + "algotrading"
-	dbpool, err = pgxpool.Connect(ctx, dbAlgoUrl)
+	// Check if you can connect to DB server (accessing 'postgres' defualt DB)
+	dbPoolDefault, err := pgxpool.Connect(context.Background(), dbUrl)
+	// defer dbPoolDefault.Close()
 	if err != nil {
-		srv.ErrorLogger.Println("Could not connect with algotrading Db\n", err)
+		srv.ErrorLogger.Println("Could not connect with Db (Default 'postgres' DB)\n", err)
 		return false
 	}
+	myCon, err := dbPoolDefault.Acquire(ctx)
+	defer myCon.Release()
+	if err != nil {
+		srv.ErrorLogger.Printf("Could not acquire Context, too many operations?: %v\n", err)
+		return false
+	}
+
+	// check if 'algotrading' database exists, if not CREATE it
+	var retVal string
+	myCon.QueryRow(ctx, DB_EXISTS_QUERY).Scan(&retVal)
+
+	if len(retVal) == 0 {
+		srv.InfoLogger.Printf("algotrading DB Does not exist, creating now!: %v\n", err)
+
+		//execute statement, fails if table already exists
+		myCon2, _ := dbPoolDefault.Acquire(ctx)
+		defer myCon.Release()
+		_, err = myCon2.Exec(ctx, DB_CREATE_QUERY)
+		if err != nil {
+			srv.ErrorLogger.Printf("Failed to CREATE algotrading DB: %v\n", err)
+			return false
+		}
+	}
+	return true
+}
+
+func DbInit() bool {
+	// urlExample := "postgres://username:password@localhost:5432/database_name"
+
+	srv.InfoLogger.Println("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Db Checks~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+
+	ctx := context.Background()
+	dbUrl := "postgres://" + os.Getenv("TIMESCALEDB_USERNAME") + ":" + os.Getenv("TIMESCALEDB_PASSWORD") + "@" + os.Getenv("TIMESCALEDB_ADDRESS") + ":" + os.Getenv("TIMESCALEDB_PORT") + "/algotrading12"
+
+	if connectDB() {
+		// 1. Connect with 'algotrading' DB
+		var err error
+		dbPool, err = pgxpool.Connect(ctx, dbUrl)
+		if err != nil {
+			srv.ErrorLogger.Printf("Unable to connect to 'postgres' Timescale DB: %v\n", err)
+			return false
+		}
+		// 2. Aquire context
+		myCon, err := dbPool.Acquire(ctx)
+		defer myCon.Release()
+		if err != nil {
+			srv.ErrorLogger.Printf("Could not acquire Context, too many operations?: %v\n", err)
+			return false
+		}
+
+		// 3. Check if 'ticker' table exists, if not CREATE it
+		if checkTable("zerodha_ticks_2", DB_CREATE_TABLE_TICKER) {
+			// createViews()
+			// setupDbCompression()
+			return true
+		} else {
+			return false
+		}
+
+	} else {
+		return false
+	}
+
+}
+
+func checkTable(tblName string, sqlquery string) bool {
+	ctx := context.Background()
+	myCon, _ := dbPool.Acquire(ctx)
+
+	var retVal string
+
+	query := "select table_name from information_schema.tables WHERE table_name = '" + tblName + "';"
+	myCon.QueryRow(ctx, query).Scan(&retVal)
+	// if err != nil {
+	// 	srv.WarningLogger.Printf("Failed to CREATE %s table : %v\n", tblName, err)
+	// }
+
+	if len(retVal) == 0 {
+		srv.InfoLogger.Printf("%s Does not exist, creating now!\n", tblName)
+		_, err := myCon.Exec(ctx, sqlquery)
+		if err != nil {
+			srv.WarningLogger.Printf("Failed to CREATE %s table : %v\n", tblName, err)
+			myCon.Release()
+			return false
+		}
+	}
+	myCon.Release()
 	return true
 }
 
 func setupDbCompression() {
 
 	ctx := context.Background()
-	myCon, _ := dbpool.Acquire(ctx)
+	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
 	_, err := myCon.Exec(ctx, `ALTER TABLE zerodha_ticks SET (
@@ -141,7 +151,7 @@ func setupDbCompression() {
 func createViews() {
 
 	ctx := context.Background()
-	myCon, _ := dbpool.Acquire(ctx)
+	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
 	_, err := myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_1min
@@ -281,7 +291,7 @@ func StoreTickInDb() {
 
 func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
 	ctx := context.Background()
-	myCon, _ := dbpool.Acquire(ctx)
+	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
 	timestamp := time.Now()
@@ -340,7 +350,7 @@ func executeBatch(dataTick []kite.TickData) {
 
 	ctx := context.Background()
 
-	myCon, _ := dbpool.Acquire(ctx)
+	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
 	// stat := dbpool.Stat()
