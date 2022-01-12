@@ -137,9 +137,9 @@ func CloseTicker() {
 	// ticker.SetAutoReconnect(false)
 	KiteConnectionStatus = false
 
-	close(ChTick)
-
 	ticker.Stop()
+	time.Sleep(time.Second * 3) // delay for ticker to terminte connection before we close channel
+	close(ChTick)
 	srv.InfoLogger.Printf("Ticker closed for the day, hush!!!")
 }
 
