@@ -41,6 +41,8 @@ func GetSymbols() ([]uint32, map[string]string, string, string) {
 		instrumentUint32       []uint32
 	)
 
+	srv.InfoLogger.Println("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Fetch Symbols~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+
 	insMap := make(map[string]string)
 
 	e := os.Remove("app/log/instruments.csv")

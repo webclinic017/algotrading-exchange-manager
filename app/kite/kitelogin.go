@@ -19,6 +19,8 @@ const (
 
 func LoginKite() (bool, string, string) {
 	// := os.Getenv("TFA_AUTH")
+
+	srv.InfoLogger.Println("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zerodha Login~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 	apiKey := os.Getenv("API_KEY")
 	apiSecret := os.Getenv("API_SECRET")
 

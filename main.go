@@ -87,8 +87,20 @@ func loadEnv() bool {
 		srv.ErrorLogger.Println("API_SECRET not set")
 		return false
 	}
-	if 0 >= len(os.Getenv("DATABASE_URL")) {
-		srv.ErrorLogger.Println("DATABASE_URL not set")
+	if 0 >= len(os.Getenv("TIMESCALEDB_ADDRESS")) {
+		srv.ErrorLogger.Println("TIMESCALEDB_ADDRESS not set")
+		return false
+	}
+	if 0 >= len(os.Getenv("TIMESCALEDB_USERNAME")) {
+		srv.ErrorLogger.Println("TIMESCALEDB_USERNAME not set")
+		return false
+	}
+	if 0 >= len(os.Getenv("TIMESCALEDB_PASSWORD")) {
+		srv.ErrorLogger.Println("TIMESCALEDB_PASSWORD not set")
+		return false
+	}
+	if 0 >= len(os.Getenv("TIMESCALEDB_PORT")) {
+		srv.ErrorLogger.Println("TIMESCALEDB_PORT not set")
 		return false
 	}
 	return true
@@ -96,14 +108,18 @@ func loadEnv() bool {
 
 func initTickerToken(check bool) {
 
+	srv.InfoLogger.Println("\n~~~~~~~~~~~~~~~~~~~~~~~~ Let's begin -", time.Now().Format("Monday, Jan-02 3:4 PM"), "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+
 	envOk = loadEnv()
 
 	if envOk {
 
-		dbOk = db.DbInit()
-		db.StoreSymbolsInDb(symbolFutStr, symbolMcxFutStr)
-
 		kite.Tokens, kite.InsNamesMap, symbolFutStr, symbolMcxFutStr = kite.GetSymbols()
+
+		dbOk = db.DbInit()
+		if dbOk {
+			db.StoreSymbolsInDb(symbolFutStr, symbolMcxFutStr)
+		}
 
 		kiteOk, apiKey, accToken = kite.LoginKite()
 

@@ -122,7 +122,7 @@ func TickerInitialize(apiKey, accToken string) {
 	ticker.OnOrderUpdate(onOrderUpdate)
 
 	// Start the connection
-	srv.InfoLogger.Printf("Connecting to Kite Ticker")
+	srv.InfoLogger.Printf("Initiaing Ticker connection, time to make money --->>> drama unfurls now...")
 	KiteConnectionStatus = true
 	go ticker.Serve()
 
@@ -131,16 +131,16 @@ func TickerInitialize(apiKey, accToken string) {
 func CloseTicker() {
 	defer func() {
 		if err := recover(); err != nil {
-			srv.InfoLogger.Printf("Terminating ticker")
+			srv.InfoLogger.Printf("Boss, ERR in termination of ticker, start debugging :-) ")
 		}
 	}()
 	// ticker.SetAutoReconnect(false)
 	KiteConnectionStatus = false
 
-	close(ChTick) // Close the channel
+	close(ChTick)
 
 	ticker.Stop()
-	srv.InfoLogger.Printf("Ticker connection closed")
+	srv.InfoLogger.Printf("Ticker closed for the day, hush!!!")
 }
 
 func TestTicker() {

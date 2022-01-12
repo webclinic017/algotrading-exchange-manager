@@ -17,17 +17,40 @@ var dbTick []kite.TickData
 func DbInit() bool {
 	// urlExample := "postgres://username:password@localhost:5432/database_name"
 
+	srv.InfoLogger.Println("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Db Checks~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 	ctx := context.Background()
 	var err error
 
-	dbUrl := os.Getenv("DATABASE_URL")
-	dbpool, err = pgxpool.Connect(ctx, dbUrl)
-	myCon, _ := dbpool.Acquire(ctx)
+	dbBaseUrl := "postgres://" + os.Getenv("TIMESCALEDB_USERNAME") + ":" + os.Getenv("TIMESCALEDB_PASSWORD") + "@" + os.Getenv("TIMESCALEDB_ADDRESS") + ":" + os.Getenv("TIMESCALEDB_PORT") + "/"
+	dbDefaultDb := dbBaseUrl + "postgres"
+	// dbUrl := os.Getenv("DATABASE_URL")
+	dbPoolDef, err := pgxpool.Connect(ctx, dbDefaultDb)
+	if err != nil {
+		srv.ErrorLogger.Printf("Unable to connect to 'postgres' Timescale DB: %v\n", err)
+		return false
+	}
+	myCon, err := dbPoolDef.Acquire(ctx)
+	defer dbPoolDef.Close()
 	defer myCon.Release()
 
 	if err != nil {
 		srv.ErrorLogger.Printf("Unable to connect to database: %v\n", err)
 		return false
+	}
+
+	_, table_check := myCon.Query(ctx, "SELECT datname FROM pg_catalog.pg_database  WHERE lower(datname) = lower('algotrading12');")
+
+	if table_check == nil {
+		srv.InfoLogger.Printf("algotrading DB Does not exist in DB, creating now!: %v\n", err)
+
+		queryCreateDb := `CREATE DATABASE algotrading12;`
+
+		//execute statement, fails if table already exists
+		_, err = myCon.Exec(ctx, queryCreateDb)
+		if err != nil {
+			srv.ErrorLogger.Printf("DB CREATE: %v\n", err)
+			return false
+		}
 	}
 
 	var greeting string
@@ -39,7 +62,7 @@ func DbInit() bool {
 	}
 	srv.InfoLogger.Printf("connected to DB : " + greeting)
 
-	_, table_check := myCon.Query(ctx, "select * from "+"zerodha_ticks"+";")
+	_, table_check = myCon.Query(ctx, "select * from "+"zerodha_ticks"+";")
 
 	if table_check != nil {
 		srv.InfoLogger.Printf("DB Does not exist, creating now!: %v\n", err)
@@ -64,8 +87,8 @@ func DbInit() bool {
 		if err != nil {
 			srv.WarningLogger.Printf("DB CREATE: %v\n", err)
 		}
-		createViews()
-		setupDbCompression()
+		// createViews()
+		// setupDbCompression()
 
 	}
 	// check if table exist, else create it
@@ -89,6 +112,12 @@ func DbInit() bool {
 		}
 	}
 
+	dbAlgoUrl := dbBaseUrl + "algotrading"
+	dbpool, err = pgxpool.Connect(ctx, dbAlgoUrl)
+	if err != nil {
+		srv.ErrorLogger.Println("Could not connect with algotrading Db\n", err)
+		return false
+	}
 	return true
 }
 
