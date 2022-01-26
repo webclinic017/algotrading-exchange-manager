@@ -114,10 +114,9 @@ func initTickerToken(check bool) {
 
 	if envOk {
 
-		kite.Tokens, kite.InsNamesMap, symbolFutStr, symbolMcxFutStr = kite.GetSymbols()
-
 		dbOk = db.DbInit()
 		if dbOk {
+			kite.Tokens, kite.InsNamesMap, symbolFutStr, symbolMcxFutStr = kite.GetSymbols()
 			db.StoreSymbolsInDb(symbolFutStr, symbolMcxFutStr)
 		}
 

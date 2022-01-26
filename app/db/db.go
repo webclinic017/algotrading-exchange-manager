@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
@@ -14,10 +15,20 @@ import (
 var dbPool *pgxpool.Pool
 var dbTick []kite.TickData
 
-var DB_EXISTS_QUERY = "SELECT datname FROM pg_catalog.pg_database  WHERE lower(datname) = lower('algotrading12');"
-var DB_CREATE_QUERY = "CREATE DATABASE algotrading12;"
+var DB_EXISTS_QUERY = "SELECT datname FROM pg_catalog.pg_database  WHERE lower(datname) = lower('algotrading');"
+var DB_CREATE_QUERY = "CREATE DATABASE algotrading;"
+var DB_TABLE_ID_DECODED_NAME = `token_id_decoded`
+var DB_CREATE_TABLE_ID_DECODED = `CREATE TABLE token_id_decoded
+								(
+									time TIMESTAMP NOT NULL,
+									nse_symbol VARCHAR(30),
+									mcx_symbol VARCHAR(30)
+								);
+						`
+var DB_TABLE_TICKER_NAME = `ticks_data`
 var DB_CREATE_TABLE_TICKER = `CREATE TABLE 
-								zerodha_ticks_2 (
+								ticks_data
+							 (
 									time TIMESTAMP NOT NULL,
 									symbol VARCHAR(30) NOT NULL,
 									last_traded_price double precision NOT NULL,
@@ -25,10 +36,18 @@ var DB_CREATE_TABLE_TICKER = `CREATE TABLE
 									sell_demand bigint NOT NULL,
 									trades_till_now bigint NOT NULL,
 									open_interest bigint NOT NULL
-								);`
+								);
+							SELECT create_hypertable('ticks_data', 'time');
+							SELECT set_chunk_time_interval('ticks_data', INTERVAL '7 days');
+						`
 
-//SELECT create_hypertable('zerodha_ticks', 'time');
-//SELECT set_chunk_time_interval('zerodha_ticks', INTERVAL '24 hours');`
+var DB_COMPRESSION_QUERY = `ALTER TABLE ticks_data SET 
+							(
+								timescaledb.compress,
+								timescaledb.compress_segmentby = 'symbol'
+							); 
+							SELECT add_compression_policy('ticks_data ', INTERVAL '14 days');
+						`
 
 func connectDB() bool {
 	ctx := context.Background()
@@ -38,7 +57,7 @@ func connectDB() bool {
 	dbPoolDefault, err := pgxpool.Connect(context.Background(), dbUrl)
 	// defer dbPoolDefault.Close()
 	if err != nil {
-		srv.ErrorLogger.Println("Could not connect with Db (Default 'postgres' DB)\n", err)
+		srv.ErrorLogger.Println("Could not connect with 'postgres' DB\n", err)
 		return false
 	}
 	myCon, err := dbPoolDefault.Acquire(ctx)
@@ -73,14 +92,14 @@ func DbInit() bool {
 	srv.InfoLogger.Println("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Db Checks~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 
 	ctx := context.Background()
-	dbUrl := "postgres://" + os.Getenv("TIMESCALEDB_USERNAME") + ":" + os.Getenv("TIMESCALEDB_PASSWORD") + "@" + os.Getenv("TIMESCALEDB_ADDRESS") + ":" + os.Getenv("TIMESCALEDB_PORT") + "/algotrading12"
+	dbUrl := "postgres://" + os.Getenv("TIMESCALEDB_USERNAME") + ":" + os.Getenv("TIMESCALEDB_PASSWORD") + "@" + os.Getenv("TIMESCALEDB_ADDRESS") + ":" + os.Getenv("TIMESCALEDB_PORT") + "/algotrading"
 
 	if connectDB() {
 		// 1. Connect with 'algotrading' DB
 		var err error
 		dbPool, err = pgxpool.Connect(ctx, dbUrl)
 		if err != nil {
-			srv.ErrorLogger.Printf("Unable to connect to 'postgres' Timescale DB: %v\n", err)
+			srv.ErrorLogger.Printf("Unable to connect with 'algotrading db' %v\n", err)
 			return false
 		}
 		// 2. Aquire context
@@ -92,9 +111,11 @@ func DbInit() bool {
 		}
 
 		// 3. Check if 'ticker' table exists, if not CREATE it
-		if checkTable("zerodha_ticks_2", DB_CREATE_TABLE_TICKER) {
-			// createViews()
-			// setupDbCompression()
+		if createTable(DB_TABLE_TICKER_NAME, DB_CREATE_TABLE_TICKER) {
+			createViews()
+			setupDbCompression()
+			createTable(DB_TABLE_ID_DECODED_NAME, DB_CREATE_TABLE_ID_DECODED)
+			srv.InfoLogger.Printf("DB checks completed\n")
 			return true
 		} else {
 			return false
@@ -106,7 +127,7 @@ func DbInit() bool {
 
 }
 
-func checkTable(tblName string, sqlquery string) bool {
+func createTable(tblName string, sqlquery string) bool {
 	ctx := context.Background()
 	myCon, _ := dbPool.Acquire(ctx)
 
@@ -137,15 +158,10 @@ func setupDbCompression() {
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	_, err := myCon.Exec(ctx, `ALTER TABLE zerodha_ticks SET (
-									timescaledb.compress,
-									timescaledb.compress_segmentby = 'symbol'); 
-								
-									SELECT add_compression_policy('zerodha_ticks', INTERVAL '7 days');
-								`)
-	if err != nil {
-		srv.WarningLogger.Printf("Error setting up DB Compression: %v\n", err)
-	}
+	_, _ = myCon.Exec(ctx, DB_COMPRESSION_QUERY)
+	// if err != nil {
+	// 	srv.WarningLogger.Printf("Error setting up DB Compression: %v\n", err)
+	// }
 }
 
 func createViews() {
@@ -156,33 +172,35 @@ func createViews() {
 
 	_, err := myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_1min
 								WITH (timescaledb.continuous) AS
-								SELECT time_bucket('1 minutes', time) AS bucket, 
+								SELECT time_bucket('1 minutes', time) AS candle, 
 									symbol,
-									FIRST(time, time) as first_time,
 									FIRST(last_traded_price, time) as open,
 									MAX(last_traded_price) as high,
 									MIN(last_traded_price) as low,
 									LAST(last_traded_price, time) as close,
-									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume,
-									LAST(time, time) as last_time
+									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
 								FROM
-									zerodha_ticks
+									ticks_data
+								
 								GROUP by
-									symbol, bucket
+									symbol, candle
 								WITH NO DATA;
 
 								SELECT add_continuous_aggregate_policy('candles_1min',
-									start_offset => INTERVAL '1 days',
-									end_offset => NULL,
+									start_offset => NULL,
+									end_offset => INTERVAL '1 minutes',
 									schedule_interval => INTERVAL '1 minutes');
 								`)
 	if err != nil {
-		srv.WarningLogger.Printf("Error creating candles_1min: %v\n", err)
+		pgerr, _ := err.(*pgconn.PgError)
+		if pgerr.Code != "42P07" {
+			srv.WarningLogger.Printf("Error creating candles_1min: %v\n", err)
+		}
 	}
 
 	_, err = myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_3min
 								WITH (timescaledb.continuous) AS
-								SELECT time_bucket('3 minutes', time) AS bucket, 
+								SELECT time_bucket('3 minutes', time) AS candle, 
 									symbol,
 									FIRST(last_traded_price, time) as open,
 									MAX(last_traded_price) as high,
@@ -190,23 +208,28 @@ func createViews() {
 									LAST(last_traded_price, time) as close,
 									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
 								FROM
-									zerodha_ticks
+									ticks_data
+								
 								GROUP by
-									symbol, bucket
+									symbol, candle
 								WITH NO DATA;
 
 								SELECT add_continuous_aggregate_policy('candles_3min',
-									start_offset => INTERVAL '1 days',
-									end_offset => NULL,
+									start_offset => NULL,
+									end_offset => INTERVAL '3 minutes',
 									schedule_interval => INTERVAL '3 minutes');
 	`)
+
 	if err != nil {
-		srv.WarningLogger.Printf("Error creating candles_3min: %v\n", err)
+		pgerr, _ := err.(*pgconn.PgError)
+		if pgerr.Code != "42P07" {
+			srv.WarningLogger.Printf("Error creating candles_3min: %v\n", err)
+		}
 	}
 
 	_, err = myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_5min
 								WITH (timescaledb.continuous) AS
-								SELECT time_bucket('5 minutes', time) AS bucket, 
+								SELECT time_bucket('5 minutes', time) AS candle, 
 									symbol,
 									FIRST(last_traded_price, time) as open,
 									MAX(last_traded_price) as high,
@@ -214,66 +237,22 @@ func createViews() {
 									LAST(last_traded_price, time) as close,
 									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
 								FROM
-									zerodha_ticks
+									ticks_data
+								
 								GROUP by
-									symbol, bucket
+									symbol, candle
 								WITH NO DATA;
 
 								SELECT add_continuous_aggregate_policy('candles_5min',
-									start_offset => INTERVAL '1 days',
-									end_offset => NULL,
+									start_offset => NULL,
+									end_offset => INTERVAL '5 minutes',
 									schedule_interval => INTERVAL '5 minutes');
 	`)
 	if err != nil {
-		srv.WarningLogger.Printf("Error creating candles_5min: %v\n", err)
-	}
-
-	_, err = myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_10min
-								WITH (timescaledb.continuous) AS
-								SELECT time_bucket('10 minutes', time) AS bucket, 
-									symbol,
-									FIRST(last_traded_price, time) as open,
-									MAX(last_traded_price) as high,
-									MIN(last_traded_price) as low,
-									LAST(last_traded_price, time) as close,
-									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
-								FROM
-									zerodha_ticks
-								GROUP by
-									symbol, bucket
-								WITH NO DATA;
-
-								SELECT add_continuous_aggregate_policy('candles_10min',
-									start_offset => INTERVAL '1 days',
-									end_offset => NULL,
-									schedule_interval => INTERVAL '10 minutes');
-	`)
-	if err != nil {
-		srv.WarningLogger.Printf("Error creating candles_10min: %v\n", err)
-	}
-
-	_, err = myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_15min
-								WITH (timescaledb.continuous) AS
-								SELECT time_bucket('15 minutes', time) AS bucket, 
-									symbol,
-									FIRST(last_traded_price, time) as open,
-									MAX(last_traded_price) as high,
-									MIN(last_traded_price) as low,
-									LAST(last_traded_price, time) as close,
-									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
-								FROM
-									zerodha_ticks
-								GROUP by
-									symbol, bucket
-								WITH NO DATA;
-
-								SELECT add_continuous_aggregate_policy('candles_15min',
-									start_offset => INTERVAL '1 days',
-									end_offset => NULL,
-									schedule_interval => INTERVAL '15 minutes');
-	`)
-	if err != nil {
-		srv.WarningLogger.Printf("Error creating candles_15min: %v\n", err)
+		pgerr, _ := err.(*pgconn.PgError)
+		if pgerr.Code != "42P07" {
+			srv.WarningLogger.Printf("Error creating candles_5min: %v\n", err)
+		}
 	}
 }
 
@@ -295,7 +274,7 @@ func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
 	defer myCon.Release()
 
 	timestamp := time.Now()
-	queryInsertMetadata := `INSERT INTO zerodha_ticks_id_daily (
+	queryInsertMetadata := `INSERT INTO token_id_decoded (
 		time,
 		nse_symbol,
 		mcx_symbol)
@@ -310,12 +289,11 @@ func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
 		srv.ErrorLogger.Printf("Unable to insert data into 'symbol ID' database: %v\n", err)
 	}
 }
-func CloseDBpool() {
 
+func CloseDBpool() {
 }
 
 func executeBatch(dataTick []kite.TickData) {
-	// start := time.Now()
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -325,7 +303,8 @@ func executeBatch(dataTick []kite.TickData) {
 
 	batch := &pgx.Batch{}
 
-	queryInsertTimeseriesData := `INSERT INTO zerodha_ticks (
+	queryInsertTimeseriesData := `INSERT INTO ticks_data
+ (
 					time,
 					symbol,
 					last_traded_price,
@@ -361,8 +340,4 @@ func executeBatch(dataTick []kite.TickData) {
 	if err != nil {
 		srv.WarningLogger.Printf("Unable to execute statement in batch queue %v\n", err)
 	}
-
-	// elapsed := time.Since(start)
-	// fmt.Printf("AcquiredConns: %d TotalConns: %d DB operations took %s\n", stat.AcquiredConns(), stat.TotalConns(), elapsed)
-
 }
