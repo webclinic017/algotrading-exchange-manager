@@ -31,11 +31,11 @@ var DB_CREATE_TABLE_TICKER = `CREATE TABLE
 							 (
 									time TIMESTAMP NOT NULL,
 									symbol VARCHAR(30) NOT NULL,
-									last_traded_price double precision NOT NULL,
-									buy_demand bigint NOT NULL,
-									sell_demand bigint NOT NULL,
-									trades_till_now bigint NOT NULL,
-									open_interest bigint NOT NULL
+									last_traded_price double precision NOT NULL DEFAULT 0,
+									buy_demand bigint NOT NULL DEFAULT 0,
+									sell_demand bigint NOT NULL DEFAULT 0,
+									trades_till_now bigint NOT NULL DEFAULT 0,
+									open_interest bigint NOT NULL DEFAULT 0
 								);
 							SELECT create_hypertable('ticks_data', 'time');
 							SELECT set_chunk_time_interval('ticks_data', INTERVAL '7 days');
@@ -46,7 +46,7 @@ var DB_COMPRESSION_QUERY = `ALTER TABLE ticks_data SET
 								timescaledb.compress,
 								timescaledb.compress_segmentby = 'symbol'
 							); 
-							SELECT add_compression_policy('ticks_data ', INTERVAL '14 days');
+							SELECT add_compression_policy('ticks_data ', INTERVAL '30 days');
 						`
 
 func connectDB() bool {
