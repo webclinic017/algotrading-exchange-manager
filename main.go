@@ -147,7 +147,8 @@ func checkConnection() {
 
 		now := time.Now()
 
-		if (now.Hour() >= 9) && (now.Hour() < 16) &&
+		// check if trading time 9-4 on weekdays, except at 9:00am as the cronjob is set to start it
+		if (now.Hour() >= 9) && (now.Hour() < 16) && (now.Minute() != 0) &&
 			(now.Weekday() > 0) && (now.Weekday() < 6) {
 			startKite()
 		}
