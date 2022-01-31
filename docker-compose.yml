@@ -14,6 +14,7 @@ services:
       API_KEY: ""
       API_SECRET: ""
       DATABASE_URL: "postgres://postgres:pgpwdChangeMe@mysite.com:5432/stockdb"
+      LIVE_TRADING_MODE: 'true'
     volumes:
       - ./dockerTest/config:/app/app/config
       - ./dockerTest/log:/app/app/log

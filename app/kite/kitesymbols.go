@@ -41,7 +41,10 @@ func GetSymbols() ([]uint32, map[string]string, string, string) {
 		instrumentUint32       []uint32
 	)
 
-	srv.InfoLogger.Println("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Fetch Symbols~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+	srv.InfoLogger.Print(
+		"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+		"Fetch Symbols",
+		"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 
 	insMap := make(map[string]string)
 
@@ -250,7 +253,7 @@ func getInstrumentTokenNseEquity(symbolList []string, instrumentsList [][]string
 	for _, mySymbol := range symbolList {
 
 		for i = 0; i < len(instrumentsList); i++ {
-			if mySymbol == instrumentsList[i][tradingsymbol] && "NSE" == instrumentsList[i][exchange] {
+			if mySymbol == instrumentsList[i][tradingsymbol] && instrumentsList[i][exchange] == "NSE" {
 				instrumentTokens = append(instrumentTokens, instrumentsList[i][instrument_token])
 				instrumentTokensLog = append(instrumentTokensLog, mySymbol+","+instrumentsList[i][instrument_token])
 				insMap[instrumentsList[i][instrument_token]] = mySymbol
@@ -277,7 +280,7 @@ func getInstrumentTokenIndices(symbolList []string, instrumentsList [][]string, 
 	for _, mySymbol := range symbolList {
 
 		for i = 0; i < len(instrumentsList); i++ {
-			if mySymbol == instrumentsList[i][tradingsymbol] && "INDICES" == instrumentsList[i][segment] {
+			if mySymbol == instrumentsList[i][tradingsymbol] && instrumentsList[i][segment] == "INDICES" {
 				instrumentTokens = append(instrumentTokens, instrumentsList[i][instrument_token])
 				instrumentTokensLog = append(instrumentTokensLog, mySymbol+","+instrumentsList[i][instrument_token])
 				insMap[instrumentsList[i][instrument_token]] = mySymbol + "-IDX"

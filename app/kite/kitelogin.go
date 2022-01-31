@@ -20,7 +20,10 @@ const (
 func LoginKite() (bool, string, string) {
 	// := os.Getenv("TFA_AUTH")
 
-	srv.InfoLogger.Println("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Zerodha Login~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+	srv.InfoLogger.Print(
+		"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+		"Zerodha Login",
+		"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 	apiKey := os.Getenv("API_KEY")
 	apiSecret := os.Getenv("API_SECRET")
 
@@ -49,7 +52,7 @@ func LoginKite() (bool, string, string) {
 		env, _ := godotenv.Unmarshal("accessToken=" + data.AccessToken)
 		err = godotenv.Write(env, "./app/config/ENV_accesstoken.env")
 		if err != nil {
-			srv.WarningLogger.Printf("Cannot write to accesstoken.env", err)
+			srv.WarningLogger.Print("Cannot write to accesstoken.env", err)
 		}
 
 		// Get margins
@@ -156,7 +159,7 @@ func extractValue(body string, key string) string {
 func extractKeyValue(body string, key string) string {
 	arr := strings.Split(body, `&`) // split on '&'
 
-	for index, _ := range arr {
+	for index := range arr {
 		if strings.Contains(arr[index], key) { // if key is found
 			//fmt.Println(arr[index])
 			arrVal := strings.Split(arr[index], `=`)

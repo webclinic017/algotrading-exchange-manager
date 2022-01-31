@@ -4,6 +4,7 @@ import (
 	"goTicker/app/db"
 	"goTicker/app/kite"
 	"goTicker/app/srv"
+	"goTicker/app/trademgr"
 	"os"
 	"time"
 
@@ -29,7 +30,7 @@ func main() {
 	// testTickerData()
 	// testDbFunction()
 
-	initTickerToken(false) // Check if conections are okay
+	startSession(false) // Check if conections are okay
 
 	// start watchdog to recover from connections issues
 	wdg = cron.New()
@@ -65,6 +66,11 @@ func loadEnv() bool {
 	}
 
 	srv.InfoLogger.Println("user ID", os.Getenv("USER_ID"))
+
+	if 0 >= len(os.Getenv("LIVE_TRADING_MODE")) {
+		srv.ErrorLogger.Println("LIVE_TRADING_MODE not set")
+		return false
+	}
 
 	if 0 >= len(os.Getenv("USER_ID")) {
 		srv.ErrorLogger.Println("USER_ID not set")
@@ -106,7 +112,7 @@ func loadEnv() bool {
 	return true
 }
 
-func initTickerToken(check bool) {
+func startSession(check bool) {
 
 	srv.InfoLogger.Println("\n~~~~~~~~~~~~~~~~~~~~~~~~ Let's begin -", time.Now().Format("Monday, Jan-02 3:4 PM"), "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 
@@ -126,6 +132,8 @@ func initTickerToken(check bool) {
 			// Initate zerodha ticker
 			kite.TickerInitialize(apiKey, accToken)
 			go db.StoreTickInDb()
+			go trademgr.Trader()
+
 			// start watchdog to recover from connections issues
 		}
 	}
@@ -137,16 +145,14 @@ func stopKite() {
 func startKite() {
 	kite.CloseTicker()
 	srv.InfoLogger.Println("\nInitializing Kite", kiteOk)
-	initTickerToken(true)
+	startSession(true)
 	srv.InfoLogger.Printf("\n\n\t--------------STATUS---------------\n\t| Environment variables set: %t |\n\t| Kite Login Succesfull: %t     |\n\t| DB Connected: %t              |\n\t-----------------------------------\n\n", envOk, kiteOk, dbOk)
 }
 
 func checkConnection() {
 
 	if !kite.KiteConnectionStatus {
-
 		now := time.Now()
-
 		if (now.Hour() >= 9) && (now.Hour() < 16) &&
 			(now.Weekday() > 0) && (now.Weekday() < 6) {
 			startKite()

@@ -55,11 +55,12 @@ func connectDB() bool {
 
 	// Check if you can connect to DB server (accessing 'postgres' defualt DB)
 	dbPoolDefault, err := pgxpool.Connect(context.Background(), dbUrl)
-	// defer dbPoolDefault.Close()
 	if err != nil {
 		srv.ErrorLogger.Println("Could not connect with 'postgres' DB\n", err)
 		return false
 	}
+	defer dbPoolDefault.Close()
+
 	myCon, err := dbPoolDefault.Acquire(ctx)
 	defer myCon.Release()
 	if err != nil {
@@ -89,7 +90,10 @@ func connectDB() bool {
 func DbInit() bool {
 	// urlExample := "postgres://username:password@localhost:5432/database_name"
 
-	srv.InfoLogger.Println("\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Db Checks~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+	srv.InfoLogger.Print(
+		"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+		"Db Checks",
+		"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 
 	ctx := context.Background()
 	dbUrl := "postgres://" + os.Getenv("TIMESCALEDB_USERNAME") + ":" + os.Getenv("TIMESCALEDB_PASSWORD") + "@" + os.Getenv("TIMESCALEDB_ADDRESS") + ":" + os.Getenv("TIMESCALEDB_PORT") + "/algotrading"
@@ -290,14 +294,16 @@ func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
 	}
 }
 
-func CloseDBpool() {
+func CloseDBpool() bool {
+	dbPool.Close()
+	return false
 }
 
 func executeBatch(dataTick []kite.TickData) {
 
 	defer func() {
 		if err := recover(); err != nil {
-			srv.WarningLogger.Printf("DB Not intialised: ", err)
+			srv.WarningLogger.Print("DB Not intialised: ", err)
 		}
 	}()
 

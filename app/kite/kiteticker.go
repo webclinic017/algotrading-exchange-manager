@@ -70,13 +70,7 @@ func onTick(tick kitemodels.Tick) {
 		TradesTillNow:   tick.VolumeTraded,
 		OpenInterest:    tick.OI}
 
-	// fmt.Println("Time: ", tick.Timestamp.Time)
-	// fmt.Println("Instrument: ", tick.InstrumentToken)
-	// fmt.Println("LastPrice: ", tick.LastPrice)
-	// fmt.Println("Open: ", tick.OHLC.Open)
-	// fmt.Println("High: ", tick.OHLC.High)
-	// fmt.Println("Low: ", tick.OHLC.Low)
-	// fmt.Println("Close: ", tick.OHLC.Close)
+	// srv.InfoLogger.Println("Time: ", tick.Timestamp.Time, "Instrument: ", InsNamesMap[fmt.Sprint(tick.InstrumentToken)], "LastPrice: ", tick.LastPrice, "Open: ", tick.OHLC.Open, "High: ", tick.OHLC.High, "Low: ", tick.OHLC.Low, "Close: ", tick.OHLC.Close)
 
 	// Total Buy Quantity, Total Sell quantity, Volume traded, Turnover, Open Interest
 	// fmt.Println("Total Buy Quantity: ", tick.TotalBuyQuantity)
@@ -128,7 +122,7 @@ func TickerInitialize(apiKey, accToken string) {
 
 }
 
-func CloseTicker() {
+func CloseTicker() bool {
 	defer func() {
 		if err := recover(); err != nil {
 			srv.InfoLogger.Printf("Boss, ERR in termination of ticker, start debugging :-) ")
@@ -141,6 +135,8 @@ func CloseTicker() {
 	time.Sleep(time.Second * 3) // delay for ticker to terminte connection before we close channel
 	close(ChTick)
 	srv.InfoLogger.Printf("Ticker closed for the day, hush!!!")
+
+	return false
 }
 
 func TestTicker() {
