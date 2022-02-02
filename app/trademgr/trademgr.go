@@ -4,6 +4,7 @@ func Trader() {
 
 }
 
-func StopTrader() {
+func StopTrader() bool {
 
+	return true
 }

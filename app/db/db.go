@@ -5,12 +5,15 @@ import (
 	"goTicker/app/kite"
 	"goTicker/app/srv"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
+
+var dBwg sync.WaitGroup
 
 var dbPool *pgxpool.Pool
 var dbTick []kite.TickData
@@ -264,12 +267,22 @@ func StoreTickInDb() {
 	for v := range kite.ChTick { // read from tick channel
 		dbTick = append(dbTick, v)
 		if len(dbTick) > 250 {
+			dBwg.Add(1)
 			go executeBatch(dbTick)
 			dbTick = nil
 		}
 	}
+	dBwg.Add(1)
 	go executeBatch(dbTick)
 	dbTick = nil
+
+	// wait for all executeBatch() to finish
+	dBwg.Wait()
+	dbPool.Close()
+}
+
+func CloseDb() {
+	dbPool.Close()
 }
 
 func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
@@ -294,13 +307,8 @@ func StoreSymbolsInDb(nse_symbol string, mcx_symbol string) {
 	}
 }
 
-func CloseDBpool() bool {
-	dbPool.Close()
-	return false
-}
-
 func executeBatch(dataTick []kite.TickData) {
-
+	defer dBwg.Done()
 	defer func() {
 		if err := recover(); err != nil {
 			srv.WarningLogger.Print("DB Not intialised: ", err)
