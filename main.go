@@ -11,16 +11,14 @@ import (
 )
 
 var (
-	envOk, dbOk, kiteOk, traderOk bool
+	envOk, dbOk, kiteOk, traderOk bool = false, false, false, false
 	apiKey, accToken              string
-	wdg, closeTicker, initTicker  *cron.Cron
+	wdg, sessionCron              *cron.Cron
 	symbolFutStr, symbolMcxFutStr string
 	Tokens                        []uint32
 )
 
 func main() {
-
-	// timeZone, _ := time.LoadLocation("Asia/Calcutta")
 
 	srv.CheckFiles()
 	srv.Init()
@@ -36,20 +34,11 @@ func main() {
 		checkAPIs() // Check if conections are okay
 	}
 
-	// start watchdog to recover from connections issues
-	wdg = cron.New()
-	wdg.AddFunc("@every 30s", exMgrWdg)
-	wdg.Start()
-
-	// everyday scheduled start At 09:00:00 Mon-Fri
-	initTicker = cron.New()
-	initTicker.AddFunc("0 0 9 * * 1-5", startMainSession)
-	initTicker.Start()
-
-	// everyday scheduled stop At 16:00:00 Mon-Fri
-	closeTicker = cron.New()
-	closeTicker.AddFunc("0 0 16 * * 1-5", stopMainSession)
-	closeTicker.Start()
+	// everyday scheduled #[start 09:00:00] #[stop 16:00:00] (Mon-Fri)
+	sessionCron = cron.New()
+	sessionCron.AddFunc("0 0 9 * * 1-5", startMainSession)
+	sessionCron.AddFunc("0 0 16 * * 1-5", stopMainSession)
+	sessionCron.Start()
 
 	select {}
 
@@ -60,6 +49,11 @@ func startMainSession() {
 	srv.InfoLogger.Print(
 		"\n\n\t-------------- START ---------------",
 		"\n\t------------------------------------\n\n")
+
+	// start watchdog to recover from connections issues
+	wdg = cron.New()
+	wdg.AddFunc("@every 60s", exMgrWdg)
+	wdg.Start()
 
 	envOk = srv.LoadEnvVariables()
 
@@ -78,9 +72,9 @@ func startMainSession() {
 			// Start Ticker and Trader
 			if kiteOk {
 				kite.TickerInitialize(apiKey, accToken)
-				go db.StoreTickInDb() // TODO:check if channel open then spawn
-				go trademgr.Trader()  // TODO: what condition to apply?
 
+				go trademgr.Trader() // TODO: what condition to apply?
+				go db.StoreTickInDb()
 				// start watchdog to recover from connections issues
 			}
 		}
@@ -90,9 +84,9 @@ func startMainSession() {
 
 func stopMainSession() {
 
-	kiteOk = kite.CloseTicker()
+	kiteOk = kite.CloseTicker()      // DB will close if channel gets closed
 	traderOk = trademgr.StopTrader() // Trader will terminate after closing the trades
-	// DB shall close with close on channel itself - TODO: auto close logic for DB
+	wdg.Stop()
 }
 
 func checkAPIs() {
@@ -108,6 +102,15 @@ func checkAPIs() {
 }
 
 func exMgrWdg() {
+
+	// db Reconnection on error
+	if (db.ErrCnt > 100) || (kite.TickerCnt < 100) {
+		srv.ErrorLogger.Print("\n\n\tDB/Ticker Error, Restarting...\n\n")
+		kite.CloseTicker() // close channel and DB store task
+		startMainSession() // login kite, start ch & db task
+	}
+	db.ErrCnt = 0
+	kite.TickerCnt = 0
 
 }
 

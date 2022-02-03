@@ -14,7 +14,7 @@ import (
 )
 
 var dBwg sync.WaitGroup
-
+var ErrCnt int = 0
 var dbPool *pgxpool.Pool
 var dbTick []kite.TickData
 
@@ -352,6 +352,7 @@ func executeBatch(dataTick []kite.TickData) {
 	_, err := br.Exec()
 
 	if err != nil {
+		ErrCnt++
 		srv.WarningLogger.Printf("Unable to execute statement in batch queue %v\n", err)
 	}
 }

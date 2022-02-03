@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	TickerCnt            uint32 = 0
 	ticker               *kiteticker.Ticker
 	Tokens               []uint32
 	TokensWithNames      []string
@@ -60,6 +61,8 @@ func onConnect() {
 
 // Triggered when tick is recevived
 func onTick(tick kitemodels.Tick) {
+
+	TickerCnt++
 
 	ChTick <- TickData{
 		Timestamp:       tick.Timestamp.Time,
