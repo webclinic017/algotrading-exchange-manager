@@ -96,6 +96,7 @@ func checkAPIs() {
 
 	envOk = srv.LoadEnvVariables()
 	dbOk = db.DbInit()
+	db.ReadStrategiesFromDb()
 	kiteOk, apiKey, accToken = kite.LoginKite()
 	status()
 	db.CloseDb()
