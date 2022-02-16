@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const (
+const ( // format in which data is received form zerodha server
 	instrument_token = iota
 	exchange_token
 	tradingsymbol

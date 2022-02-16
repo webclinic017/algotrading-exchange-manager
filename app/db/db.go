@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"goTicker/app/data"
 	"goTicker/app/kite"
 	"goTicker/app/srv"
 	"os"
@@ -13,22 +14,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
-
-type Strategies struct {
-	Strategy_id               string
-	Strategy_en               bool
-	P_engine                  string
-	P_trigger_time            time.Time
-	P_trigger_days            string
-	P_target_per              int
-	P_candle_size             int
-	P_stoploss_per            int
-	P_deep_stoploss_per       int
-	P_delayed_stoploss_min    time.Time
-	P_stall_detect_period_min time.Time
-	P_trail_target_en         bool
-	P_position_reversal_en    bool
-}
 
 var dBwg sync.WaitGroup
 var ErrCnt int = 0
@@ -374,57 +359,14 @@ func executeBatch(dataTick []kite.TickData) {
 	}
 }
 
-func ReadStrategiesFromDb() {
+func ReadStrategiesFromDb() []*data.Strategies {
 	ctx := context.Background()
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	// rows, err := myCon.Query(ctx, `SELECT * FROM strategies`)
-	// if err != nil {
-	// 	panic(errors.Wrap(err, "query bookings"))
-	// }
+	var ts []*data.Strategies
 
-	// var s Strategies
+	pgxscan.Select(ctx, dbPool, &ts, `SELECT * FROM strategies where strategy_en = 'true'`)
 
-	// for rows.Next() {
-	// 	err = rows.Scan(
-	// 		&s.Strategy_id,
-	// 		&s.Strategy_en,
-	// 		&s.P_engine,
-	// 		&s.P_trigger_time,
-	// 		&s.P_trigger_days,
-	// 		&s.P_target_per,
-	// 		&s.P_candle_size,
-	// 		&s.P_stoploss_per,
-	// 		&s.P_deep_stoploss_per,
-	// 		&s.P_delayed_stoploss_min,
-	// 		&s.P_stall_detect_period_min,
-	// 		&s.P_trail_target_en,
-	// 		&s.P_position_reversal_en)
-
-	// 	if err != nil {
-	// 		srv.WarningLogger.Println(err.Error())
-	// 	}
-
-	// 	// strategies = append(strategies, s)
-	// 	fmt.Printf("Strategy_id: %s\n", s.Strategy_id)
-
-	// }
-
-	// // Any errors encountered by rows.Next or rows.Scan will be returned here
-	// if rows.Err() != nil {
-	// 	print("Error: ", rows.Err())
-	// }
-
-	var s1 []*Strategies
-	pgxscan.Select(ctx, dbPool, &s1, `SELECT * FROM strategies where strategy_en = 'true'`)
-
-	// Read enabled strategies
-	// var strategies []*Strategies
-	// pgxscan.Select(ctx, dbPool, &strategies, `SELECT * FROM strategies`)
-
-	// println("Strategies: %d\n", len(strategies))
-
-	// srv.ErrorLogger.Printf("Error reading 'Strategies Tbl in DB';\n No trades could be initiated:\n")
-
+	return ts
 }
