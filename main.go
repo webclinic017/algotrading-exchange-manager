@@ -84,8 +84,8 @@ func startMainSession() {
 
 func stopMainSession() {
 
-	kiteOk = kite.CloseTicker()      // DB will close if channel gets closed
-	traderOk = trademgr.StopTrader() // Trader will terminate after closing the trades
+	kiteOk = kite.CloseTicker() // DB will close if channel gets closed
+	trademgr.StopTrader()       // Trader will terminate after closing the trades
 	wdg.Stop()
 }
 
