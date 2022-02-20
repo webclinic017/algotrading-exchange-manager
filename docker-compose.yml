@@ -16,8 +16,8 @@ services:
       DATABASE_URL: "postgres://postgres:pgpwdChangeMe@mysite.com:5432/stockdb"
       LIVE_TRADING_MODE: 'true'
     volumes:
-      - ./dockerTest/config:/app/app/config
-      - ./dockerTest/log:/app/app/log
+      - ./dockerTest/config:/app/app/zfiles/config
+      - ./dockerTest/log:/app/app/zfiles/log
     
 # Use the below code to spawn TimescaleDB Container
 

@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY app/ ./app
 COPY *.go ./
-RUN rm ./app/config/*.env
+RUN rm ./app/zfiles/config/*.env
 
 RUN go build -o /algotrading-exchange-manager
 

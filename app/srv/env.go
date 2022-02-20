@@ -14,8 +14,8 @@ func LoadEnvVariables() bool {
 	if os.Getenv("PRODUCTION") != "true" {
 		WarningLogger.Println("DEVELOPMENT ENV")
 		InfoLogger.Println("Ensure ENV variables are set in ENV_settings.env")
-		FileCopyIfMissing("app/templates/ENV_Settings.env", "app/config/ENV_Settings.env")
-		_ = godotenv.Load("app/config/ENV_Settings.env")
+		FileCopyIfMissing("app/zfiles/templates/ENV_Settings.env", "app/zfiles/config/ENV_Settings.env")
+		_ = godotenv.Load("app/zfiles/config/ENV_Settings.env")
 	} else {
 		InfoLogger.Println("PRODUCTION ENV- Ensure ENV variables are set")
 	}

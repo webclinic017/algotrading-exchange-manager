@@ -5,6 +5,7 @@ package trademgr
 
 import (
 	"fmt"
+	"goTicker/app/apiclient"
 	"goTicker/app/data"
 	"goTicker/app/db"
 	"goTicker/app/srv"
@@ -48,26 +49,27 @@ func StopTrader() {
 	terminateTradeOperator = true
 }
 
+// this is thread for each strategy
 func tradeOperator(tradeStrategies *data.Strategies, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	srv.TradesLogger.Println("\n\ntradeOperator ", tradeStrategies)
 
 	if checkTriggerDays(tradeStrategies) {
-		// 1. wait till trigger time
-		awaitTriggerTime(tradeStrategies)
+		// 1. wait for trigger time and invoke api (blocking call)
+		awaitSignal(tradeStrategies)
 
-		// 2. execute signal api
+		// 2. read db for valid signal
 
-		// 3. on signal, execute trade
+		// 3. on signal, execute trade (blocking call)
 
 		// 4. on trade completion, update db
 
-		// 5. montitor trade positions
+		// 5. montitor trade positions (blocking call)
 
-		// 6. check exit conditions
+		// 6. check exit conditions (blocking call)
 
-		// 7. on signal, exit trade
+		// 7. on signal, exit trade	(blocking call)
 
 		// 8. on exit, update db
 	}
@@ -91,27 +93,43 @@ func checkTriggerDays(tradeStrategies *data.Strategies) bool {
 
 // Wait till the current time is greater than the trigger time.
 // TODO: master exit condition & EoD termniation
-func awaitTriggerTime(tradeStrategies *data.Strategies) {
+func awaitSignal(tradeStrategies *data.Strategies) {
 
-	// const layoutTime = "15:04:05"
-	for {
-		curTime := time.Now()
-		triggerTime := tradeStrategies.P_trigger_time
-		// fmt.Println(triggerTime, " : ", curTime)
+	if tradeStrategies.P_trigger_time.Hour() == 0 {
 
-		if curTime.Hour() == triggerTime.Hour() {
-			if curTime.Minute() == triggerTime.Minute() {
-				fmt.Println("intiating trade check")
+		for {
+			fmt.Println("(continous) Invoking API for ", tradeStrategies.Strategy_id)
+
+			apiclient.ExecuteApi()
+			// termination requested
+			if terminateTradeOperator {
 				return
 			}
+			time.Sleep(time.Second * 10)
+
 		}
 
-		// termination requested
-		if terminateTradeOperator {
-			return
-		}
+	} else {
+		// for specific time of day
+		for {
+			curTime := time.Now()
+			triggerTime := tradeStrategies.P_trigger_time
+			// fmt.Println(triggerTime, " : ", curTime)
 
-		time.Sleep(1 * time.Second * 10)
-		fmt.Println("sleeping ", tradeStrategies.Strategy_id)
+			if curTime.Hour() == triggerTime.Hour() {
+				if curTime.Minute() == triggerTime.Minute() {
+					fmt.Println("Invoking API for ", tradeStrategies.Strategy_id)
+					return
+				}
+			}
+
+			// termination requested
+			if terminateTradeOperator {
+				return
+			}
+
+			time.Sleep(1 * time.Second * 10)
+			fmt.Println("sleeping ", tradeStrategies.Strategy_id)
+		}
 	}
 }

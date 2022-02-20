@@ -7,9 +7,9 @@ import (
 
 func CheckFiles() {
 
-	//FileCopyIfMissing("app/templates/ENV_Settings.env", "app/config/ENV_Settings.env")
-	FileCopyIfMissing("app/templates/ENV_accesstoken.env", "app/config/ENV_accesstoken.env")
-	FileCopyIfMissing("app/templates/trackSymbols.txt", "app/config/trackSymbols.txt")
+	//FileCopyIfMissing("app/zfiles/templates/ENV_Settings.env", "app/zfiles/config/ENV_Settings.env")
+	FileCopyIfMissing("app/zfiles/templates/ENV_accesstoken.env", "app/zfiles/config/ENV_accesstoken.env")
+	FileCopyIfMissing("app/zfiles/templates/trackSymbols.txt", "app/zfiles/config/trackSymbols.txt")
 }
 
 // Copy the src file to dst. Skipped if file exists

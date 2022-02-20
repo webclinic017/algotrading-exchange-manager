@@ -22,7 +22,7 @@ func Init() {
 }
 
 func InitTradeLogger() {
-	logFile, err := os.OpenFile("app/log/Trades "+time.Now().Format(time.RFC822)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	logFile, err := os.OpenFile("app/zfiles/log/Trades "+time.Now().Format(time.RFC822)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,7 +30,7 @@ func InitTradeLogger() {
 }
 
 func InitLogger() {
-	logFile, err := os.OpenFile("app/log/algoExchMgr "+time.Now().Format(time.RFC822)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	logFile, err := os.OpenFile("app/zfiles/log/algoExchMgr "+time.Now().Format(time.RFC822)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}

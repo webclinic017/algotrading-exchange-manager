@@ -25,7 +25,7 @@ This container is first part of 3 micro-services to perform algo trading. This c
 
 # Instrument Symbols/Tokens
 The symbols to be registered for ticks are stored in trackSymbols.txt
-Default token/Instruments file is stored at app/config/trackSymbols.txt
+Default token/Instruments file is stored at app/zfiles/config/trackSymbols.txt
 
 For Futures, as the contract names changes, the name is generated based on today's date.
 And the current ID is fetched from Instruments file downloaded from Zerodha API.-
@@ -50,8 +50,8 @@ This tokens are used to register for the ticks.
         API_SECRET: ""
         DATABASE_URL: "postgres://postgres:pgpwdChangeMe@mysite.com:5432/stockdb"
         volumes:
-        - ./dockerTest/config:/app/app/config
-        - ./dockerTest/log:/app/app/log
+        - ./dockerTest/config:/app/app/zfiles/config
+        - ./dockerTest/log:/app/app/zfiles/log
         
     # Use the below code to spawn TimescaleDB Container
     timescaledb:
