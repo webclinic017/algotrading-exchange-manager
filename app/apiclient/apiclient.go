@@ -1,29 +1,32 @@
 package apiclient
 
 import (
-	"fmt"
+	"encoding/json"
 
 	"github.com/asmcos/requests"
 )
 
-func ExecuteApi() {
+func ExecuteSingleSymbolApi(algo string, symbol string, date string) (bool, interface{}) {
 
 	p := requests.Params{
-		"algo":   "S001-ORB-001",
-		"symbol": "BANKNIFTY",
-		"date":   "2022-02-09",
+		"multisymbol": "true",
+		"algo":        algo,
+		"symbol":      symbol,
+		"date":        date,
 	}
-	resp, err := requests.Get("https://algoanalysis.wyealth.com/tradesignals/", p)
+	// resp, err := requests.Get("https://algoanalysis.wyealth.com/tradesignals/", p)
+	resp, err := requests.Get("http://localhost:5000/tradesignals/", p)
 	// resp, err := requests.Get("https://jsonplaceholder.typicode.com/todos/1")
 	if err != nil {
-		return
+		return false, nil
 	}
-	fmt.Println(resp.Text())
 
-	var json map[string]interface{}
-	resp.Json(&json)
+	var js interface{}
+	json.Unmarshal([]byte(resp.Text()), &js)
 
-	for k, v := range json {
-		fmt.Println(k, v)
+	if len(js.([]interface{})) > 0 {
+		return true, js
+	} else {
+		return false, nil
 	}
 }

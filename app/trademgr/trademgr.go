@@ -46,6 +46,7 @@ func Trader() {
 }
 
 func StopTrader() {
+	fmt.Println("Terminating Trader - Signal received")
 	terminateTradeOperator = true
 }
 
@@ -95,12 +96,22 @@ func checkTriggerDays(tradeStrategies *data.Strategies) bool {
 // TODO: master exit condition & EoD termniation
 func awaitSignal(tradeStrategies *data.Strategies) {
 
+	tradeSymbols := strings.Split(tradeStrategies.P_trade_symbols, ",")
+
 	if tradeStrategies.P_trigger_time.Hour() == 0 {
 
 		for {
-			fmt.Println("(continous) Invoking API for ", tradeStrategies.Strategy_id)
+			for each := range tradeSymbols {
 
-			apiclient.ExecuteApi()
+				if tradeSymbols[each] != "" {
+					fmt.Println("(continious) Invoking API for ", tradeStrategies.Strategy_id, "symbol : ", tradeSymbols[each])
+					res, _ := apiclient.ExecuteSingleSymbolApi(tradeStrategies.Strategy_id, tradeSymbols[each], "2022-02-09")
+					if res {
+						fmt.Println("Removing coni check as Signal found for ", tradeStrategies.Strategy_id, "symbol : ", tradeSymbols[each])
+						tradeSymbols[each] = "" // remove from furher scan
+					}
+				}
+			}
 			// termination requested
 			if terminateTradeOperator {
 				return
@@ -118,7 +129,11 @@ func awaitSignal(tradeStrategies *data.Strategies) {
 
 			if curTime.Hour() == triggerTime.Hour() {
 				if curTime.Minute() == triggerTime.Minute() {
-					fmt.Println("Invoking API for ", tradeStrategies.Strategy_id)
+
+					for each := range tradeSymbols {
+						_, _ = apiclient.ExecuteSingleSymbolApi(tradeStrategies.Strategy_id, tradeSymbols[each], "2022-02-09")
+						fmt.Println("Invoking API for ", tradeStrategies.Strategy_id, "symbol : ", tradeSymbols[each])
+					}
 					return
 				}
 			}

@@ -97,7 +97,9 @@ func checkAPIs() {
 	envOk = srv.LoadEnvVariables()
 	dbOk = db.DbInit()
 
-	trademgr.Trader()
+	go trademgr.Trader()
+	time.Sleep(time.Minute * 1)
+	trademgr.StopTrader()
 
 	kiteOk, apiKey, accToken = kite.LoginKite()
 	status()

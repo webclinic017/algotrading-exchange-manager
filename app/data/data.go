@@ -16,4 +16,5 @@ type Strategies struct {
 	P_stall_detect_period_min time.Time
 	P_trail_target_en         bool
 	P_position_reversal_en    bool
+	P_trade_symbols           string
 }
