@@ -105,9 +105,10 @@ func awaitSignal(tradeStrategies *data.Strategies) {
 
 				if tradeSymbols[each] != "" {
 					fmt.Println("(continious) Invoking API for ", tradeStrategies.Strategy_id, "symbol : ", tradeSymbols[each])
-					res, _ := apiclient.ExecuteSingleSymbolApi(tradeStrategies.Strategy_id, tradeSymbols[each], "2022-02-09")
+					res, sigData := apiclient.ExecuteSingleSymbolApi(tradeStrategies.Strategy_id, tradeSymbols[each], "2022-02-09")
 					if res {
-						fmt.Println("Removing coni check as Signal found for ", tradeStrategies.Strategy_id, "symbol : ", tradeSymbols[each])
+						fmt.Println("Trade Signal found for ", tradeStrategies.Strategy_id, "symbol : ", tradeSymbols[each])
+						db.StoreTradeSignalInDb(sigData)
 						tradeSymbols[each] = "" // remove from furher scan
 					}
 				}

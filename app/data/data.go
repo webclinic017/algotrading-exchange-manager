@@ -18,3 +18,22 @@ type Strategies struct {
 	P_position_reversal_en    bool
 	P_trade_symbols           string
 }
+
+type TradeSignal struct {
+	Strategy_id          string
+	S_date               string
+	S_direction          string
+	T_entry              float64
+	T_entry_time         string
+	S_target             float64
+	S_stoploss           float64
+	T_trade_confirmed_en bool
+	S_instr_token        string
+	R_exit_val           float64
+	R_exit_time          string
+	R_exit_reason        string
+	R_swing_min          float64
+	R_swing_max          float64
+	R_swing_min_time     string
+	R_swing_max_time     string
+}

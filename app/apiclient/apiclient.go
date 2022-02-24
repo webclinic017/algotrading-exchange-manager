@@ -6,7 +6,7 @@ import (
 	"github.com/asmcos/requests"
 )
 
-func ExecuteSingleSymbolApi(algo string, symbol string, date string) (bool, interface{}) {
+func ExecuteSingleSymbolApi(algo string, symbol string, date string) (bool, string) {
 
 	p := requests.Params{
 		"multisymbol": "true",
@@ -18,15 +18,15 @@ func ExecuteSingleSymbolApi(algo string, symbol string, date string) (bool, inte
 	resp, err := requests.Get("http://localhost:5000/tradesignals/", p)
 	// resp, err := requests.Get("https://jsonplaceholder.typicode.com/todos/1")
 	if err != nil {
-		return false, nil
+		return false, "nil"
 	}
 
 	var js interface{}
 	json.Unmarshal([]byte(resp.Text()), &js)
 
 	if len(js.([]interface{})) > 0 {
-		return true, js
+		return true, resp.Text()
 	} else {
-		return false, nil
+		return false, "nil"
 	}
 }

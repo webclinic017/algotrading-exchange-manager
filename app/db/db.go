@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"encoding/json"
 	"goTicker/app/data"
 	"goTicker/app/kite"
 	"goTicker/app/srv"
@@ -16,6 +17,7 @@ import (
 )
 
 var dBwg sync.WaitGroup
+var lock sync.Mutex
 var ErrCnt int = 0
 var dbPool *pgxpool.Pool
 var dbTick []kite.TickData
@@ -369,4 +371,45 @@ func ReadStrategiesFromDb() []*data.Strategies {
 	pgxscan.Select(ctx, dbPool, &ts, `SELECT * FROM strategies where strategy_en = 'true'`)
 
 	return ts
+}
+
+func StoreTradeSignalInDb(sigData string) {
+	lock.Lock()
+	defer lock.Unlock()
+
+	ctx := context.Background()
+	myCon, _ := dbPool.Acquire(ctx)
+	defer myCon.Release()
+
+	sqlTradeSig := `INSERT INTO signals_trading (
+		strategy_id,
+		s_date,
+		s_direction,
+		s_target,
+		s_stoploss,
+		s_instr_token)
+		VALUES
+		($1, $2, $3, $4, $5, $6);`
+
+	var tradeSignal []*data.TradeSignal
+	err := json.Unmarshal([]byte(sigData), &tradeSignal)
+	if err != nil {
+		srv.ErrorLogger.Printf("TradeSignal - API JSON data parse error: %v\n", err)
+	}
+
+	// fmt.Printf("%+v\n", tradeSignal[0])
+	// fmt.Println(tradeSignal[0].T_entry)
+
+	_, err = myCon.Exec(ctx, sqlTradeSig,
+		tradeSignal[0].Strategy_id,
+		tradeSignal[0].S_date,
+		tradeSignal[0].S_direction,
+		tradeSignal[0].S_target,
+		tradeSignal[0].S_stoploss,
+		tradeSignal[0].S_instr_token)
+
+	if err != nil {
+		srv.ErrorLogger.Printf("Unable to insert data into 'symbol ID' database: %v\n", err)
+	}
+
 }
