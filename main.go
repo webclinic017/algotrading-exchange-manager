@@ -73,7 +73,7 @@ func startMainSession() {
 			if kiteOk {
 				kite.TickerInitialize(apiKey, accToken)
 
-				go trademgr.Trader() // TODO: what condition to apply?
+				go trademgr.StartTrader() // TODO: what condition to apply?
 				go db.StoreTickInDb()
 				// start watchdog to recover from connections issues
 			}
@@ -97,7 +97,7 @@ func checkAPIs() {
 	envOk = srv.LoadEnvVariables()
 	dbOk = db.DbInit()
 
-	go trademgr.Trader()
+	go trademgr.StartTrader()
 	time.Sleep(time.Minute * 1)
 	trademgr.StopTrader()
 

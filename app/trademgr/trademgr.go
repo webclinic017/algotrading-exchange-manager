@@ -4,8 +4,6 @@
 package trademgr
 
 import (
-	"fmt"
-	"goTicker/app/apiclient"
 	"goTicker/app/data"
 	"goTicker/app/db"
 	"goTicker/app/srv"
@@ -21,9 +19,11 @@ var (
 	terminateTradeOperator bool = false
 )
 
+const tradeOperatorSleepTime = time.Second * 10
+
 // Scan DB for all strategies with strategy_en = 1. Each funtion is executed in a separate thread and remains active till the trade is complete.
 // TODO: recovery logic for server restarts
-func Trader() {
+func StartTrader() {
 
 	var wgTrademgr sync.WaitGroup
 	terminateTradeOperator = false
@@ -33,10 +33,9 @@ func Trader() {
 	// 1. Read trading strategies from dB
 	tradeStrategies = db.ReadStrategiesFromDb()
 
-	// 2. Setup time intervals for each strategy (loop for each)
+	// 2. Setup operators for each strategy
 	for each := range tradeStrategies {
-		wgTrademgr.Add(1)
-		go tradeOperator(tradeStrategies[each], &wgTrademgr)
+		tradeOperator(tradeStrategies[each], &wgTrademgr) // for each strategy
 	}
 
 	// 3. wait till all trades are completed
@@ -45,33 +44,41 @@ func Trader() {
 
 }
 
+// to stop trademanager and exit all positions
 func StopTrader() {
-	fmt.Println("Terminating Trader - Signal received")
+	srv.TradesLogger.Println("(Terminating Trader) - Signal received")
 	terminateTradeOperator = true
 }
 
-// this is thread for each strategy
-func tradeOperator(tradeStrategies *data.Strategies, wg *sync.WaitGroup) {
-	defer wg.Done()
+// Scans for all strategies and spawn thread for each symbol in that strategy
+func tradeOperator(tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup) {
 
-	srv.TradesLogger.Println("\n\ntradeOperator ", tradeStrategies)
+	srv.TradesLogger.Println("\n(TradeOperator Setup) ", tradeStrategies)
 
-	if checkTriggerDays(tradeStrategies) {
+	if checkTriggerDays(tradeStrategies) { // check if the current day is a trading day.
+
+		// Read symbols within each strategy
+		tradeSymbols := strings.Split(tradeStrategies.P_trade_symbols, ",")
+
+		for each := range tradeSymbols {
+
+			// Check if continous OR time trigerred strategy
+			if tradeStrategies.P_trigger_time.Hour() == 0 {
+				wgTrademgr.Add(1)
+				go toContinous(tradeSymbols[each], tradeStrategies, wgTrademgr)
+			} else {
+				wgTrademgr.Add(1)
+				go toTimeTrigerred(tradeSymbols[each], tradeStrategies, wgTrademgr)
+			}
+		}
+
 		// 1. wait for trigger time and invoke api (blocking call)
-		awaitSignal(tradeStrategies)
-
 		// 2. read db for valid signal
-
 		// 3. on signal, execute trade (blocking call)
-
 		// 4. on trade completion, update db
-
 		// 5. montitor trade positions (blocking call)
-
 		// 6. check exit conditions (blocking call)
-
 		// 7. on signal, exit trade	(blocking call)
-
 		// 8. on exit, update db
 	}
 }
@@ -92,60 +99,20 @@ func checkTriggerDays(tradeStrategies *data.Strategies) bool {
 	return false
 }
 
-// Wait till the current time is greater than the trigger time.
 // TODO: master exit condition & EoD termniation
-func awaitSignal(tradeStrategies *data.Strategies) {
 
-	tradeSymbols := strings.Split(tradeStrategies.P_trade_symbols, ",")
+// Continous scan strategy
+func toContinous(tradeSymbol string, tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup) {
+	defer wgTrademgr.Done()
 
-	if tradeStrategies.P_trigger_time.Hour() == 0 {
+	awaitContinousScan(tradeSymbol, tradeStrategies.Strategy_id)
 
-		for {
-			for each := range tradeSymbols {
+}
 
-				if tradeSymbols[each] != "" {
-					fmt.Println("(continious) Invoking API for ", tradeStrategies.Strategy_id, "symbol : ", tradeSymbols[each])
-					res, sigData := apiclient.ExecuteSingleSymbolApi(tradeStrategies.Strategy_id, tradeSymbols[each], "2022-02-09")
-					if res {
-						fmt.Println("Trade Signal found for ", tradeStrategies.Strategy_id, "symbol : ", tradeSymbols[each])
-						db.StoreTradeSignalInDb(sigData)
-						tradeSymbols[each] = "" // remove from furher scan
-					}
-				}
-			}
-			// termination requested
-			if terminateTradeOperator {
-				return
-			}
-			time.Sleep(time.Second * 10)
+// Strategy invoked at the time of trigger.
+func toTimeTrigerred(tradeSymbol string, tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup) {
+	defer wgTrademgr.Done()
 
-		}
+	awaiTriggerTimeScan(tradeSymbol, tradeStrategies.Strategy_id, tradeStrategies.P_trigger_time)
 
-	} else {
-		// for specific time of day
-		for {
-			curTime := time.Now()
-			triggerTime := tradeStrategies.P_trigger_time
-			// fmt.Println(triggerTime, " : ", curTime)
-
-			if curTime.Hour() == triggerTime.Hour() {
-				if curTime.Minute() == triggerTime.Minute() {
-
-					for each := range tradeSymbols {
-						_, _ = apiclient.ExecuteSingleSymbolApi(tradeStrategies.Strategy_id, tradeSymbols[each], "2022-02-09")
-						fmt.Println("Invoking API for ", tradeStrategies.Strategy_id, "symbol : ", tradeSymbols[each])
-					}
-					return
-				}
-			}
-
-			// termination requested
-			if terminateTradeOperator {
-				return
-			}
-
-			time.Sleep(1 * time.Second * 10)
-			fmt.Println("sleeping ", tradeStrategies.Strategy_id)
-		}
-	}
 }

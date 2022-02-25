@@ -6,10 +6,10 @@ import (
 	"github.com/asmcos/requests"
 )
 
-func ExecuteSingleSymbolApi(algo string, symbol string, date string) (bool, string) {
+func SignalAnalyzer(multiSymbol string, algo string, symbol string, date string) (bool, string) {
 
 	p := requests.Params{
-		"multisymbol": "true",
+		"multisymbol": multiSymbol,
 		"algo":        algo,
 		"symbol":      symbol,
 		"date":        date,

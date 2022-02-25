@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/asmcos/requests v0.0.0-20210319030608-c839e8ae4946
+	github.com/georgysavva/scany v0.3.0
 	github.com/jackc/pgconn v1.10.1
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/joho/godotenv v1.4.0
@@ -13,7 +14,6 @@ require (
 )
 
 require (
-	github.com/georgysavva/scany v0.3.0 // indirect
 	github.com/gocarina/gocsv v0.0.0-20211203214250-4735fba0c1d9 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
