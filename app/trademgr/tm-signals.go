@@ -7,7 +7,9 @@ import (
 	"time"
 )
 
-func awaitContinousScan(symbol string, sID string) {
+func awaitContinousScan(symbol string, sID string) uint16 {
+
+	var orderBookId uint16 = 0
 
 	for {
 		srv.TradesLogger.Println("(Continious Scan) Invoking API [", sID, "-", symbol, "]")
@@ -15,7 +17,7 @@ func awaitContinousScan(symbol string, sID string) {
 
 		if result {
 			srv.TradesLogger.Println("{Trade Signal found} [", sID, "-", symbol, "]")
-			db.StoreTradeSignalInDb(sigData)
+			orderBookId = db.StoreTradeSignalInDb(sigData)
 			break
 		}
 
@@ -25,9 +27,12 @@ func awaitContinousScan(symbol string, sID string) {
 		}
 		time.Sleep(tradeOperatorSleepTime)
 	}
+	return orderBookId
 }
 
-func awaiTriggerTimeScan(symbol string, sID string, triggerTime time.Time) {
+func awaiTriggerTimeScan(symbol string, sID string, triggerTime time.Time) uint16 {
+
+	var orderBookId uint16 = 0
 
 	for {
 		curTime := time.Now()
@@ -42,7 +47,7 @@ func awaiTriggerTimeScan(symbol string, sID string, triggerTime time.Time) {
 
 				if result {
 					srv.TradesLogger.Println("{Trade Signal found} [", sID, "-", symbol, "]")
-					db.StoreTradeSignalInDb(sigData)
+					orderBookId = db.StoreTradeSignalInDb(sigData)
 				}
 				break
 			}
@@ -51,10 +56,12 @@ func awaiTriggerTimeScan(symbol string, sID string, triggerTime time.Time) {
 		// termination requested
 		if terminateTradeOperator {
 			srv.TradesLogger.Println("(TimeTrigerred) Termination requested ", sID, "symbol : ", symbol)
-			return
+			return 0
 		}
 
 		time.Sleep(tradeOperatorSleepTime)
 		srv.TradesLogger.Println("(Sleeping) [", sID, "-", symbol, "]")
 	}
+
+	return orderBookId
 }

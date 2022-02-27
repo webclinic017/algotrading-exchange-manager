@@ -6,6 +6,7 @@ package trademgr
 import (
 	"goTicker/app/data"
 	"goTicker/app/db"
+	"goTicker/app/kite"
 	"goTicker/app/srv"
 	"os"
 	"strings"
@@ -105,7 +106,9 @@ func checkTriggerDays(tradeStrategies *data.Strategies) bool {
 func toContinous(tradeSymbol string, tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup) {
 	defer wgTrademgr.Done()
 
-	awaitContinousScan(tradeSymbol, tradeStrategies.Strategy_id)
+	orderBookId := awaitContinousScan(tradeSymbol, tradeStrategies.Strategy_id)
+	// fetchRecord(orderBookId)
+	kite.ExecuteTrade(orderBookId)
 
 }
 
@@ -113,6 +116,8 @@ func toContinous(tradeSymbol string, tradeStrategies *data.Strategies, wgTrademg
 func toTimeTrigerred(tradeSymbol string, tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup) {
 	defer wgTrademgr.Done()
 
-	awaiTriggerTimeScan(tradeSymbol, tradeStrategies.Strategy_id, tradeStrategies.P_trigger_time)
+	orderBookId := awaiTriggerTimeScan(tradeSymbol, tradeStrategies.Strategy_id, tradeStrategies.P_trigger_time)
+	// fetchRecord(orderBookId)
+	kite.ExecuteTrade(orderBookId)
 
 }
