@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"goTicker/app/data"
 	"goTicker/app/srv"
+
+	"github.com/georgysavva/scany/pgxscan"
 )
 
 func StoreTradeSignalInDb(sigData string) uint16 {
@@ -93,3 +95,28 @@ func StoreTradeSignalInDb(sigData string) uint16 {
 	}
 
 }
+
+func FetchOrderBookIdData(orderBookId uint16) []*data.TradeSignal {
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	ctx := context.Background()
+	myCon, _ := dbPool.Acquire(ctx)
+	defer myCon.Release()
+
+	var ts []*data.TradeSignal
+
+	err := pgxscan.Select(ctx, dbPool, &ts, `SELECT * FROM 
+	signals_trading where s_order_id = 31`)
+
+	if err != nil {
+		srv.ErrorLogger.Printf("TradeSignal DB store error %v\n", err)
+		return nil
+	}
+
+	return ts
+
+}
+
+// t_entry = 0
