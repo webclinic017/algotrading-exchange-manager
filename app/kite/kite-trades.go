@@ -1,10 +1,12 @@
 package kite
 
-func ExecuteTrade(orderBookId uint16) bool {
+import "goTicker/app/data"
 
-	if orderBookId == 0 {
+func PlaceOrder(order *data.TradeSignal) bool {
+
+	if order.Instr != "" {
+		return true
+	} else {
 		return false
 	}
-
-	return true
 }

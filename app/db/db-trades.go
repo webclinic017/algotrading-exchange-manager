@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"goTicker/app/data"
 	"goTicker/app/srv"
 
@@ -18,12 +19,12 @@ func StoreTradeSignalInDb(sigData string) uint16 {
 	defer myCon.Release()
 
 	sqlTradeSig := `INSERT INTO signals_trading (
-		strategy_id,
-		s_date,
-		s_direction,
-		s_target,
-		s_stoploss,
-		s_instr_token)
+		strategy,
+		date,
+		dir,
+		target,
+		stoploss,
+		instr)
 		VALUES
 		($1, $2, $3, $4, $5, $6);`
 
@@ -37,29 +38,29 @@ func StoreTradeSignalInDb(sigData string) uint16 {
 	// // fmt.Println(tradeSignal[0].T_entry)
 
 	_, err = myCon.Exec(ctx, sqlTradeSig,
-		tradeSignal[0].Strategy_id,
-		tradeSignal[0].S_date,
-		tradeSignal[0].S_direction,
-		tradeSignal[0].S_target,
-		tradeSignal[0].S_stoploss,
-		tradeSignal[0].S_instr_token)
+		tradeSignal[0].Strategy,
+		tradeSignal[0].Date,
+		tradeSignal[0].Dir,
+		tradeSignal[0].Target,
+		tradeSignal[0].Stoploss,
+		tradeSignal[0].Instr)
 
 	if err != nil {
 		srv.ErrorLogger.Printf("Unable to insert data into 'symbol ID' database: %v\n", err)
 	}
 
 	rows, err := myCon.Query(ctx, `
-		SELECT s_order_id 
+		SELECT id 
 		FROM signals_trading 
 		WHERE  (
-				s_instr_token = $1 
+				instr = $1 
 			AND 
-				s_date = $2
+				date = $2
 			AND 
-				strategy_id = $3)`,
-		tradeSignal[0].S_instr_token,
-		tradeSignal[0].S_date,
-		tradeSignal[0].Strategy_id)
+				strategy = $3)`,
+		tradeSignal[0].Instr,
+		tradeSignal[0].Date,
+		tradeSignal[0].Strategy)
 
 	if err != nil {
 		srv.ErrorLogger.Printf("TradeSignal DB store error %v\n", err)
@@ -107,8 +108,9 @@ func FetchOrderBookIdData(orderBookId uint16) []*data.TradeSignal {
 
 	var ts []*data.TradeSignal
 
-	err := pgxscan.Select(ctx, dbPool, &ts, `SELECT * FROM 
-	signals_trading where s_order_id = 31`)
+	sqlquery := fmt.Sprintf("SELECT * FROM signals_trading WHERE id = %d", orderBookId)
+
+	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
 	if err != nil {
 		srv.ErrorLogger.Printf("TradeSignal DB store error %v\n", err)

@@ -107,9 +107,11 @@ func toContinous(tradeSymbol string, tradeStrategies *data.Strategies, wgTrademg
 	defer wgTrademgr.Done()
 
 	orderBookId := awaitContinousScan(tradeSymbol, tradeStrategies.Strategy_id)
-	db.FetchOrderBookIdData(orderBookId)
-	// fetchRecord(orderBookId)
-	kite.ExecuteTrade(orderBookId)
+	order := db.FetchOrderBookIdData(orderBookId)
+
+	if order != nil {
+		kite.PlaceOrder(order[0])
+	}
 
 }
 
@@ -118,8 +120,10 @@ func toTimeTrigerred(tradeSymbol string, tradeStrategies *data.Strategies, wgTra
 	defer wgTrademgr.Done()
 
 	orderBookId := awaiTriggerTimeScan(tradeSymbol, tradeStrategies.Strategy_id, tradeStrategies.P_trigger_time)
-	db.FetchOrderBookIdData(orderBookId)
-	// fetchRecord(orderBookId)
-	kite.ExecuteTrade(orderBookId)
+	order := db.FetchOrderBookIdData(orderBookId)
+
+	if order != nil {
+		kite.PlaceOrder(order[0])
+	}
 
 }
