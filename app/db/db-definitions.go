@@ -1,9 +1,6 @@
 package db
 
 var DB_EXISTS_QUERY = "SELECT datname FROM pg_catalog.pg_database  WHERE lower(datname) = lower('algotrading');"
-var DB_EXISTS_QUERY2 = "SELECT * FROM pg_database  WHERE lower(datname) = lower('algotrading');"
-var DB_READ_STR = "SELECT s_order_id FROM signals_trading WHERE (s_instr_token = 'BANKNIFTY-FUT' and s_date = '2022-02-09' and strategy_id = 'S001-ORB-001');"
-
 var DB_CREATE_QUERY = "CREATE DATABASE algotrading;"
 var DB_TABLE_ID_DECODED_NAME = `token_id_decoded`
 var DB_CREATE_TABLE_ID_DECODED = `CREATE TABLE token_id_decoded
