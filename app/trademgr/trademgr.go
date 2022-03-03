@@ -6,10 +6,8 @@ package trademgr
 import (
 	"goTicker/app/data"
 	"goTicker/app/db"
-	"goTicker/app/kite"
 	"goTicker/app/srv"
 	"os"
-	"strings"
 	"sync"
 	"time"
 )
@@ -56,47 +54,47 @@ func tradeOperator(tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup)
 
 	srv.TradesLogger.Println("\n(TradeOperator Setup) ", tradeStrategies)
 
-	if checkTriggerDays(tradeStrategies) { // check if the current day is a trading day.
+	// if checkTriggerDays(tradeStrategies) { // check if the current day is a trading day.
 
-		// Read symbols within each strategy
-		tradeSymbols := strings.Split(tradeStrategies.P_trade_symbols, ",")
+	// 	// Read symbols within each strategy
+	// 	tradeSymbols := strings.Split(tradeStrategies.P_trade_symbols, ",")
 
-		for each := range tradeSymbols {
+	// 	for each := range tradeSymbols {
 
-			// Check if continous OR time trigerred strategy
-			if tradeStrategies.P_trigger_time.Hour() == 0 {
-				wgTrademgr.Add(1)
-				go toContinous(tradeSymbols[each], tradeStrategies, wgTrademgr)
-			} else {
-				wgTrademgr.Add(1)
-				go toTimeTrigerred(tradeSymbols[each], tradeStrategies, wgTrademgr)
-			}
-		}
+	// 		// Check if continous OR time trigerred strategy
+	// 		if tradeStrategies.P_trigger_time.Hour() == 0 {
+	// 			wgTrademgr.Add(1)
+	// 			go toContinous(tradeSymbols[each], tradeStrategies, wgTrademgr)
+	// 		} else {
+	// 			wgTrademgr.Add(1)
+	// 			go toTimeTrigerred(tradeSymbols[each], tradeStrategies, wgTrademgr)
+	// 		}
+	// 	}
 
-		// 1. wait for trigger time and invoke api (blocking call)
-		// 2. read db for valid signal
-		// 3. on signal, execute trade (blocking call)
-		// 4. on trade completion, update db
-		// 5. montitor trade positions (blocking call)
-		// 6. check exit conditions (blocking call)
-		// 7. on signal, exit trade	(blocking call)
-		// 8. on exit, update db
-	}
+	// 	// 1. wait for trigger time and invoke api (blocking call)
+	// 	// 2. read db for valid signal
+	// 	// 3. on signal, execute trade (blocking call)
+	// 	// 4. on trade completion, update db
+	// 	// 5. montitor trade positions (blocking call)
+	// 	// 6. check exit conditions (blocking call)
+	// 	// 7. on signal, exit trade	(blocking call)
+	// 	// 8. on exit, update db
+	// }
 }
 
 // Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.
 func checkTriggerDays(tradeStrategies *data.Strategies) bool {
 
-	triggerdays := strings.Split(tradeStrategies.P_trigger_days, ",")
-	currentday := time.Now().Weekday().String()
+	// triggerdays := strings.Split(tradeStrategies.P_trigger_days, ",")
+	// currentday := time.Now().Weekday().String()
 
-	for each := range triggerdays {
-		if triggerdays[each] == currentday {
-			srv.TradesLogger.Println(tradeStrategies.Strategy_id, " : Trade signal registered")
-			return true
-		}
-	}
-	srv.TradesLogger.Println(tradeStrategies.Strategy_id, " : Trade signal skipped due to no valid day trigger present")
+	// for each := range triggerdays {
+	// 	if triggerdays[each] == currentday {
+	// 		srv.TradesLogger.Println(tradeStrategies.Strategy_id, " : Trade signal registered")
+	// 		return true
+	// 	}
+	// }
+	// srv.TradesLogger.Println(tradeStrategies.Strategy_id, " : Trade signal skipped due to no valid day trigger present")
 	return false
 }
 
@@ -106,12 +104,12 @@ func checkTriggerDays(tradeStrategies *data.Strategies) bool {
 func toContinous(tradeSymbol string, tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup) {
 	defer wgTrademgr.Done()
 
-	orderBookId := awaitContinousScan(tradeSymbol, tradeStrategies.Strategy_id)
-	order := db.FetchOrderBookIdData(orderBookId)
+	// orderBookId := awaitContinousScan(tradeSymbol, tradeStrategies.Strategy_id)
+	// order := db.FetchOrderData(orderBookId)
 
-	if order != nil {
-		kite.PlaceOrder(order[0])
-	}
+	// if order != nil {
+	// 	kite.PlaceOrder(order[0])
+	// }
 
 }
 
@@ -119,11 +117,11 @@ func toContinous(tradeSymbol string, tradeStrategies *data.Strategies, wgTrademg
 func toTimeTrigerred(tradeSymbol string, tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup) {
 	defer wgTrademgr.Done()
 
-	orderBookId := awaiTriggerTimeScan(tradeSymbol, tradeStrategies.Strategy_id, tradeStrategies.P_trigger_time)
-	order := db.FetchOrderBookIdData(orderBookId)
+	// orderBookId := awaiTriggerTimeScan(tradeSymbol, tradeStrategies.Strategy_id, tradeStrategies.P_trigger_time)
+	// order := db.FetchOrderData(orderBookId)
 
-	if order != nil {
-		kite.PlaceOrder(order[0])
-	}
+	// if order != nil {
+	// 	kite.PlaceOrder(order[0])
+	// }
 
 }

@@ -82,7 +82,7 @@ func StoreTradeSignalInDb(sigData string) uint16 {
 		orderId = append(orderId, id)
 
 		if rows.Err() != nil {
-			srv.ErrorLogger.Printf("Error: ", rows.Err())
+			srv.ErrorLogger.Println("Error: ", rows.Err())
 			rows.Close()
 			return 0
 		}
@@ -97,7 +97,7 @@ func StoreTradeSignalInDb(sigData string) uint16 {
 
 }
 
-func FetchOrderBookIdData(orderBookId uint16) []*data.TradeSignal {
+func FetchOrderData(orderBookId uint16) []*data.TradeSignal {
 
 	lock.Lock()
 	defer lock.Unlock()

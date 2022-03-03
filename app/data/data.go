@@ -1,22 +1,37 @@
 package data
 
-import "time"
+import (
+	"time"
+)
+
+type Percentage struct {
+	Target float64 // "target": 1,
+	SL     float64 // "sl": 1,
+	DeepSL float64 // "deepsl": 1
+}
+
+type TargetControls struct {
+	Trail_target_en         bool      // 	"trail_target_en": true,
+	Position_reversal_en    bool      // 	"position_reversal_en": true,
+	Delayed_stoploss_min    time.Time // 	"delayed_stoploss_min": "00:30:00",
+	Stall_detect_period_min time.Time // 	"stall_detect_period_min": "00:30:00"
+}
+
+type ControlParams struct {
+	Percentages     Percentage
+	Target_Controls TargetControls
+}
 
 type Strategies struct {
-	Strategy_id               string    // 0
-	Strategy_en               bool      // 1
-	P_engine                  string    // 2
-	P_trigger_time            time.Time // 3
-	P_trigger_days            string    // 4
-	P_target_per              int       // 5
-	P_candle_size             int       // 6
-	P_stoploss_per            int       // 7
-	P_deep_stoploss_per       int       // 8
-	P_delayed_stoploss_min    time.Time // 9
-	P_stall_detect_period_min time.Time // 10
-	P_trail_target_en         bool      // 11
-	P_position_reversal_en    bool      // 12
-	P_trade_symbols           string    // 13
+	Strategy     string    // 0
+	Enabled      bool      // 1
+	Engine       string    // 2
+	Trigger_time time.Time // 3
+	Trigger_days string    // 4
+	Cdl_size     int       // 6
+	Instruments  string    // 7
+	Controls     string
+	CtrlParam    ControlParams
 }
 
 type TradeSignal struct {
