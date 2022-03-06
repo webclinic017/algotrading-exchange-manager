@@ -13,6 +13,8 @@ func awaitContinousScan(symbol string, sID string) uint16 {
 	var orderBookId uint16 = 0
 
 	for {
+		time.Sleep(tradeOperatorSleepTime)
+
 		srv.TradesLogger.Println(" ▶ (Continious Scan) Invoking API [", sID, "-", symbol, "]")
 		result, sigData := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
 
@@ -26,7 +28,7 @@ func awaitContinousScan(symbol string, sID string) uint16 {
 			srv.TradesLogger.Println(" ❎ (Continious Scan) Termination requested [", sID, "-", symbol, "]")
 			break
 		}
-		time.Sleep(tradeOperatorSleepTime)
+
 	}
 	return orderBookId
 }

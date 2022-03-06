@@ -75,7 +75,7 @@ func StoreTradeSignalInDb(sigData string) uint16 {
 		var id uint16
 		err = rows.Scan(&id)
 		if err != nil {
-			srv.ErrorLogger.Printf("TradeSignal DB store error %v\n", err)
+			srv.ErrorLogger.Printf("TradeSignal DB row-scan error %v\n", err)
 			rows.Close()
 			return 0
 		}
@@ -91,10 +91,13 @@ func StoreTradeSignalInDb(sigData string) uint16 {
 
 	if (len(orderId)) == 1 {
 		return orderId[0]
+	} else if (len(orderId)) > 1 {
+		srv.ErrorLogger.Printf("TradeSignal - Multiple entries in DB - Skipping trades for %v %v\n", tradeSignal[0].Strategy, err)
 	} else {
-		return 0
-	}
+		srv.ErrorLogger.Printf("TradeSignal DB unkown error %v\n", err)
 
+	}
+	return 0
 }
 
 func FetchOrderData(orderBookId uint16) []*data.TradeSignal {

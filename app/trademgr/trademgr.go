@@ -6,7 +6,6 @@ package trademgr
 import (
 	"goTicker/app/data"
 	"goTicker/app/db"
-	"goTicker/app/kite"
 	"goTicker/app/srv"
 	"os"
 	"strings"
@@ -82,14 +81,14 @@ func tradeOperator(tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup)
 		}
 	}
 
-	// 	// 1. wait for trigger time and invoke api (blocking call)
-	// 	// 2. read db for valid signal
-	// 	// 3. on signal, execute trade (blocking call)
-	// 	// 4. on trade completion, update db
-	// 	// 5. montitor trade positions (blocking call)
-	// 	// 6. check exit conditions (blocking call)
-	// 	// 7. on signal, exit trade	(blocking call)
-	// 	// 8. on exit, update db
+	// 	[x] 1. wait for trigger time and invoke api (blocking call)
+	// 	[x] 2. read db for valid signal
+	// 	[ ] 3. on signal, execute trade (blocking call)
+	// 	[ ] 4. on trade completion, update db
+	// 	[ ] 5. montitor trade positions (blocking call)
+	// 	[ ] 6. check exit conditions (blocking call)
+	// 	[ ] 7. on signal, exit trade	(blocking call)
+	// 	[ ] 8. on exit, update db
 	// }
 }
 
@@ -125,6 +124,6 @@ func signalScan(continous bool, tradeSymbol string, tradeStrategies *data.Strate
 	order := db.FetchOrderData(orderBookId)
 
 	if order != nil {
-		kite.PlaceOrder(order[0])
+		placeOrder(order[0], tradeStrategies)
 	}
 }

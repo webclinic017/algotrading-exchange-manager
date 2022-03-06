@@ -20,6 +20,7 @@ type TargetControls struct {
 type ControlParams struct {
 	Percentages     Percentage
 	Target_Controls TargetControls
+	TradeBase       string // 	"trade_base": "future","stock","option"
 }
 
 type Strategies struct {
