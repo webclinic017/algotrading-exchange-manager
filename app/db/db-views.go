@@ -3,98 +3,57 @@ package db
 import (
 	"context"
 	"goTicker/app/srv"
+	"strings"
 
 	"github.com/jackc/pgconn"
 )
 
 func createViews() {
 
+	createViewInMinutes("1")
+	createViewInMinutes("3")
+	createViewInMinutes("5")
+	createViewInMinutes("10")
+	createViewInMinutes("15")
+
+}
+
+func createViewInMinutes(viewMin string) {
 	ctx := context.Background()
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	_, err := myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_1min
-								WITH (timescaledb.continuous) AS
-								SELECT time_bucket('1 minutes', time) AS candle, 
-									symbol,
-									FIRST(last_traded_price, time) as open,
-									MAX(last_traded_price) as high,
-									MIN(last_traded_price) as low,
-									LAST(last_traded_price, time) as close,
-									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
-								FROM
-									ticks_data
-								
-								GROUP by
-									symbol, candle
-								WITH NO DATA;
+	if !viewExists("candles_" + viewMin + "min") {
 
-								SELECT add_continuous_aggregate_policy('candles_1min',
-									start_offset => NULL,
-									end_offset => INTERVAL '1 minutes',
-									schedule_interval => INTERVAL '1 minutes');
-								`)
-	if err != nil {
-		pgerr, _ := err.(*pgconn.PgError)
-		if pgerr.Code != "42P07" {
-			srv.WarningLogger.Printf("Error creating candles_1min: %v\n", err)
+		sqlquery := strings.Replace(DB_CREATE_VIEW, "$1", viewMin, -1)
+
+		// $1 candles_5min // $2 5
+		_, err := myCon.Exec(ctx, sqlquery)
+		if err != nil {
+			pgerr, _ := err.(*pgconn.PgError)
+			if pgerr.Code != "42P07" {
+				srv.WarningLogger.Printf("Error creating candles_"+viewMin+"min: %v\n", err)
+			}
 		}
 	}
+}
 
-	_, err = myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_3min
-								WITH (timescaledb.continuous) AS
-								SELECT time_bucket('3 minutes', time) AS candle, 
-									symbol,
-									FIRST(last_traded_price, time) as open,
-									MAX(last_traded_price) as high,
-									MIN(last_traded_price) as low,
-									LAST(last_traded_price, time) as close,
-									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
-								FROM
-									ticks_data
-								
-								GROUP by
-									symbol, candle
-								WITH NO DATA;
+func viewExists(viewName string) bool {
+	ctx := context.Background()
+	myCon, _ := dbPool.Acquire(ctx)
+	defer myCon.Release()
 
-								SELECT add_continuous_aggregate_policy('candles_3min',
-									start_offset => NULL,
-									end_offset => INTERVAL '3 minutes',
-									schedule_interval => INTERVAL '3 minutes');
-	`)
+	var retVal string
 
+	// query := "SELECT view_name FROM timescaledb_information.continuous_aggregates  WHERE view_name = '" + viewName + "';"
+	err := myCon.QueryRow(ctx, DB_VIEW_EXISTS_QUERY, viewName).Scan(&retVal)
 	if err != nil {
-		pgerr, _ := err.(*pgconn.PgError)
-		if pgerr.Code != "42P07" {
-			srv.WarningLogger.Printf("Error creating candles_3min: %v\n", err)
-		}
+		println(err.Error())
 	}
 
-	_, err = myCon.Exec(ctx, `CREATE MATERIALIZED VIEW candles_5min
-								WITH (timescaledb.continuous) AS
-								SELECT time_bucket('5 minutes', time) AS candle, 
-									symbol,
-									FIRST(last_traded_price, time) as open,
-									MAX(last_traded_price) as high,
-									MIN(last_traded_price) as low,
-									LAST(last_traded_price, time) as close,
-									LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
-								FROM
-									ticks_data
-								
-								GROUP by
-									symbol, candle
-								WITH NO DATA;
-
-								SELECT add_continuous_aggregate_policy('candles_5min',
-									start_offset => NULL,
-									end_offset => INTERVAL '5 minutes',
-									schedule_interval => INTERVAL '5 minutes');
-	`)
-	if err != nil {
-		pgerr, _ := err.(*pgconn.PgError)
-		if pgerr.Code != "42P07" {
-			srv.WarningLogger.Printf("Error creating candles_5min: %v\n", err)
-		}
+	if len(retVal) == 0 {
+		return false
 	}
+
+	return true
 }

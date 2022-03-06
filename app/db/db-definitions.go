@@ -33,3 +33,28 @@ var DB_COMPRESSION_QUERY = `ALTER TABLE ticks_data SET
 							); 
 							SELECT add_compression_policy('ticks_data ', INTERVAL '30 days');
 						`
+
+var DB_VIEW_EXISTS_QUERY = `
+					SELECT view_name 
+						FROM timescaledb_information.continuous_aggregates
+						WHERE view_name = $1;`
+
+// $1 candles_5min
+// $2 5
+var DB_CREATE_VIEW = `
+					CREATE MATERIALIZED VIEW candles_$1min
+						WITH (timescaledb.continuous) AS
+						SELECT time_bucket('$1 minutes', time) AS candle, 
+							symbol,
+							FIRST(last_traded_price, time) as open,
+							MAX(last_traded_price) as high,
+							MIN(last_traded_price) as low,
+							LAST(last_traded_price, time) as close,
+							LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
+						FROM
+							ticks_data
+						
+						GROUP by
+							symbol, candle
+						WITH NO DATA;
+						`
