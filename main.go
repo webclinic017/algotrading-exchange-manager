@@ -5,6 +5,7 @@ import (
 	"goTicker/app/kite"
 	"goTicker/app/srv"
 	"goTicker/app/trademgr"
+	"os"
 	"time"
 
 	"github.com/robfig/cron"
@@ -98,8 +99,9 @@ func checkAPIs() {
 	dbOk = db.DbInit()
 
 	go trademgr.StartTrader()
-	time.Sleep(time.Minute * 1)
+	time.Sleep(time.Minute * 5)
 	trademgr.StopTrader()
+	os.Exit(0)
 
 	kiteOk, apiKey, accToken = kite.LoginKite()
 	status()

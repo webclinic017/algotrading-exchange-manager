@@ -113,7 +113,7 @@ func FetchOrderData(orderBookId uint16) []*data.TradeSignal {
 	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
 	if err != nil {
-		srv.ErrorLogger.Printf("TradeSignal DB store error %v\n", err)
+		srv.ErrorLogger.Printf("FetchOrderData error %v\n", err)
 		return nil
 	}
 

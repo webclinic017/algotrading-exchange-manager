@@ -4,6 +4,7 @@ import (
 	"goTicker/app/apiclient"
 	"goTicker/app/db"
 	"goTicker/app/srv"
+	"strconv"
 	"time"
 )
 
@@ -12,17 +13,17 @@ func awaitContinousScan(symbol string, sID string) uint16 {
 	var orderBookId uint16 = 0
 
 	for {
-		srv.TradesLogger.Println("(Continious Scan) Invoking API [", sID, "-", symbol, "]")
+		srv.TradesLogger.Println(" ▶ (Continious Scan) Invoking API [", sID, "-", symbol, "]")
 		result, sigData := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
 
 		if result {
-			srv.TradesLogger.Println("{Trade Signal found} [", sID, "-", symbol, "]")
+			srv.TradesLogger.Println(" ⏪ {Trade Signal found} [", sID, "-", symbol, "]")
 			orderBookId = db.StoreTradeSignalInDb(sigData)
 			break
 		}
 
 		if terminateTradeOperator { // termination requested
-			srv.TradesLogger.Println("(Continious Scan) Termination requested [", sID, "-", symbol, "]")
+			srv.TradesLogger.Println(" ❎ (Continious Scan) Termination requested [", sID, "-", symbol, "]")
 			break
 		}
 		time.Sleep(tradeOperatorSleepTime)
@@ -33,20 +34,26 @@ func awaitContinousScan(symbol string, sID string) uint16 {
 func awaiTriggerTimeScan(symbol string, sID string, triggerTime time.Time) uint16 {
 
 	var orderBookId uint16 = 0
+	ttime := strconv.Itoa(int(triggerTime.Hour())) + ":" + strconv.Itoa(int(triggerTime.Minute()))
 
 	for {
 		curTime := time.Now()
 
-		// fmt.Println(triggerTime, " : ", curTime)
-
 		if curTime.Hour() == triggerTime.Hour() {
 			if curTime.Minute() == triggerTime.Minute() { // trigger time reached
 
-				srv.TradesLogger.Println("Invoking TimeTrigerred API [", sID, "-", symbol, "]")
+				srv.TradesLogger.Println(" ▶ Invoking TimeTrigerred API [ (", ttime, ") -", sID, "-", symbol, "]")
 				result, sigData := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
 
 				if result {
-					srv.TradesLogger.Println("{Trade Signal found} [", sID, "-", symbol, "]")
+					srv.TradesLogger.Println(" ⏪ {Trade Signal found}",
+						"[",
+						ttime,
+						"-",
+						sID,
+						"-",
+						symbol,
+						"]")
 					orderBookId = db.StoreTradeSignalInDb(sigData)
 				}
 				break
@@ -55,12 +62,19 @@ func awaiTriggerTimeScan(symbol string, sID string, triggerTime time.Time) uint1
 
 		// termination requested
 		if terminateTradeOperator {
-			srv.TradesLogger.Println("(TimeTrigerred) Termination requested ", sID, "symbol : ", symbol)
+			srv.TradesLogger.Println(" ❎ (TimeTrigerred) Termination requested ", sID, "symbol : ", symbol)
 			return 0
 		}
 
 		time.Sleep(tradeOperatorSleepTime)
-		srv.TradesLogger.Println("(Sleeping) [", sID, "-", symbol, "]")
+		srv.TradesLogger.Println(" ⏳",
+			"[",
+			ttime,
+			"-",
+			sID,
+			"-",
+			symbol,
+			"]")
 	}
 
 	return orderBookId
