@@ -8,6 +8,8 @@ Services
 - *initiate order with zerodha*
 - *monitor exit conditions*
 
+Component
+* [trademgr-signals](/trademgr-signals.html) 
 
 ### Overall
 
@@ -37,6 +39,8 @@ tsdb --> trademgr : Strategies
 |||
 trademgr -> tm.signals : check signal 
 @enduml
+
+
 
 
 
