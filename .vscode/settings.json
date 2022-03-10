@@ -46,7 +46,9 @@
     "todo-tree.general.statusBar": "tags",
     "todo-tree.tree.showBadges": true,
     "todo-tree.tree.showCountsInTree": true,
-    "todo-tree.tree.hideIconsWhenGroupedByTag": true
+    "todo-tree.tree.hideIconsWhenGroupedByTag": true,
+    "plantuml.fileExtensions": ".wsd,.pu,.puml,.plantuml,.iuml,",
+    "plantuml.render": "Local"
     
 }
 

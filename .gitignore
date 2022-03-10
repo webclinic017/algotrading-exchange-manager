@@ -1,8 +1,5 @@
-app/zfiles/config/*
-app/zfiles/log/*
+app/zfiles/*
 goTicker
 main
 dockerTest
-r.json
 __debug_bin
-tempmain.goo
