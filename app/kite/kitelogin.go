@@ -12,6 +12,8 @@ import (
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
+var kc *kiteconnect.Client
+
 const (
 	URL      = "https://kite.zerodha.com/api/login"
 	twofaUrl = "https://kite.zerodha.com/api/twofa"
@@ -35,7 +37,7 @@ func LoginKite() (bool, string, string) {
 
 		srv.InfoLogger.Println("Authentication Succesful:", requestToken)
 		// Create a new Kite connect instance
-		kc := kiteconnect.New(apiKey)
+		kc = kiteconnect.New(apiKey)
 
 		// Get user details and access token
 		data, err := kc.GenerateSession(requestToken, apiSecret)

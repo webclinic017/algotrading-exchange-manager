@@ -5,9 +5,10 @@ import (
 )
 
 type Percentage struct {
-	Target float64 // "target": 1,
-	SL     float64 // "sl": 1,
-	DeepSL float64 // "deepsl": 1
+	Target       float64 // "target": 1,
+	SL           float64 // "sl": 1,
+	DeepSL       float64 // "deepsl": 1
+	Limit_budget float64 // "limit_budget": 50%,
 }
 
 type TargetControls struct {
@@ -17,10 +18,15 @@ type TargetControls struct {
 	Stall_detect_period_min time.Time // 	"stall_detect_period_min": "00:30:00"
 }
 
+type Trade struct {
+	Base         string // "trade_base": "future","stock","option"
+	Limit_amount int64  // "limit_amount": 30000,
+}
+
 type ControlParams struct {
 	Percentages     Percentage
 	Target_Controls TargetControls
-	TradeBase       string // 	"trade_base": "future","stock","option"
+	Trades          Trade
 }
 
 type Strategies struct {

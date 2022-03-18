@@ -12,7 +12,7 @@ func placeOrder(order *data.TradeSignal, ts *data.Strategies) bool {
 	// [ ] update order id into order table
 	// [ ] return order id
 
-	println(ts.CtrlParam.TradeBase)
+	println(ts.CtrlParam.Trades.Base)
 
 	return true
 
