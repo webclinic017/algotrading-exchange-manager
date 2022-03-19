@@ -18,15 +18,27 @@ type TargetControls struct {
 	Stall_detect_period_min time.Time // 	"stall_detect_period_min": "00:30:00"
 }
 
-type Trade struct {
-	Base         string // "trade_base": "future","stock","option"
-	Limit_amount int64  // "limit_amount": 30000,
+type Kite_Setting struct {
+	Products     string
+	Varieties    string
+	OrderType    string
+	Validities   string
+	PositionType string
+}
+
+type Trade_setting struct {
+	OrderRoute            string
+	OptionExpiryWeek      int
+	FuturesExpiryMonth    int
+	SkipExipryWeekFutures bool
+	LimitAmount           float64
 }
 
 type ControlParams struct {
 	Percentages     Percentage
 	Target_Controls TargetControls
-	Trades          Trade
+	KiteSettings    Kite_Setting
+	TradeSettings   Trade_setting
 }
 
 type Strategies struct {
