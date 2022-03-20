@@ -32,11 +32,11 @@ func TestDeriveFuturesName(t *testing.T) {
 	for _, test := range DeriveFuturesNameTests {
 
 		dateString := test.argDate
+		date, _ := time.Parse("2006-01-02", dateString)
 		order.Instr = test.argInstr
 		ts.CtrlParam.TradeSettings.FuturesExpiryMonth = test.argMonthSel
 		ts.CtrlParam.TradeSettings.SkipExipryWeekFutures = test.argSkipExpWk
 		expected := test.expected
-		date, _ := time.Parse("2006-01-02", dateString)
 
 		actual := deriveFuturesName(order, ts, date)
 
@@ -49,13 +49,21 @@ func TestDeriveFuturesName(t *testing.T) {
 type DeriveOptionNameTesting struct {
 	argDate, argInstr string
 	argWeekSel        int
-	argLevelSel       float64
-	argOptnType       string
+	argStrikePrice    float64
+	argOptionLevel    int
+	argDirection      string
+	argOrderRoute     string
 	expected          string
 }
 
 var DeriveOptionNameTests = []DeriveOptionNameTesting{
-	{"2021-11-26", "BANKNIFTY-FUT", 0, 35000, "CE", "BANKNIFTY2232435000CE"},
+	{"2022-03-15", "BANKNIFTY-FUT", 0, 35123, 0, "bullish", "option-buy", "BANKNIFTY2231735100CE"},
+	{"2022-03-15", "BANKNIFTY-FUT", 0, 32023, 0, "bullish", "option-buy", "BANKNIFTY2231732000CE"},
+	{"2022-03-15", "BANKNIFTY-FUT", 1, 35123, 0, "bullish", "option-buy", "BANKNIFTY2232435100CE"},
+	{"2022-03-15", "BANKNIFTY-FUT", 2, 35123, 0, "bullish", "option-buy", "BANKNIFTY22MAR35100CE"},
+	{"2022-03-15", "BANKNIFTY-FUT", 0, 35123, 0, "bullish", "option-buy", "BANKNIFTY2231735100CE"},
+	{"2022-03-15", "BANKNIFTY-FUT", 0, 35123, 0, "bullish", "option-buy", "BANKNIFTY2231735100CE"},
+	{"2021-12-22", "BANKNIFTY-FUT", 0, 35123, 0, "bullish", "option-buy", "BANKNIFTY21D2335100CE"},
 }
 
 func TestDeriveOptionName(t *testing.T) {
@@ -65,11 +73,14 @@ func TestDeriveOptionName(t *testing.T) {
 	for _, test := range DeriveOptionNameTests {
 
 		dateString := test.argDate
-		order.Instr = test.argInstr
-		ts.CtrlParam.TradeSettings.OptionExpiryWeek = test.argWeekSel
-		order.Entry = test.argLevelSel
-		expected := test.expected
 		date, _ := time.Parse("2006-01-02", dateString)
+		order.Instr = test.argInstr
+		order.Entry = test.argStrikePrice
+		order.Dir = test.argDirection
+		ts.CtrlParam.TradeSettings.OptionLevel = test.argOptionLevel
+		ts.CtrlParam.TradeSettings.OptionExpiryWeek = test.argWeekSel
+		ts.CtrlParam.TradeSettings.OrderRoute = test.argOrderRoute
+		expected := test.expected
 
 		actual := deriveOptionName(order, ts, date)
 

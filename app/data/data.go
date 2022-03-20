@@ -28,6 +28,7 @@ type Kite_Setting struct {
 
 type Trade_setting struct {
 	OrderRoute            string
+	OptionLevel           int
 	OptionExpiryWeek      int
 	FuturesExpiryMonth    int
 	SkipExipryWeekFutures bool

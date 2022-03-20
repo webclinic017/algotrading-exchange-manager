@@ -3,3 +3,4 @@ goTicker
 main
 dockerTest
 __debug_bin
+*.out
