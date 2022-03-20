@@ -2,7 +2,6 @@ package kite
 
 import (
 	"goTicker/app/data"
-	"goTicker/app/srv"
 	"strings"
 	"time"
 
@@ -18,7 +17,7 @@ func PlaceOrder(order *data.TradeSignal) bool {
 	}
 }
 
-func CalOrderMargin(order *data.TradeSignal, ts *data.Strategies) bool {
+func CalOrderMargin(order data.TradeSignal, ts data.Strategies) bool {
 
 	var marginParam kiteconnect.GetMarginParams
 
@@ -42,10 +41,10 @@ func CalOrderMargin(order *data.TradeSignal, ts *data.Strategies) bool {
 		marginParam.OrderParams[0].Tradingsymbol = order.Instr
 
 	case "option":
-		marginParam.OrderParams[0].Tradingsymbol = deriveOptionName(order, ts)
+		marginParam.OrderParams[0].Tradingsymbol = deriveOptionName(order, ts, time.Now())
 
 	case "futures":
-		marginParam.OrderParams[0].Tradingsymbol = deriveFuturesName(order, ts)
+		marginParam.OrderParams[0].Tradingsymbol = deriveFuturesName(order, ts, time.Now())
 
 	}
 	OrderMargins, err := kc.GetOrderMargins(marginParam)
@@ -55,38 +54,47 @@ func CalOrderMargin(order *data.TradeSignal, ts *data.Strategies) bool {
 
 }
 
-func deriveOptionName(order *data.TradeSignal, ts *data.Strategies) string {
+func deriveOptionName(order data.TradeSignal, ts data.Strategies, selDate time.Time) string {
 	// The format is BANKNIFTY<YY><M><DD>strike<PE/CE>
 	// The month format is 1 for JAN, 2 for FEB, 3, 4, 5, 6, 7, 8, 9, O(capital o) for October, N for November, D for December.
 
 	return ""
 }
 
-func deriveFuturesName(order *data.TradeSignal, ts *data.Strategies) string {
+func deriveFuturesName(order data.TradeSignal, ts data.Strategies, selDate time.Time) string {
 
 	var symbolFutStr string = "FAILED"
 	// NIFTY21DECFUT
 
-	monthSelected := time.Now().AddDate(0, ts.CtrlParam.TradeSettings.FuturesExpiryMonth, 0)
+	Instr := strings.ReplaceAll(order.Instr, "-FUT", "") // remove -FUT suffix
+	// monthSelected := selDate.AddDate(0, ts.CtrlParam.TradeSettings.FuturesExpiryMonth, 0)
 
-	wkday := time.Now().Weekday()
+	// currThu := selDate.AddDate(0, ts.CtrlParam.TradeSettings.FuturesExpiryMonth, 0)
+
+	wkday := selDate.Weekday()
+	currThu := time.Now()
+
 	if wkday <= time.Thursday {
-		nextThu := time.Now().AddDate(0, 0, int((time.Thursday-wkday)+7)) //  curr Thu + 7 days
-		if nextThu.Month() == monthSelected.Month() {                     // curr and next thu in same month?
-			symbolFutStr = monthSelected.Format("06-Jan") + "FUT"
-		} else {
-			if ts.CtrlParam.TradeSettings.SkipExipryWeekFutures {
-				symbolFutStr = nextThu.Format("06-Jan") + "FUT"
+		currThu = selDate.AddDate(0, ts.CtrlParam.TradeSettings.FuturesExpiryMonth, int(time.Thursday-wkday)) //  upcoming Thu + 7 days
+	} else {
+		currThu = selDate.AddDate(0, ts.CtrlParam.TradeSettings.FuturesExpiryMonth, int(7-(wkday-time.Thursday))) //  recent passed Thu + 7 days
+	}
+	nextThu := currThu.AddDate(0, 0, 7)
 
-			} else {
-				symbolFutStr = monthSelected.Format("06-Jan") + "FUT"
-			}
+	if nextThu.Month() == currThu.Month() { // curr and next thu in same month?
+
+		symbolFutStr = Instr + currThu.Format("06-Jan") + "FUT"
+
+	} else {
+		if ts.CtrlParam.TradeSettings.SkipExipryWeekFutures {
+			symbolFutStr = Instr + nextThu.Format("06-Jan") + "FUT"
+		} else {
+			symbolFutStr = Instr + currThu.Format("06-Jan") + "FUT"
 		}
 	}
 
 	symbolFutStr = strings.ReplaceAll(symbolFutStr, "-", "")
 	symbolFutStr = strings.ToUpper(symbolFutStr)
-	srv.InfoLogger.Println("Futures Symbol : Decoded :- ", symbolFutStr)
 
 	return symbolFutStr
 }
