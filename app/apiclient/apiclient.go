@@ -14,8 +14,8 @@ func SignalAnalyzer(multiSymbol string, algo string, symbol string, date string)
 		"symbol":      symbol,
 		"date":        date,
 	}
-	// resp, err := requests.Get("https://algoanalysis.wyealth.com/tradesignals/", p)
-	resp, err := requests.Get("http://localhost:5000/tradesignals/", p)
+	resp, err := requests.Get("https://algoanalysis.wyealth.com/tradesignals/", p)
+	// resp, err := requests.Get("http://localhost:5000/tradesignals/", p)
 
 	if err != nil {
 		return false, "nil"
