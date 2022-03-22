@@ -1,6 +1,7 @@
 package kite
 
 import (
+	"fmt"
 	"goTicker/app/data"
 	"math"
 	"os"
@@ -72,8 +73,9 @@ func deriveOptionName(order data.TradeSignal, ts data.Strategies, selDate time.T
 
 	var (
 		lvl             float64
+		optnlvl         string
 		mth             string
-		strikePriceStep int
+		strikePriceStep float64
 		optn            string
 	)
 
@@ -124,8 +126,9 @@ func deriveOptionName(order data.TradeSignal, ts data.Strategies, selDate time.T
 	mnt3ltr := strings.ToUpper(currThu.Month().String()[:3])
 
 	// ---------------------------------------------------------------------- ROUNDOFF STRIKE PRICE
-	strikePriceStep, _ = strconv.Atoi(envMap[Instr])
-	rnd := math.Round((order.Entry / float64(strikePriceStep))) * float64(strikePriceStep)
+	// strikePriceStep, _ = strconv.Atoi(envMap[Instr])
+	strikePriceStep, _ = strconv.ParseFloat(envMap[Instr], 64)
+	rnd := math.Round((order.Entry / float64(strikePriceStep))) * strikePriceStep
 
 	// ---------------------------------------------------------------------- COMPUTE CE/PE and ITM/ATM/OTM Value
 	if ts.CtrlParam.TradeSettings.OrderRoute == "option-buy" {
@@ -137,7 +140,7 @@ func deriveOptionName(order data.TradeSignal, ts data.Strategies, selDate time.T
 			lvl = rnd - (float64(strikePriceStep) * float64(ts.CtrlParam.TradeSettings.OptionLevel))
 		}
 	} else if ts.CtrlParam.TradeSettings.OrderRoute == "option-sell" {
-		if strings.ToLower(order.Dir) == "bearish" {
+		if strings.ToLower(order.Dir) == "bullish" {
 			optn = "PE"
 			lvl = rnd - (float64(strikePriceStep) * float64(ts.CtrlParam.TradeSettings.OptionLevel))
 		} else {
@@ -147,13 +150,20 @@ func deriveOptionName(order data.TradeSignal, ts data.Strategies, selDate time.T
 	} else {
 
 	}
+	// if last digit is 0, remove it
+	chklvl := (lvl * 10) - float64(int(lvl)*10)
+	if chklvl == 0 {
+		optnlvl = fmt.Sprintf("%.0f", lvl)
+	} else {
+		optnlvl = fmt.Sprintf("%.1f", lvl)
+	}
 
 	// ---------------------------------------------------------------------- COMPUTE STRING
 	// if expiry last in month use montly expiry
 	if nextThu.Month() == currThu.Month() { // curr and next thu in same month?
-		symbolFutStr = (Instr + yr + mth + dy + strconv.Itoa(int(lvl)) + optn)
+		symbolFutStr = (Instr + yr + mth + dy + optnlvl + optn)
 	} else {
-		symbolFutStr = (Instr + yr + mnt3ltr + strconv.Itoa(int(lvl)) + optn)
+		symbolFutStr = (Instr + yr + mnt3ltr + optnlvl + optn)
 	}
 
 	return symbolFutStr

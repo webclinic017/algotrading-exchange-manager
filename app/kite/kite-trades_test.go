@@ -57,6 +57,15 @@ type DeriveOptionNameTesting struct {
 }
 
 var DeriveOptionNameTests = []DeriveOptionNameTesting{
+	{"2022-03-22", "ASHOKLEY-FUT", 1, 73, 0, "bullish", "option-buy", "ASHOKLEY22MAR72.5CE"},
+	{"2022-03-22", "TVSMOTOR-FUT", 1, 484, 0, "bullish", "option-buy", "TVSMOTOR22MAR480CE"},
+	{"2022-03-22", "TVSMOTOR-FUT", 1, 500, 0, "bullish", "option-buy", "TVSMOTOR22MAR500CE"},
+	{"2022-03-22", "TVSMOTOR-FUT", 1, 484, 5, "bullish", "option-buy", "TVSMOTOR22MAR530CE"},
+	{"2022-03-22", "TVSMOTOR-FUT", 1, 484, -5, "bullish", "option-buy", "TVSMOTOR22MAR430CE"},
+	{"2022-03-22", "TVSMOTOR-FUT", 1, 484, -5, "BEARISH", "option-buy", "TVSMOTOR22MAR530PE"},
+	{"2022-03-22", "TVSMOTOR-FUT", 1, 484, -5, "bullish", "option-sell", "TVSMOTOR22MAR530PE"},
+	{"2022-03-22", "ASHOKLEY-FUT", 1, 25, 0, "bullish", "option-buy", "ASHOKLEY22MAR25CE"},
+	{"2022-03-22", "ASHOKLEY-FUT", 1, 25.8, 0, "bullish", "option-buy", "ASHOKLEY22MAR25CE"},
 	{"2022-03-15", "BANKNIFTY-FUT", 0, 35123, 0, "bullish", "option-buy", "BANKNIFTY2231735100CE"},
 	{"2022-03-15", "BANKNIFTY-FUT", 0, 32023, 0, "bullish", "option-buy", "BANKNIFTY2231732000CE"},
 	{"2022-03-15", "BANKNIFTY-FUT", 1, 35123, 0, "bullish", "option-buy", "BANKNIFTY2232435100CE"},
@@ -64,6 +73,14 @@ var DeriveOptionNameTests = []DeriveOptionNameTesting{
 	{"2022-03-15", "BANKNIFTY-FUT", 0, 35123, 0, "bullish", "option-buy", "BANKNIFTY2231735100CE"},
 	{"2022-03-15", "BANKNIFTY-FUT", 0, 35123, 0, "bullish", "option-buy", "BANKNIFTY2231735100CE"},
 	{"2021-12-22", "BANKNIFTY-FUT", 0, 35123, 0, "bullish", "option-buy", "BANKNIFTY21D2335100CE"},
+	{"2021-12-22", "BANKNIFTY-FUT", 0, 35123, 0, "bullish", "option-sell", "BANKNIFTY21D2335100PE"},
+	{"2021-12-22", "NIFTY-FUT", 0, 35123, 0, "bullish", "option-sell", "NIFTY21D2335100PE"},
+	{"2021-12-22", "NIFTY-FUT", 0, 35123, 0, "BEARISh", "option-sell", "NIFTY21D2335100CE"},
+	{"2021-12-22", "NIFTY-FUT", 0, 35123, 0, "bullish", "option-buy", "NIFTY21D2335100CE"},
+	{"2022-03-22", "NIFTY-FUT", 1, 35123, 0, "bullish", "option-buy", "NIFTY22MAR35100CE"},
+	{"2022-03-22", "NIFTY-FUT", 3, 35123, 0, "bullish", "option-buy", "NIFTY2241435100CE"},
+	{"2022-03-22", "NIFTY-FUT", 1, 35000, 0, "bullish", "option-buy", "NIFTY22MAR35000CE"},
+	{"2022-03-22", "NIFTY-FUT", 1, 2536, 0, "bullish", "option-buy", "NIFTY22MAR2500CE"},
 }
 
 func TestDeriveOptionName(t *testing.T) {
