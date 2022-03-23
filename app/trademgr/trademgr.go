@@ -59,6 +59,14 @@ func StopTrader() {
 }
 
 // Scans for all strategies and spawn thread for each symbol in that strategy
+// 	[x] 1. wait for trigger time and invoke api (blocking call)
+// 	[x] 2. read db for valid signal
+// 	[ ] 3. on signal, execute trade (blocking call)
+// 	[ ] 4. on trade completion, update db
+// 	[ ] 5. montitor trade positions (blocking call)
+// 	[ ] 6. check exit conditions (blocking call)
+// 	[ ] 7. on signal, exit trade	(blocking call)
+// 	[ ] 8. on exit, update db
 func tradeOperator(tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup) {
 
 	srv.TradesLogger.Println("\n(TradeOperator Setup) ", tradeStrategies)
@@ -73,23 +81,13 @@ func tradeOperator(tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup)
 			// Check if continous OR time trigerred strategy
 			if tradeStrategies.Trigger_time.Hour() == 0 {
 				wgTrademgr.Add(1)
-				go signalScan(CONTINOUS_SCAN, tradeSymbols[each], tradeStrategies, wgTrademgr)
+				go symbolTradeManager(CONTINOUS_SCAN, tradeSymbols[each], tradeStrategies, wgTrademgr)
 			} else {
 				wgTrademgr.Add(1)
-				go signalScan(TIME_TRIGGERED_SCAN, tradeSymbols[each], tradeStrategies, wgTrademgr)
+				go symbolTradeManager(TIME_TRIGGERED_SCAN, tradeSymbols[each], tradeStrategies, wgTrademgr)
 			}
 		}
 	}
-
-	// 	[x] 1. wait for trigger time and invoke api (blocking call)
-	// 	[x] 2. read db for valid signal
-	// 	[ ] 3. on signal, execute trade (blocking call)
-	// 	[ ] 4. on trade completion, update db
-	// 	[ ] 5. montitor trade positions (blocking call)
-	// 	[ ] 6. check exit conditions (blocking call)
-	// 	[ ] 7. on signal, exit trade	(blocking call)
-	// 	[ ] 8. on exit, update db
-	// }
 }
 
 // Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.
@@ -111,7 +109,7 @@ func checkTriggerDays(tradeStrategies *data.Strategies) bool {
 // TODO: master exit condition & EoD termniation
 
 // Scan signal
-func signalScan(continous bool, tradeSymbol string, tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup) {
+func symbolTradeManager(continous bool, tradeSymbol string, tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup) {
 	defer wgTrademgr.Done()
 
 	var orderBookId uint16

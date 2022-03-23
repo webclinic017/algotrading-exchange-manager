@@ -71,6 +71,17 @@ func LoginKite() (bool, string, string) {
 	return false, "", ""
 }
 
+func SetAccessToken(accessToken string) {
+	kc = kiteconnect.New(os.Getenv("API_KEY"))
+	kc.SetAccessToken(accessToken)
+	margins, err := kc.GetUserMargins()
+	if err != nil {
+		srv.ErrorLogger.Printf("Error getting margins: %v", err)
+		//return false, "", ""
+	}
+	srv.InfoLogger.Println("Cash Balance (Net): ", margins.Equity.Net)
+}
+
 func KiteGetRequestToken() string {
 
 	tfAuth := os.Getenv("TFA_AUTH")

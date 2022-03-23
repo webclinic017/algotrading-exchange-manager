@@ -44,21 +44,24 @@ func Init() {
 
 func InitTradeLogger() {
 	logFile, err := os.OpenFile("app/zfiles/log/Trades "+time.Now().Format(time.RFC822)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	mwtl := io.MultiWriter(os.Stdout)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+	} else {
+		mwtl = io.MultiWriter(logFile, os.Stdout)
 	}
-
-	mwtl := io.MultiWriter(logFile, os.Stdout)
 	TradesLogger = log.New(mwtl, "", log.Ltime)
 
 }
 
 func InitLogger() {
+	mw := io.MultiWriter(os.Stdout)
 	logFile, err := os.OpenFile("app/zfiles/log/algoExchMgr "+time.Now().Format(time.RFC822)+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+	} else {
+		mw = io.MultiWriter(logFile, os.Stdout)
 	}
-	mw := io.MultiWriter(logFile, os.Stdout)
 
 	InfoLogger = log.New(mw, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	WarningLogger = log.New(mw, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)

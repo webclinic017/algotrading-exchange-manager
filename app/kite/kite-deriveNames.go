@@ -96,8 +96,6 @@ func deriveOptionName(order data.TradeSignal, ts data.Strategies, selDate time.T
 			optn = "CE"
 			lvl = rnd + (float64(strikePriceStep) * float64(ts.CtrlParam.TradeSettings.OptionLevel))
 		}
-	} else {
-
 	}
 	// if last digit is 0, remove it
 	chklvl := (lvl * 10) - float64(int(lvl)*10)

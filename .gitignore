@@ -1,6 +1,8 @@
-app/zfiles/*
+app/zfiles/log
 goTicker
 main
 dockerTest
 __debug_bin
 *.out
+app/zfiles/config/ENV_accesstoken.env
+app/zfiles/config/ENV_Settings.env

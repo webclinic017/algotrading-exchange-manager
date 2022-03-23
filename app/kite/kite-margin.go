@@ -2,6 +2,7 @@ package kite
 
 import (
 	"goTicker/app/data"
+	"goTicker/app/srv"
 	"strings"
 	"time"
 
@@ -30,9 +31,12 @@ func CalOrderMargin(order data.TradeSignal, ts data.Strategies, tm time.Time) []
 
 	var marginParam kiteconnect.GetMarginParams
 
+	//initialise the slice
+	marginParam.OrderParams = make([]kiteconnect.OrderMarginParam, 1)
+
 	// default params
 	marginParam.Compact = false
-	marginParam.OrderParams[0].Exchange = "NSE"
+
 	marginParam.OrderParams[0].OrderType = "MARKET"
 	marginParam.OrderParams[0].Quantity = 1
 	marginParam.OrderParams[0].Price = 0
@@ -52,23 +56,29 @@ func CalOrderMargin(order data.TradeSignal, ts data.Strategies, tm time.Time) []
 		fallthrough
 
 	case "stock":
+		marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNSE
 		marginParam.OrderParams[0].Tradingsymbol = order.Instr
 
 	case "option-buy":
+		marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNFO
 		marginParam.OrderParams[0].TransactionType = "BUY"
 		marginParam.OrderParams[0].Tradingsymbol = deriveOptionName(order, ts, tm)
 
 	case "option-sell":
+		marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNFO
 		marginParam.OrderParams[0].TransactionType = "SELL"
 		marginParam.OrderParams[0].Tradingsymbol = deriveOptionName(order, ts, tm)
 
 	case "futures":
+		marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNFO
 		marginParam.OrderParams[0].Tradingsymbol = deriveFuturesName(order, ts, tm)
 
 	}
 	OrderMargins, err := kc.GetOrderMargins(marginParam)
 
-	print(OrderMargins, err)
+	if err != nil {
+		srv.ErrorLogger.Println(err)
+	}
 	return OrderMargins
 
 }
