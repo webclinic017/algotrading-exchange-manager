@@ -28,7 +28,7 @@ func createViewInMinutes(viewMin string) {
 		_, err := myCon.Exec(ctx, sqlquery)
 		if err != nil {
 			pgerr, _ := err.(*pgconn.PgError)
-			if pgerr.Code != "42P07" {
+			if pgerr.Code != "42P07" { // 42P07: duplicate_table
 				srv.WarningLogger.Printf("Error creating candles_"+viewMin+"min: %v\n", err)
 			}
 		}

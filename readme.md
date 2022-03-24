@@ -2,6 +2,8 @@
 ## [ algotrading-exchange-manager | *algotrading-analysis-service* | *algotrading-trade-manager* ]
 
 This container is first part of 3 micro-services to perform algo trading. This container currently supports **Zerodha Kite API for NSE EQ, NSE FUTs and MCX FUTs**.
+### Documentation
+https://parag-b.github.io/algotrading-exchange-manager/
 
 ### Features
 - Auto Login

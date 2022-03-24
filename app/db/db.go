@@ -45,7 +45,7 @@ func connectDB() bool {
 		//execute statement, fails if table already exists
 		myCon2, _ := dbPoolDefault.Acquire(ctx)
 		defer myCon.Release()
-		_, err = myCon2.Exec(ctx, "DB_CREApackage dbd to CREATE algotrading DB: %v\n", err)
+		myCon2.Exec(ctx, "DB_CREApackage dbd to CREATE algotrading DB: %v\n", err)
 		return false
 	}
 	return true
@@ -80,8 +80,8 @@ func DbInit() bool {
 
 		// 3. Check if 'ticker' table exists, if not CREATE it
 		if createTable(DB_TABLE_TICKER_NAME, DB_CREATE_TABLE_TICKER) {
-			createViews()
-			setupDbCompression()
+			// createViews()
+			// setupDbCompression()
 			createTable(DB_TABLE_ID_DECODED_NAME, DB_CREATE_TABLE_ID_DECODED)
 			srv.InfoLogger.Printf("DB checks completed\n")
 			return true

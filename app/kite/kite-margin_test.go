@@ -25,6 +25,8 @@ type CalOrderMarginTesting struct {
 
 var CalOrderMarginTests = []CalOrderMarginTesting{
 	{"2022-03-22", "INFY", 1, 73, 0, "bullish", "stock", 0, false, kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
+	{"2022-03-22", "BANKNIFTY-FUT", 0, 36000, 0, "bullish", "option-buy", 0, false, kiteconnect.VarietyRegular, kiteconnect.ProductNRML},
+	{"2022-03-22", "BANKNIFTY-FUT", 0, 36000, 0, "bullish", "option-sell", 0, false, kiteconnect.VarietyRegular, kiteconnect.ProductNRML},
 }
 
 func TestCalOrderMargin(t *testing.T) {
