@@ -18,6 +18,11 @@ type FetchInstrDataTesting struct {
 // these unit testcase are sensitive to date in "instruments" table,
 // load the instruments_dbtest_data_24Mar22.csv data before running the test cases
 var FetchInstrDataTests = []FetchInstrDataTesting{
+	{"BANKNIFTY-FUT", 0, 0, "FUT", "2022-03-23", "2022-04-23", "BANKNIFTY22MARFUT"},
+	{"BANKNIFTY-FUT", 35120, 0, "CE", "2022-03-23", "2022-03-30", "BANKNIFTY2232435200CE"},
+	{"BANKNIFTY-FUT", 35120, 1, "CE", "2022-03-23", "2022-03-30", "BANKNIFTY2232435300CE"},
+	{"BANKNIFTY-FUT", 35120, -5, "CE", "2022-03-23", "2022-03-30", "BANKNIFTY2232434700CE"},
+
 	{"BANKNIFTY-FUT", 35120, 0, "PE", "2022-03-23", "2022-03-30", "BANKNIFTY2232435200PE"},
 	{"BANKNIFTY-FUT", 36020, 0, "PE", "2022-03-23", "2022-03-30", "BANKNIFTY2232436100PE"},
 	{"BANKNIFTY-FUT", 36020, 1, "PE", "2022-03-23", "2022-03-30", "BANKNIFTY2232436200PE"},

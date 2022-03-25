@@ -5,7 +5,29 @@ import (
 	"goTicker/app/srv"
 )
 
-func FetchInstrData(instrument string, strikelevel uint64, opdepth int, optype string, startdate string, enddate string) (instrname string, lotsize uint16) {
+/*
+SELECT tradingsymbol, lot_size
+    FROM tracking_symbols ts, instruments i
+    WHERE
+    		ts.symbol = i.name
+    	and
+    		mysymbol= 'BANKNIFTY-FUT'
+    	and
+    		strike >= (0  + 0*ts.strikestep)
+		and
+    		strike < (0 + ts.strikestep + 0*ts.strikestep)
+    	and
+    		instrument_type = 'FUT'
+    	and
+    		expiry > '2022-03-23'
+    	and
+    		expiry < '2022-04-10'
+	ORDER BY
+		expiry asc
+	LIMIT 10;
+*/
+
+func FetchInstrData(instrument string, strikelevel uint64, opdepth int, instrtype string, startdate string, enddate string) (instrname string, lotsize uint16) {
 
 	lock.Lock()
 	defer lock.Unlock()
@@ -38,7 +60,7 @@ func FetchInstrData(instrument string, strikelevel uint64, opdepth int, optype s
 		LIMIT 10;`
 
 	err := myCon.QueryRow(ctx, sqlQuery,
-		instrument, strikelevel, opdepth, optype, startdate, enddate).Scan(&name, &size)
+		instrument, strikelevel, opdepth, instrtype, startdate, enddate).Scan(&name, &size)
 
 	if err != nil {
 		srv.ErrorLogger.Printf("FetchOrderData error %v\n", err)
