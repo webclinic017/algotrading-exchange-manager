@@ -21,7 +21,6 @@ func CalOrderMargin(order data.TradeSignal, ts data.Strategies, tm time.Time) []
 	marginParam.Compact = false
 
 	marginParam.OrderParams[0].OrderType = "MARKET"
-	marginParam.OrderParams[0].Quantity = 1
 	marginParam.OrderParams[0].Price = 0
 	marginParam.OrderParams[0].TriggerPrice = 0
 	// specific params
@@ -38,25 +37,25 @@ func CalOrderMargin(order data.TradeSignal, ts data.Strategies, tm time.Time) []
 	default:
 		fallthrough
 
-	case "stock":
+	case "equity":
 		marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNSE
 		marginParam.OrderParams[0].Tradingsymbol = order.Instr
 
 	case "option-buy":
 		marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNFO
 		marginParam.OrderParams[0].TransactionType = "BUY"
-		marginParam.OrderParams[0].Tradingsymbol = deriveOptionName(order, ts, tm)
 
 	case "option-sell":
 		marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNFO
 		marginParam.OrderParams[0].TransactionType = "SELL"
-		marginParam.OrderParams[0].Tradingsymbol = deriveOptionName(order, ts, tm)
 
 	case "futures":
 		marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNFO
-		marginParam.OrderParams[0].Tradingsymbol = deriveFuturesName(order, ts, tm)
 
 	}
+	marginParam.OrderParams[0].Tradingsymbol, marginParam.OrderParams[0].Quantity =
+		deriveInstrumentsName(order, ts, tm)
+
 	OrderMargins, err := kite.FetchOrderMargins(marginParam)
 
 	if err != nil {

@@ -6,3 +6,4 @@ __debug_bin
 *.out
 app/zfiles/config/ENV_accesstoken.env
 app/zfiles/config/ENV_Settings.env
+*.~lock*

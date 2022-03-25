@@ -85,6 +85,11 @@ Source code: https://github.com/parag-b/goTicker
 **Update libs** `go get -u all && go mod tidy`
 **Update specific lib** `go get -u gopkg.in/yaml.v2`
 
+**Generate Coverage Report** 
+cd app/trademgr
+go tool cover -html=coverage.out
+go tool cover -html=coverage.out
+
 # ToDo List
 - [x] Connect to DB
 - [x] Connect to Kite
