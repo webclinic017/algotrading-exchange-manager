@@ -39,7 +39,6 @@ func CalOrderMargin(order data.TradeSignal, ts data.Strategies, tm time.Time) []
 
 	case "equity":
 		marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNSE
-		marginParam.OrderParams[0].Tradingsymbol = order.Instr
 
 	case "option-buy":
 		marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNFO

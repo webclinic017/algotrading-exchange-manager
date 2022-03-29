@@ -15,6 +15,7 @@ import (
 
 const (
 	InfoColorFloat = "\033[1;34m%.0f\033[0m\t"
+	InfoColorUint  = "\033[1;34m%d\033[0m\t"
 	InfoColor      = "\033[1;34m%20s\033[0m\t"
 	ErrorColor     = "\033[1;31m%s\033[0m"
 	WeekSel        = 0
@@ -44,6 +45,7 @@ type CalOrderMarginTesting struct {
 // ** This is live testcase - update dates are per current symbols dates and levels.
 // ** Result needs to be verified manually!!!
 var CalOrderMarginTests = []CalOrderMarginTesting{
+
 	// {"2022-03-22", "INFY", 1, 73, 0, "bullish", "equity", 0, false, kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
 	{"2022-04-02", "BANKNIFTY-FUT", 0 + WeekSel, 36000 + StrikePrice, 0 + OptionLevel,
 		"bullish", "option-buy", 0 + MonthSel, SkipExpWkTrue,
@@ -81,6 +83,10 @@ var CalOrderMarginTests = []CalOrderMarginTesting{
 		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
 		kiteconnect.VarietyRegular, kiteconnect.ProductCNC},
 
+	{"2022-04-02", "RELIANCE INDUSTRIES", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
+		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
+		kiteconnect.VarietyRegular, kiteconnect.ProductCNC},
+
 	// {"2022-04-02", "invalid", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
 	// 	"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
 	// 	kiteconnect.VarietyRegular, kiteconnect.ProductCNC},
@@ -91,7 +97,7 @@ func TestCalOrderMargin(t *testing.T) {
 	srv.Init()
 	srv.LoadEnvVariables()
 	db.DbInit()
-	kite.SetAccessToken("CikMmd9jYoJp9hLlnb5HeoV3WHjVU2wj")
+	kite.SetAccessToken("qtejqw2D7IWWD0pWqMLolHzsCkWwugQf")
 	t.Parallel()
 
 	var order data.TradeSignal

@@ -20,6 +20,8 @@ type DeriveInstrumentsNameTesting struct {
 	expected          string
 }
 
+// these unit testcase are sensitive to date in "instruments" table,
+// load the instruments_dbtest_data_24Mar22.csv data before running the test cases
 var DeriveInstrumentsNameTests = []DeriveInstrumentsNameTesting{
 	// option testing - individual securities
 	{"2022-04-03", "RELIANCE-FUT", 0, 0, 2400, 0, false, "bullish", "option-buy", "RELIANCE22APR2400CE"},
