@@ -69,7 +69,7 @@ var PlaceOrderTests = []PlaceOrderTesting{
 
 	{"SRB-001", "VODAFONE IDEA", 0 + WeekSel, 10 + StrikePrice, 0 + OptionLevel,
 		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
-		kiteconnect.VarietyRegular, kiteconnect.ValidityIOC, kiteconnect.ProductCNC},
+		kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS},
 
 	// {"RELIANCE INDUSTRIES", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
 	// 	"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
@@ -85,7 +85,7 @@ func TestPlaceOrder(t *testing.T) {
 	srv.Init()
 	srv.LoadEnvVariables()
 	db.DbInit()
-	kite.SetAccessToken("qtejqw2D7IWWD0pWqMLolHzsCkWwugQf")
+	kite.SetAccessToken("")
 	t.Parallel()
 
 	var order data.TradeSignal

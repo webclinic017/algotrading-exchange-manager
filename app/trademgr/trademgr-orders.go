@@ -69,7 +69,7 @@ func PlaceOrder(order data.TradeSignal, ts data.Strategies, selDate time.Time) (
 	orderParam.Tradingsymbol, symbolMinQty = deriveInstrumentsName(order, ts, time.Now())
 	orderParam.Quantity = int(symbolMinQty)
 
-	return kite.PlaceOrder(orderParam)
+	return kite.PlaceOrder(orderParam, ts.CtrlParam.KiteSettings.Varieties)
 
 }
 

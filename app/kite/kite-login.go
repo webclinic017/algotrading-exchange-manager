@@ -84,7 +84,9 @@ func SetAccessToken(accessToken string) {
 
 func KiteGetRequestToken() string {
 
-	tfAuth := os.Getenv("TFA_AUTH")
+	tfAuth := os.Getenv("TOTP_SECRET_KEY")
+	tfAuth = srv.GetTOTPToken(tfAuth)
+
 	userId := os.Getenv("USER_ID")
 	userPwd := os.Getenv("PASSWORD")
 	reqTokenUrl := "https://kite.zerodha.com/connect/login?v=3&api_key=" + os.Getenv("API_KEY")
