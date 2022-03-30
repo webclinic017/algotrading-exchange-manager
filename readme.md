@@ -48,7 +48,8 @@ This tokens are used to register for the ticks.
             ZERODHA_PASSWORD        : ""
             ZERODHA_API_KEY         : ""
             ZERODHA_API_SECRET      : ""
-            ZERODHA_TOTP_SECRET_KEY : ""
+            ZERODHA_PIN             : "" # Set ZERODHA_TOTP_SECRET_KEY = `NOT-USED` , to use ZERODHA_PIN for twauth
+            ZERODHA_TOTP_SECRET_KEY : "NOT-USED"
             ZERODHA_REQ_TOKEN_URL   : "https://kite.zerodha.com/connect/login?v=3&api_key="
             APP_LIVE_TRADING_MODE   : "TRUE"
             TIMESCALEDB_USERNAME    : ""

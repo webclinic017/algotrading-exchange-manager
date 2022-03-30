@@ -121,10 +121,18 @@ func KiteGetRequestToken() string {
 	reqID := extractValue(resp.Text(), "request_id")
 
 	// ------------------------------------------------------------ 2. Do Two factor auth
+	// If TOTP not enabled, use PIN for login
+	twoAuth := srv.Env["ZERODHA_TOTP_SECRET_KEY"]
+	if twoAuth != "NOT-USED" {
+		twoAuth = srv.GetTOTPToken(srv.Env["ZERODHA_TOTP_SECRET_KEY"])
+	} else {
+		twoAuth = srv.Env["ZERODHA_PIN"]
+	}
+
 	data = requests.Datas{
 		"user_id":     srv.Env["ZERODHA_USER_ID"],
 		"request_id":  reqID,
-		"twofa_value": srv.GetTOTPToken(srv.Env["ZERODHA_TOTP_SECRET_KEY"]),
+		"twofa_value": twoAuth,
 		// RULE - TWO FACTOR AUTH - MUST BE ENABLED
 	}
 	resp, err = req.Post(twofaUrl, data)
