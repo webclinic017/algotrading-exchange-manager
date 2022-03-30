@@ -43,14 +43,18 @@ This tokens are used to register for the ticks.
         container_name: algotrading-exchange-manager
         restart: unless-stopped
         environment:
-        TZ: 'Asia/Kolkata'
-        PRODUCTION: 'true'
-        USER_ID: ""
-        PASSWORD: ""
-        TFA_AUTH: ""  # PIN
-        API_KEY: ""
-        API_SECRET: ""
-        DATABASE_URL: "postgres://postgres:pgpwdChangeMe@mysite.com:5432/stockdb"
+            TZ: 'Asia/Kolkata'
+            ZERODHA_USER_ID         : ""
+            ZERODHA_PASSWORD        : ""
+            ZERODHA_API_KEY         : ""
+            ZERODHA_API_SECRET      : ""
+            ZERODHA_TOTP_SECRET_KEY : ""
+            ZERODHA_REQ_TOKEN_URL   : "https://kite.zerodha.com/connect/login?v=3&api_key="
+            APP_LIVE_TRADING_MODE   : "TRUE"
+            TIMESCALEDB_USERNAME    : ""
+            TIMESCALEDB_PASSWORD    : ""
+            TIMESCALEDB_ADDRESS     : ""
+            TIMESCALEDB_PORT        : ""
         volumes:
         - ./dockerTest/config:/app/app/zfiles/config
         - ./dockerTest/log:/app/app/zfiles/log
@@ -76,9 +80,9 @@ Source code: https://github.com/parag-b/algotrading-exchange-manager
 # Development
 **Compilation** - `go build main.go`
 
-**Create Docker Image** - `DOCKER_BUILDKIT=1 docker build -t paragba/algotrading-ticker-service:(v0.1/latest) .`
+**Create Docker Image** - `DOCKER_BUILDKIT=1 docker build -t paragba/algotrading-exchange-manager:latest .`
 
-**Run Docker** `docker run --rm -it paragba/algotrading-ticker-service`
+**Run Docker** `docker run --rm -it paragba/algotrading-exchange-manager`
 
 **Enter Docker shell** `docker exec -it algo-ex-mgr sh`
 

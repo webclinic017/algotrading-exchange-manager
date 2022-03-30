@@ -19,15 +19,31 @@ const (
 	twofaUrl = "https://kite.zerodha.com/api/twofa"
 )
 
-func LoginKite() (bool, string, string) {
-	// := os.Getenv("TFA_AUTH")
+func Init() bool {
+
+	err := godotenv.Load("./zerodha-access-token.env")
+
+	// ------------------------------------------------------------ Saved access token?, on failure login again
+	if err != nil {
+		srv.ErrorLogger.Println(err.Error())
+		return loginKite()
+	}
+
+	// ------------------------------------------------------------ Set saved access token?, on failure login again
+	if !setAccessToken(os.Getenv("kiteaccessToken")) {
+		return loginKite()
+	}
+	return true
+}
+
+func loginKite() bool {
 
 	srv.InfoLogger.Print(
 		"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
 		"Zerodha Login",
 		"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
-	apiKey := os.Getenv("API_KEY")
-	apiSecret := os.Getenv("API_SECRET")
+	apiKey := srv.Env["ZERODHA_API_KEY"]
+	apiSecret := srv.Env["ZERODHA_API_SECRET"]
 
 	requestToken := KiteGetRequestToken()
 
@@ -43,7 +59,7 @@ func LoginKite() (bool, string, string) {
 		data, err := kc.GenerateSession(requestToken, apiSecret)
 		if err != nil {
 			srv.ErrorLogger.Printf("Session Err: %v", err)
-			return false, "", ""
+			return false
 		}
 
 		// Set access token
@@ -51,11 +67,8 @@ func LoginKite() (bool, string, string) {
 		srv.InfoLogger.Println("AccessToken", data.AccessToken)
 
 		// keypair := strings.Join("accessToken", data.AccessToken)
-		env, _ := godotenv.Unmarshal("accessToken=" + data.AccessToken)
-		err = godotenv.Write(env, "./app/zfiles/config/ENV_accesstoken.env")
-		if err != nil {
-			srv.WarningLogger.Print("Cannot write to accesstoken.env", err)
-		}
+		env, _ := godotenv.Unmarshal("kiteaccessToken=" + data.AccessToken)
+		godotenv.Write(env, "./zerodha-access-token.env")
 
 		// Get margins
 		margins, err := kc.GetUserMargins()
@@ -64,34 +77,24 @@ func LoginKite() (bool, string, string) {
 			//return false, "", ""
 		}
 		srv.InfoLogger.Println("Cash Balance (Net): ", margins.Equity.Net)
-
-		return true, apiKey, data.AccessToken
-
+		return true
 	}
-	return false, "", ""
+	return false
 }
 
-func SetAccessToken(accessToken string) {
-	kc = kiteconnect.New(os.Getenv("API_KEY"))
+func setAccessToken(accessToken string) bool {
+	kc = kiteconnect.New(srv.Env["ZERODHA_API_KEY"])
 	kc.SetAccessToken(accessToken)
 	margins, err := kc.GetUserMargins()
 	if err != nil {
 		srv.ErrorLogger.Printf("Error getting margins: %v", err)
-		//return false, "", ""
+		return false
 	}
 	srv.InfoLogger.Println("Cash Balance (Net): ", margins.Equity.Net)
+	return true
 }
 
 func KiteGetRequestToken() string {
-
-	tfAuth := os.Getenv("TOTP_SECRET_KEY")
-	tfAuth = srv.GetTOTPToken(tfAuth)
-
-	userId := os.Getenv("USER_ID")
-	userPwd := os.Getenv("PASSWORD")
-	reqTokenUrl := "https://kite.zerodha.com/connect/login?v=3&api_key=" + os.Getenv("API_KEY")
-
-	requestToken := ""
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -99,65 +102,51 @@ func KiteGetRequestToken() string {
 		}
 	}()
 
-	// 1. Start login, get reqId
+	// ------------------------------------------------------------ 1. Start login, get reqId
 	data := requests.Datas{
-		"user_id":  userId,
-		"password": userPwd,
+		"user_id":  srv.Env["ZERODHA_USER_ID"],
+		"password": srv.Env["ZERODHA_PASSWORD"],
 	}
 
 	req := requests.Requests()
 	resp, err := req.Post(URL, data)
 
 	if (err != nil) || (resp.R.StatusCode != 200) {
-		requestToken = "ERR: User ID / Password error"
-		srv.InfoLogger.Println(resp.Text())
-		return requestToken
+		return "ERR: User ID / Password error"
 	}
 
-	//{"status":"success","data":{"user_id":"ZY7293","request_id":"mJHDflgxtNutiffR3jAZcIPA5SH4eXaLNkrwSgheQfoyb4syN9vJ5OJyGnPRKCi7","twofa_type":"pin","twofa_status":"active"}}
+	// {"status":"success","data":{"user_id":"ZY7293",
+	// "request_id":"mJHDflgxtNutiffR3jAZcIPA5SH4eXaLNkrwSgheQfoyb4syN9vJ5OJyGnPRKCi7",
+	// "twofa_type":"pin","twofa_status":"active"}}
 	reqID := extractValue(resp.Text(), "request_id")
 
-	// 2. Do Two factor auth
+	// ------------------------------------------------------------ 2. Do Two factor auth
 	data = requests.Datas{
-		"user_id":     userId,
+		"user_id":     srv.Env["ZERODHA_USER_ID"],
 		"request_id":  reqID,
-		"twofa_value": tfAuth,
+		"twofa_value": srv.GetTOTPToken(srv.Env["ZERODHA_TOTP_SECRET_KEY"]),
+		// RULE - TWO FACTOR AUTH - MUST BE ENABLED
 	}
 	resp, err = req.Post(twofaUrl, data)
 
 	if (err != nil) || (resp.R.StatusCode != 200) {
-		srv.InfoLogger.Println(resp.Text())
-		requestToken = "ERR: Two factor auth failed"
-		return requestToken
+		return "ERR: Two factor auth failed"
 	}
 
-	// 3. Post login, access URL to get requestToken
+	// ------------------------------------------------------------ 3. Post login, access URL to get requestToken
 	req.SetTimeout(5)
-	resp, err = req.Get(reqTokenUrl)
+	resp, err = req.Get(srv.Env["ZERODHA_REQ_TOKEN_URL"] + srv.Env["ZERODHA_API_KEY"])
 	if err != nil {
 		srv.WarningLogger.Println(err.Error())
-		arr := strings.Split(err.Error(), `"`) // split on '&'
-		requestToken = extractKeyValue(arr[1], "request_token")
-		if requestToken == "" {
-			requestToken = "ERR: Cannot fetch request token"
-			return requestToken
-		}
+		arr := strings.Split(err.Error(), `"`)          // split on '&'
+		return extractKeyValue(arr[1], "request_token") //
 	} else {
-
 		m, err := url.ParseQuery(resp.R.Request.URL.RawQuery)
 		if (err != nil) || (resp.R.StatusCode != 200) {
-
-			requestToken = "ERR: Cannot fetch request token"
-			return requestToken
+			return "ERR: Cannot fetch request token"
 		}
-
-		// srv.InfoLogger.Println("parsed m:", m)
-		requestToken = m["request_token"][0]
+		return m["request_token"][0]
 	}
-
-	// srv.InfoLogger.Println("extraced req token:", requestToken)
-
-	return requestToken
 }
 
 func extractValue(body string, key string) string {
@@ -169,7 +158,8 @@ func extractValue(body string, key string) string {
 }
 
 // Find value based on key, split on '='
-// Example string - https://pathtonowhere.com/?type=login&status=success&request_token=tTy0wqusPbDObGf2zz7J0Wx9J5OYkFlp&action=login":
+// Example string - https://pathtonowhere.com/?type=login&status=success&
+//					request_token=tTy0wqusPbDObGf2zz7J0Wx9J5OYkFlp&action=login":
 
 func extractKeyValue(body string, key string) string {
 	arr := strings.Split(body, `&`) // split on '&'

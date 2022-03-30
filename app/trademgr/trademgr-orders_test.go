@@ -83,9 +83,9 @@ var PlaceOrderTests = []PlaceOrderTesting{
 func TestPlaceOrder(t *testing.T) {
 
 	srv.Init()
-	srv.LoadEnvVariables("home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
+	srv.LoadEnvVariables("/home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
 	db.DbInit()
-	kite.SetAccessToken("")
+	kite.Init()
 	t.Parallel()
 
 	var order appdata.TradeSignal

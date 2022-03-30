@@ -68,7 +68,7 @@ func startMainSession() {
 			db.StoreSymbolsInDb(symbolFutStr, symbolMcxFutStr)
 
 			// Kite login
-			kiteOk, apiKey, accToken = kite.LoginKite()
+			kiteOk = kite.Init()
 
 			// Start Ticker and Trader
 			if kiteOk {
@@ -103,7 +103,7 @@ func checkAPIs() {
 	trademgr.StopTrader()
 	os.Exit(0)
 
-	kiteOk, apiKey, accToken = kite.LoginKite()
+	kiteOk = kite.Init()
 	status()
 	db.CloseDb()
 }

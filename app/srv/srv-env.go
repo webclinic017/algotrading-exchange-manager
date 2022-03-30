@@ -2,7 +2,6 @@ package srv
 
 import (
 	"algo-ex-mgr/app/appdata"
-
 	"os"
 
 	"github.com/joho/godotenv"

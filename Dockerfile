@@ -10,6 +10,6 @@ COPY app/ ./app
 COPY *.go ./
 RUN rm ./app/zfiles/config/*.env
 
-RUN go build -o /algotrading-exchange-manager
+RUN go build -o /algoexmgr
 
-CMD [ "/algotrading-exchange-manager" ]
+CMD [ "/algoexmgr" ]

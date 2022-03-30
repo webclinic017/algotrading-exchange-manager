@@ -1,10 +1,9 @@
-app/zfiles/log
 main
-dockerTest
-__debug_bin
 *.out
-app/zfiles/config/ENV_accesstoken.env
-app/zfiles/config/ENV_Settings.env
 *.~lock*
+dockerTest
 algo-ex-mgr
+__debug_bin
 userSettings.env
+app/trademgr/zerodha-access-token.env
+app/zfiles/log

@@ -2,19 +2,23 @@ version: '3.4'
 
 services:
   goticker:
-    image: paragba/algotrading-ticker-service:latest
+    image: paragba/algotrading-exchange-manager:latest
     container_name: algo-ex-mgr
     restart: unless-stopped
     environment:
       TZ: 'Asia/Kolkata'
-      PRODUCTION: 'true'
-      USER_ID: ""
-      PASSWORD: ""
-      TFA_AUTH: ""
-      API_KEY: ""
-      API_SECRET: ""
-      DATABASE_URL: "postgres://postgres:pgpwdChangeMe@mysite.com:5432/stockdb"
-      LIVE_TRADING_MODE: 'true'
+      ZERODHA_USER_ID         : ""
+      ZERODHA_PASSWORD        : ""
+      ZERODHA_API_KEY         : ""
+      ZERODHA_API_SECRET      : ""
+      ZERODHA_TOTP_SECRET_KEY : ""
+      ZERODHA_REQ_TOKEN_URL   : "https://kite.zerodha.com/connect/login?v=3&api_key="
+      APP_LIVE_TRADING_MODE   : "TRUE"
+      TIMESCALEDB_USERNAME    : ""
+      TIMESCALEDB_PASSWORD    : ""
+      TIMESCALEDB_ADDRESS     : ""
+      TIMESCALEDB_PORT        : ""
+
     volumes:
       - ./dockerTest/config:/app/app/zfiles/config
       - ./dockerTest/log:/app/app/zfiles/log

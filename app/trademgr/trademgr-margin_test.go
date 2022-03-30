@@ -96,9 +96,9 @@ var CalOrderMarginTests = []CalOrderMarginTesting{
 func TestCalOrderMargin(t *testing.T) {
 
 	srv.Init()
-	srv.LoadEnvVariables("home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
+	srv.LoadEnvVariables("/home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
 	db.DbInit()
-	kite.SetAccessToken("xRdGhtPNgQn6h3lMSWTkg8C6JKE0bYfo")
+	kite.Init()
 	t.Parallel()
 
 	var order appdata.TradeSignal
