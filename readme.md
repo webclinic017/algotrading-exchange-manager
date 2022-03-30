@@ -68,7 +68,7 @@ This tokens are used to register for the ticks.
         - "5432:5432"
 
 
-Source code: https://github.com/parag-b/goTicker
+Source code: https://github.com/parag-b/algotrading-exchange-manager
 `Visit github project page for documentation support `
 
 
@@ -80,7 +80,7 @@ Source code: https://github.com/parag-b/goTicker
 
 **Run Docker** `docker run --rm -it paragba/algotrading-ticker-service`
 
-**Enter Docker shell** `docker exec -it goTicker sh`
+**Enter Docker shell** `docker exec -it algo-ex-mgr sh`
 
 **Update libs** `go get -u all && go mod tidy`
 **Update specific lib** `go get -u gopkg.in/yaml.v2`

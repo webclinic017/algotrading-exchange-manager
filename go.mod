@@ -1,4 +1,4 @@
-module goTicker
+module algo-ex-mgr
 
 go 1.17
 

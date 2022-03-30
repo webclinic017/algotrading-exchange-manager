@@ -1,8 +1,8 @@
 package kite
 
 import (
+	"algo-ex-mgr/app/srv"
 	"fmt"
-	"goTicker/app/srv"
 	"time"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"

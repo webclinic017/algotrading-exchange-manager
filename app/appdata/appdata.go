@@ -1,4 +1,4 @@
-package data
+package appdata
 
 import (
 	"time"
@@ -73,3 +73,16 @@ type TradeSignal struct {
 	Swing_min_time time.Time // 16
 	Swing_max_time time.Time // 17
 }
+
+// Env variables required
+var UserSettings = []string{
+	"APP_LIVE_TRADING_MODE",
+	"ZERODHA_USER_ID",
+	"ZERODHA_PASSWORD",
+	"ZERODHA_API_KEY",
+	"ZERODHA_API_SECRET",
+	"ZERODHA_TOTP_SECRET_KEY",
+	"TIMESCALEDB_ADDRESS",
+	"TIMESCALEDB_USERNAME",
+	"TIMESCALEDB_PASSWORD",
+	"TIMESCALEDB_PORT"}

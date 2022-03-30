@@ -1,9 +1,9 @@
 package kite
 
 import (
+	"algo-ex-mgr/app/srv"
 	"encoding/csv"
 	"fmt"
-	"goTicker/app/srv"
 	"io"
 	"io/ioutil"
 	"net/http"

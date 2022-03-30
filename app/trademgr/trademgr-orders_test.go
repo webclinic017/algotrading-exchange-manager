@@ -1,11 +1,11 @@
 package trademgr
 
 import (
+	"algo-ex-mgr/app/appdata"
+	"algo-ex-mgr/app/db"
+	"algo-ex-mgr/app/kite"
+	"algo-ex-mgr/app/srv"
 	"fmt"
-	"goTicker/app/data"
-	"goTicker/app/db"
-	"goTicker/app/kite"
-	"goTicker/app/srv"
 	"testing"
 	"time"
 
@@ -83,13 +83,13 @@ var PlaceOrderTests = []PlaceOrderTesting{
 func TestPlaceOrder(t *testing.T) {
 
 	srv.Init()
-	srv.LoadEnvVariables()
+	srv.LoadEnvVariables("home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
 	db.DbInit()
 	kite.SetAccessToken("")
 	t.Parallel()
 
-	var order data.TradeSignal
-	var ts data.Strategies
+	var order appdata.TradeSignal
+	var ts appdata.Strategies
 
 	var warCheck = "Check results MANUALLY!!!"
 

@@ -1,11 +1,12 @@
 package trademgr
 
 import (
+	"algo-ex-mgr/app/appdata"
+	"algo-ex-mgr/app/db"
+	"algo-ex-mgr/app/kite"
+	"algo-ex-mgr/app/srv"
 	"fmt"
-	"goTicker/app/data"
-	"goTicker/app/db"
-	"goTicker/app/kite"
-	"goTicker/app/srv"
+
 	"math"
 	"testing"
 	"time"
@@ -95,13 +96,13 @@ var CalOrderMarginTests = []CalOrderMarginTesting{
 func TestCalOrderMargin(t *testing.T) {
 
 	srv.Init()
-	srv.LoadEnvVariables()
+	srv.LoadEnvVariables("home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
 	db.DbInit()
-	kite.SetAccessToken("qtejqw2D7IWWD0pWqMLolHzsCkWwugQf")
+	kite.SetAccessToken("xRdGhtPNgQn6h3lMSWTkg8C6JKE0bYfo")
 	t.Parallel()
 
-	var order data.TradeSignal
-	var ts data.Strategies
+	var order appdata.TradeSignal
+	var ts appdata.Strategies
 
 	for _, test := range CalOrderMarginTests {
 
@@ -126,9 +127,9 @@ func TestCalOrderMargin(t *testing.T) {
 		actual := CalOrderMargin(order, ts, date)
 
 		if len(actual) == 0 {
-			t.Errorf(ErrorColor, "\nderiveFuturesName() No data fetched - check dates and levels are correct. This UT is live with server\n")
+			t.Errorf(ErrorColor, "\nderiveFuturesName() No data fetched - check dates/levels/Server Auth code. This UT is live with server\n")
 		} else if actual[0].Total == 0 {
-			t.Errorf(ErrorColor, "\nderiveFuturesName() No margin calculated - check dates and levels are correct. This UT is live with server\n")
+			t.Errorf(ErrorColor, "\nderiveFuturesName() No margin calculated - check dates/levels/Server Auth code. This UT is live with server\n")
 		} else {
 			// print result for manual check
 

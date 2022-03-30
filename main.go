@@ -1,10 +1,10 @@
 package main
 
 import (
-	"goTicker/app/db"
-	"goTicker/app/kite"
-	"goTicker/app/srv"
-	"goTicker/app/trademgr"
+	"algo-ex-mgr/app/db"
+	"algo-ex-mgr/app/kite"
+	"algo-ex-mgr/app/srv"
+	"algo-ex-mgr/app/trademgr"
 	"os"
 	"time"
 
@@ -56,7 +56,7 @@ func startMainSession() {
 	wdg.AddFunc("@every 60s", exMgrWdg)
 	wdg.Start()
 
-	envOk = srv.LoadEnvVariables()
+	envOk = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
 
 	if envOk {
 
@@ -95,7 +95,7 @@ func checkAPIs() {
 		"\n\n\t-----------------------------",
 		"------------------------------------ Check API's \n\n")
 
-	envOk = srv.LoadEnvVariables()
+	envOk = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
 	dbOk = db.DbInit()
 
 	go trademgr.StartTrader()
@@ -138,7 +138,7 @@ func testDbFunction() {
 
 	kite.ChTick = make(chan kite.TickData, 1000)
 
-	_ = srv.LoadEnvVariables()
+	_ = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
 	_ = db.DbInit()
 	go db.StoreTickInDb()
 	go kite.TestTicker()

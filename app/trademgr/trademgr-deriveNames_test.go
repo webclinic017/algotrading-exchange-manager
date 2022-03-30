@@ -1,9 +1,9 @@
 package trademgr
 
 import (
-	"goTicker/app/data"
-	"goTicker/app/db"
-	"goTicker/app/srv"
+	"algo-ex-mgr/app/appdata"
+	"algo-ex-mgr/app/db"
+	"algo-ex-mgr/app/srv"
 	"testing"
 	"time"
 )
@@ -63,11 +63,11 @@ var DeriveInstrumentsNameTests = []DeriveInstrumentsNameTesting{
 func TestDeriveInstrumentsName(t *testing.T) {
 	t.Parallel()
 	srv.Init()
-	srv.LoadEnvVariables()
+	srv.LoadEnvVariables("home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
 	db.DbInit()
 
-	var order data.TradeSignal
-	var ts data.Strategies
+	var order appdata.TradeSignal
+	var ts appdata.Strategies
 
 	for _, test := range DeriveInstrumentsNameTests {
 

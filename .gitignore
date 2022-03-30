@@ -1,5 +1,4 @@
 app/zfiles/log
-goTicker
 main
 dockerTest
 __debug_bin
@@ -7,3 +6,5 @@ __debug_bin
 app/zfiles/config/ENV_accesstoken.env
 app/zfiles/config/ENV_Settings.env
 *.~lock*
+algo-ex-mgr
+userSettings.env

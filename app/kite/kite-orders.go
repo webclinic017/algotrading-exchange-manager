@@ -23,4 +23,4 @@ func PlaceOrder(orderParams kiteconnect.OrderParams, variety string) uint64 {
 	return s
 }
 
-// RULE "TOTP is mandatory to place orders on third-party apps. Learn how to set up TOTP for your account [here](https://support.zerodha.com/category/your-zerodha-account/login-credentials/login-credentials-of-trading-platforms/articles/time-based-otp-setup-mobile-only)."
+// RULE "TOTP is mandatory to place orders on third-party apps.

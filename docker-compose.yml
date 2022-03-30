@@ -3,7 +3,7 @@ version: '3.4'
 services:
   goticker:
     image: paragba/algotrading-ticker-service:latest
-    container_name: goTicker
+    container_name: algo-ex-mgr
     restart: unless-stopped
     environment:
       TZ: 'Asia/Kolkata'

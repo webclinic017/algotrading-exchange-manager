@@ -1,8 +1,8 @@
 package db
 
 import (
+	"algo-ex-mgr/app/srv"
 	"context"
-	"goTicker/app/srv"
 	"strings"
 
 	"github.com/jackc/pgconn"

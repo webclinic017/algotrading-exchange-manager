@@ -1,9 +1,9 @@
 package trademgr
 
 import (
-	"goTicker/app/apiclient"
-	"goTicker/app/db"
-	"goTicker/app/srv"
+	"algo-ex-mgr/app/apiclient"
+	"algo-ex-mgr/app/db"
+	"algo-ex-mgr/app/srv"
 	"strconv"
 	"time"
 )

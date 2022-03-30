@@ -1,9 +1,9 @@
 package db
 
 import (
+	"algo-ex-mgr/app/kite"
+	"algo-ex-mgr/app/srv"
 	"context"
-	"goTicker/app/kite"
-	"goTicker/app/srv"
 
 	"github.com/jackc/pgx/v4"
 )

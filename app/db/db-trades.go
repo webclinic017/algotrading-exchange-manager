@@ -1,11 +1,11 @@
 package db
 
 import (
+	"algo-ex-mgr/app/appdata"
+	"algo-ex-mgr/app/srv"
 	"context"
 	"encoding/json"
 	"fmt"
-	"goTicker/app/data"
-	"goTicker/app/srv"
 
 	"github.com/georgysavva/scany/pgxscan"
 )
@@ -28,7 +28,7 @@ func StoreTradeSignalInDb(sigData string) uint16 {
 		VALUES
 		($1, $2, $3, $4, $5, $6);`
 
-	var tradeSignal []*data.TradeSignal
+	var tradeSignal []*appdata.TradeSignal
 	err := json.Unmarshal([]byte(sigData), &tradeSignal)
 	if err != nil {
 		srv.ErrorLogger.Printf("TradeSignal - API JSON data parse error: %v\n", err)
@@ -100,7 +100,7 @@ func StoreTradeSignalInDb(sigData string) uint16 {
 	return 0
 }
 
-func FetchOrderData(orderBookId uint16) []*data.TradeSignal {
+func FetchOrderData(orderBookId uint16) []*appdata.TradeSignal {
 
 	lock.Lock()
 	defer lock.Unlock()
@@ -109,7 +109,7 @@ func FetchOrderData(orderBookId uint16) []*data.TradeSignal {
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	var ts []*data.TradeSignal
+	var ts []*appdata.TradeSignal
 
 	sqlquery := fmt.Sprintf("SELECT * FROM signals_trading WHERE id = %d", orderBookId)
 

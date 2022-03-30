@@ -1,7 +1,7 @@
 package kite
 
 import (
-	"goTicker/app/srv"
+	"algo-ex-mgr/app/srv"
 	"net/url"
 	"os"
 	"regexp"

@@ -1,16 +1,16 @@
 package trademgr
 
 import (
-	"goTicker/app/data"
-	"goTicker/app/kite"
-	"goTicker/app/srv"
+	"algo-ex-mgr/app/appdata"
+	"algo-ex-mgr/app/kite"
+	"algo-ex-mgr/app/srv"
 	"strings"
 	"time"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
-func CalOrderMargin(order data.TradeSignal, ts data.Strategies, tm time.Time) []kiteconnect.OrderMargins {
+func CalOrderMargin(order appdata.TradeSignal, ts appdata.Strategies, tm time.Time) []kiteconnect.OrderMargins {
 
 	var marginParam kiteconnect.GetMarginParams
 

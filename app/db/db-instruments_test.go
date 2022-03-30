@@ -1,7 +1,7 @@
 package db
 
 import (
-	"goTicker/app/srv"
+	"algo-ex-mgr/app/srv"
 	"testing"
 )
 
@@ -32,7 +32,7 @@ var FetchInstrDataTests = []FetchInstrDataTesting{
 
 func TestFetchInstrData(t *testing.T) {
 	srv.Init()
-	srv.LoadEnvVariables()
+	srv.LoadEnvVariables("home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
 	DbInit()
 
 	for _, test := range FetchInstrDataTests {

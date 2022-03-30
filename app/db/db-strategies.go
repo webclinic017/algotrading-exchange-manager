@@ -1,20 +1,20 @@
 package db
 
 import (
+	"algo-ex-mgr/app/appdata"
+	"algo-ex-mgr/app/srv"
 	"context"
 	"encoding/json"
-	"goTicker/app/data"
-	"goTicker/app/srv"
 
 	"github.com/georgysavva/scany/pgxscan"
 )
 
-func ReadStrategiesFromDb() []*data.Strategies {
+func ReadStrategiesFromDb() []*appdata.Strategies {
 	ctx := context.Background()
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	var ts []*data.Strategies
+	var ts []*appdata.Strategies
 
 	err := pgxscan.Select(ctx, dbPool, &ts, `SELECT * FROM strategies where enabled = 'true'`)
 

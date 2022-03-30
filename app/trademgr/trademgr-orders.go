@@ -1,15 +1,15 @@
 package trademgr
 
 import (
-	"goTicker/app/data"
-	"goTicker/app/kite"
+	"algo-ex-mgr/app/appdata"
+	"algo-ex-mgr/app/kite"
 	"strings"
 	"time"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
-func placeOrder(order *data.TradeSignal, ts *data.Strategies) bool {
+func placeOrder(order *appdata.TradeSignal, ts *appdata.Strategies) bool {
 	// [x] select opt/fut/stk based on intrument
 	// [ ] Fetch account balance
 	// [ ] calculate margin required
@@ -25,7 +25,7 @@ func placeOrder(order *data.TradeSignal, ts *data.Strategies) bool {
 
 }
 
-func PlaceOrder(order data.TradeSignal, ts data.Strategies, selDate time.Time) (orderID uint64) {
+func PlaceOrder(order appdata.TradeSignal, ts appdata.Strategies, selDate time.Time) (orderID uint64) {
 
 	var orderParam kiteconnect.OrderParams
 

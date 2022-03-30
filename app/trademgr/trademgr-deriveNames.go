@@ -1,9 +1,9 @@
 package trademgr
 
 import (
+	"algo-ex-mgr/app/appdata"
+	"algo-ex-mgr/app/db"
 	"fmt"
-	"goTicker/app/data"
-	"goTicker/app/db"
 
 	"strings"
 	"time"
@@ -15,7 +15,7 @@ import (
 // BANKNIFTY2232435000CE - 24th Mar 2022
 // BANKNIFTY22MAR31000CE - 31st Mar 2022
 // Last week of Month - will be monthly expiry
-func deriveInstrumentsName(order data.TradeSignal, ts data.Strategies, selDate time.Time) (name string, qty float64) {
+func deriveInstrumentsName(order appdata.TradeSignal, ts appdata.Strategies, selDate time.Time) (name string, qty float64) {
 
 	var (
 		instrumentType string

@@ -1,8 +1,8 @@
 package db
 
 import (
+	"algo-ex-mgr/app/srv"
 	"context"
-	"goTicker/app/srv"
 )
 
 func FetchInstrData(instrument string, strikelevel uint64, opdepth int, instrtype string, startdate string, enddate string) (instrname string, lotsize float64) {

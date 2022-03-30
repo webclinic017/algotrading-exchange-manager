@@ -4,9 +4,9 @@
 package trademgr
 
 import (
-	"goTicker/app/data"
-	"goTicker/app/db"
-	"goTicker/app/srv"
+	"algo-ex-mgr/app/appdata"
+	"algo-ex-mgr/app/db"
+	"algo-ex-mgr/app/srv"
 	"os"
 	"strings"
 	"sync"
@@ -15,7 +15,7 @@ import (
 
 // tradeStrategies - list of all strategies to be executed. Read once from db at start of day
 var (
-	tradeStrategies        []*data.Strategies
+	tradeStrategies        []*appdata.Strategies
 	terminateTradeOperator bool = false
 )
 
@@ -67,7 +67,7 @@ func StopTrader() {
 // 	[ ] 6. check exit conditions (blocking call)
 // 	[ ] 7. on signal, exit trade	(blocking call)
 // 	[ ] 8. on exit, update db
-func tradeOperator(tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup) {
+func tradeOperator(tradeStrategies *appdata.Strategies, wgTrademgr *sync.WaitGroup) {
 
 	srv.TradesLogger.Println("\n(TradeOperator Setup) ", tradeStrategies)
 
@@ -91,7 +91,7 @@ func tradeOperator(tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup)
 }
 
 // Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.
-func checkTriggerDays(tradeStrategies *data.Strategies) bool {
+func checkTriggerDays(tradeStrategies *appdata.Strategies) bool {
 
 	triggerdays := strings.Split(tradeStrategies.Trigger_days, ",")
 	currentday := time.Now().Weekday().String()
@@ -109,7 +109,7 @@ func checkTriggerDays(tradeStrategies *data.Strategies) bool {
 // TODO: master exit condition & EoD termniation
 
 // Scan signal
-func symbolTradeManager(continous bool, tradeSymbol string, tradeStrategies *data.Strategies, wgTrademgr *sync.WaitGroup) {
+func symbolTradeManager(continous bool, tradeSymbol string, tradeStrategies *appdata.Strategies, wgTrademgr *sync.WaitGroup) {
 	defer wgTrademgr.Done()
 
 	var orderBookId uint16
