@@ -44,3 +44,17 @@ func TestFetchInstrData(t *testing.T) {
 		}
 	}
 }
+
+func TestGetInstrumentsToken(t *testing.T) {
+	srv.Init()
+	srv.LoadEnvVariables("/home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
+	DbInit()
+
+	actual := GetInstrumentsToken()
+
+	if len(actual) == 0 {
+		t.Errorf("\nGetInstrumentsToken() \nexpected:%q \n  actual:%q", 2, len(actual))
+	} else {
+		println("\nGetInstrumentsToken() \nexpected:%q \n  actual:%q", 2, len(actual))
+	}
+}

@@ -45,7 +45,7 @@ func connectDB() bool {
 		//execute statement, fails if table already exists
 		myCon2, _ := dbPoolDefault.Acquire(ctx)
 		defer myCon.Release()
-		myCon2.Exec(ctx, "DB_CREApackage dbd to CREATE algotrading DB: %v\n", err)
+		myCon2.Exec(ctx, DB_CREATE_QUERY)
 		return false
 	}
 	return true

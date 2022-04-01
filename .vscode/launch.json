@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Kite Ticker",
+            "name": "algo-ex-mgr",
             "type": "go",
             "request": "launch",
             "mode": "debug",

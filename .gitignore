@@ -5,5 +5,6 @@ dockerTest
 algo-ex-mgr
 __debug_bin
 userSettings.env
-app/trademgr/zerodha-access-token.env
+zerodha-access-token.env
 app/zfiles/log
+

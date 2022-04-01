@@ -69,6 +69,7 @@ func loginKite() bool {
 		// keypair := strings.Join("accessToken", data.AccessToken)
 		env, _ := godotenv.Unmarshal("kiteaccessToken=" + data.AccessToken)
 		godotenv.Write(env, "./zerodha-access-token.env")
+		os.Setenv("kiteaccessToken", data.AccessToken)
 
 		// Get margins
 		margins, err := kc.GetUserMargins()

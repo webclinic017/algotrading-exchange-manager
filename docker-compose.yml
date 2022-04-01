@@ -26,13 +26,18 @@ services:
     
 # Use the below code to spawn TimescaleDB Container
 
-  # timescaledb:
-  #   image: 'timescale/timescaledb:latest-pg12'
-  #   container_name: timescaledb
-  #   restart: unless-stopped
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - POSTGRES_PASSWORD=pgpwdChangeMe
-  #   ports:
-  #     - "5432:5432"
+  timescaledb:
+    image: 'timescale/timescaledb:latest-pg14'
+    container_name: timescaledb
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+
+
+
+# docker run -d --name timescaledb-test -p 127.0.0.1:5432:5432 \
+# -e POSTGRES_PASSWORD=password timescale/timescaledb:latest-pg14

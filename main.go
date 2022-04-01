@@ -21,7 +21,6 @@ var (
 
 func main() {
 
-	srv.CheckFiles()
 	srv.Init()
 
 	// testTickerData()
@@ -64,17 +63,17 @@ func startMainSession() {
 
 		if dbOk {
 
-			kite.Tokens, kite.InsNamesMap, symbolFutStr, symbolMcxFutStr = kite.GetSymbols()
-			db.StoreSymbolsInDb(symbolFutStr, symbolMcxFutStr)
+			kite.InsNamesMap = db.GetInstrumentsToken()
+			kite.GetSymbols()
 
 			// Kite login
 			kiteOk = kite.Init()
 
 			// Start Ticker and Trader
 			if kiteOk {
-				kite.TickerInitialize(apiKey, accToken)
+				kite.TickerInitialize(srv.Env["ZERODHA_API_KEY"], os.Getenv("kiteaccessToken"))
 
-				go trademgr.StartTrader() // TODO: what condition to apply?
+				// go trademgr.StartTrader() // TODO: what condition to apply?
 				go db.StoreTickInDb()
 				// start watchdog to recover from connections issues
 			}
@@ -98,9 +97,14 @@ func checkAPIs() {
 	envOk = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
 	dbOk = db.DbInit()
 
-	go trademgr.StartTrader()
+	kite.InsNamesMap = db.GetInstrumentsToken()
+	kite.GetSymbols()
+	kiteOk = kite.Init()
+	kite.TickerInitialize(srv.Env["ZERODHA_API_KEY"], os.Getenv("kiteaccessToken"))
+
+	// go trademgr.StartTrader()
 	time.Sleep(time.Minute * 5)
-	trademgr.StopTrader()
+	// trademgr.StopTrader()
 	os.Exit(0)
 
 	kiteOk = kite.Init()
