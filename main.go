@@ -59,7 +59,6 @@ func startMainSession() {
 		dbOk = db.DbInit()
 
 		if dbOk {
-
 			// Kite login
 			kiteOk = kite.Init()
 
@@ -86,15 +85,16 @@ func stopMainSession() {
 func checkAPIs() {
 	srv.InfoLogger.Print(
 		"\n\n\t-----------------------------",
-		"------------------------------------ Check API's \n\n")
+		"------------------------------------ Check API's --- MARKET OFF-TIME\n\n")
 
-	startMainSession()
-
+	// startMainSession()
 	// go trademgr.StartTrader()
-	time.Sleep(time.Minute * 5)
 	// trademgr.StopTrader()
-	os.Exit(0)
+	// time.Sleep(time.Minute * 5)
+	// os.Exit(0)
 
+	envOk = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
+	dbOk = db.DbInit()
 	kiteOk = kite.Init()
 	status()
 	db.CloseDb()
@@ -104,10 +104,11 @@ func exMgrWdg() {
 
 	// db Reconnection on error
 	if (db.ErrCnt > 100) || (kite.TickerCnt < 100) {
-		srv.ErrorLogger.Print("\n\n\tWatchdog - DB/Ticker Error, Restarting...\n\n")
-		kite.CloseTicker() // close channel and DB store task
-		startMainSession() // login kite, start ch & db task
-		time.Sleep(time.Minute * 1)
+		srv.ErrorLogger.Print("\n\n\tWatchdogMgr - | db.ErrCnt:", db.ErrCnt, "\tkite.TickerCnt:", kite.TickerCnt, "\n\n")
+		// srv.ErrorLogger.Print("\n\n\tWatchdog - DB/Ticker Error, Restarting...\n\n")
+		// kite.CloseTicker() // close channel and DB store task
+		// startMainSession() // login kite, start ch & db task
+		time.Sleep(time.Minute * 1) // wait to establish connections
 	}
 	db.ErrCnt = 0
 	kite.TickerCnt = 0
