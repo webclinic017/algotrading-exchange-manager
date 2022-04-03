@@ -79,9 +79,9 @@ func getNseEqTokens() map[string]string {
 	sqlQueryStocks := `SELECT i.instrument_token, ts.mysymbol
 	FROM tracking_symbols ts, instruments i
 	WHERE 
-			ts.symbol = i.name
+			ts.symbol = i.tradingsymbol
 		and 
-			ts.segment = 'EQ'
+			i.instrument_type = 'EQ'
 		and 
 			ts.exchange = i.exchange;`
 

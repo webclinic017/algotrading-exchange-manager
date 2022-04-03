@@ -170,6 +170,7 @@ func TestTicker() {
 // From instrMap, get the tokens
 func getTokens(instrMap map[string]string) []uint32 {
 
+	//TODO: check if duplicate tokens are present
 	var tkn []uint32
 	var i = 0
 
