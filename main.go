@@ -13,10 +13,7 @@ import (
 
 var (
 	envOk, dbOk, kiteOk, traderOk bool = false, false, false, false
-	apiKey, accToken              string
 	wdg, sessionCron              *cron.Cron
-	symbolFutStr, symbolMcxFutStr string
-	Tokens                        []uint32
 )
 
 func main() {
@@ -63,9 +60,6 @@ func startMainSession() {
 
 		if dbOk {
 
-			kite.InsNamesMap = db.GetInstrumentsToken()
-			kite.GetSymbols()
-
 			// Kite login
 			kiteOk = kite.Init()
 
@@ -74,7 +68,7 @@ func startMainSession() {
 				kite.TickerInitialize(srv.Env["ZERODHA_API_KEY"], os.Getenv("kiteaccessToken"))
 
 				// go trademgr.StartTrader() // TODO: what condition to apply?
-				go db.StoreTickInDb()
+				db.InitTickStorage()
 				// start watchdog to recover from connections issues
 			}
 		}
@@ -94,13 +88,7 @@ func checkAPIs() {
 		"\n\n\t-----------------------------",
 		"------------------------------------ Check API's \n\n")
 
-	envOk = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
-	dbOk = db.DbInit()
-
-	kite.InsNamesMap = db.GetInstrumentsToken()
-	kite.GetSymbols()
-	kiteOk = kite.Init()
-	kite.TickerInitialize(srv.Env["ZERODHA_API_KEY"], os.Getenv("kiteaccessToken"))
+	startMainSession()
 
 	// go trademgr.StartTrader()
 	time.Sleep(time.Minute * 5)
@@ -116,9 +104,10 @@ func exMgrWdg() {
 
 	// db Reconnection on error
 	if (db.ErrCnt > 100) || (kite.TickerCnt < 100) {
-		srv.ErrorLogger.Print("\n\n\tDB/Ticker Error, Restarting...\n\n")
+		srv.ErrorLogger.Print("\n\n\tWatchdog - DB/Ticker Error, Restarting...\n\n")
 		kite.CloseTicker() // close channel and DB store task
 		startMainSession() // login kite, start ch & db task
+		time.Sleep(time.Minute * 1)
 	}
 	db.ErrCnt = 0
 	kite.TickerCnt = 0
@@ -140,15 +129,15 @@ func status() {
 
 func testDbFunction() {
 
-	kite.ChTick = make(chan kite.TickData, 1000)
+	// appdata.ChTick = make(chan appdata.TickData, 1000)
 
-	_ = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
-	_ = db.DbInit()
-	go db.StoreTickInDb()
-	go kite.TestTicker()
-	println("Testing Done")
+	// _ = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
+	// _ = db.DbInit()
+	// go db.StoreTickInDb()
+	// go kite.TestTicker()
+	// println("Testing Done")
 
-	select {}
+	// select {}
 }
 
 func testTickerData() {

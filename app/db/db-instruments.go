@@ -10,20 +10,38 @@ func GetInstrumentsToken() map[string]string {
 
 	var tokensMap = make(map[string]string)
 
-	sqlQueryTokens := `SELECT i.instrument_token, ts.mysymbol 
+	tknEq := getNseEqTokens()
+	tknFut := getFuturesTokens()
+
+	for k, v := range tknEq {
+		tokensMap[k] = v
+	}
+	for k, v := range tknFut {
+		tokensMap[k] = v
+	}
+	return tokensMap
+}
+
+func getFuturesTokens() map[string]string {
+
+	var tokensMap = make(map[string]string)
+
+	sqlQueryFutures := `SELECT i.instrument_token, ts.mysymbol
     FROM tracking_symbols ts, instruments i
     WHERE 
     		ts.symbol = i.name
+		and 
+			ts.segment = i.instrument_type 
+		and 
+			ts.exchange = i.exchange
     	and 
-    		ts.segment = i.segment 
-    	and 
-    		EXTRACT(MONTH FROM TO_DATE(i.expiry,'YYYY-MM-DD')) = EXTRACT(MONTH FROM current_date);
-    	`
+    		EXTRACT(MONTH FROM TO_DATE(i.expiry,'YYYY-MM-DD')) = EXTRACT(MONTH FROM current_date);`
+
 	ctx := context.Background()
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	rows, err := myCon.Query(ctx, sqlQueryTokens)
+	rows, err := myCon.Query(ctx, sqlQueryFutures)
 
 	if err != nil {
 		srv.ErrorLogger.Printf("Cannot read list of tokens for ticker %v\n", err)
@@ -46,7 +64,55 @@ func GetInstrumentsToken() map[string]string {
 
 			return tokensMap
 		}
-		tokensMap[symbol] = strconv.FormatInt(itoken, 10)
+		tokensMap[strconv.FormatInt(itoken, 10)] = symbol
+	}
+	defer rows.Close()
+
+	return tokensMap
+}
+
+// TODO: Check for MCX, BSE and other symbols
+func getNseEqTokens() map[string]string {
+
+	var tokensMap = make(map[string]string)
+
+	sqlQueryStocks := `SELECT i.instrument_token, ts.mysymbol
+	FROM tracking_symbols ts, instruments i
+	WHERE 
+			ts.symbol = i.name
+		and 
+			ts.segment = 'EQ'
+		and 
+			ts.exchange = i.exchange;`
+
+	ctx := context.Background()
+	myCon, _ := dbPool.Acquire(ctx)
+	defer myCon.Release()
+
+	rows, err := myCon.Query(ctx, sqlQueryStocks)
+
+	if err != nil {
+		srv.ErrorLogger.Printf("Cannot read list of tokens for ticker %v\n", err)
+		return tokensMap
+	}
+
+	for rows.Next() {
+
+		var itoken int64
+		var symbol string
+
+		err = rows.Scan(&itoken, &symbol)
+		if err != nil {
+			srv.ErrorLogger.Printf("Cannot parse list of tokens for ticker %v\n", err)
+			return tokensMap
+		}
+
+		if rows.Err() != nil {
+			srv.ErrorLogger.Println("Cannot parse list of tokens for ticker: ", rows.Err())
+
+			return tokensMap
+		}
+		tokensMap[strconv.FormatInt(itoken, 10)] = symbol
 	}
 	defer rows.Close()
 

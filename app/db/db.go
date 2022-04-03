@@ -1,7 +1,6 @@
 package db
 
 import (
-	"algo-ex-mgr/app/kite"
 	"algo-ex-mgr/app/srv"
 	"context"
 	"os"
@@ -14,7 +13,6 @@ var dBwg sync.WaitGroup
 var lock sync.Mutex
 var ErrCnt int = 0
 var dbPool *pgxpool.Pool
-var dbTick []kite.TickData
 
 func connectDB() bool {
 	ctx := context.Background()
@@ -79,20 +77,16 @@ func DbInit() bool {
 		}
 
 		// 3. Check if 'ticker' table exists, if not CREATE it
-		if createTable(DB_TABLE_TICKER_NAME, DB_CREATE_TABLE_TICKER) {
-			// createViews()
-			// setupDbCompression()
-			createTable(DB_TABLE_ID_DECODED_NAME, DB_CREATE_TABLE_ID_DECODED)
-			srv.InfoLogger.Printf("DB checks completed\n")
-			return true
-		} else {
-			return false
+		if createTable(DB_TABLE_TICKER_NAME_STK, DB_CREATE_TABLE_STK_TICKER) {
+			if createTable(DB_TABLE_TICKER_NAME_NSE_IDX, DB_CREATE_TABLE_NSE_IDX_TICKER) {
+				// createViews()
+				// setupDbCompression()
+				srv.InfoLogger.Printf("DB checks completed\n")
+				return true
+			}
 		}
-
-	} else {
-		return false
 	}
-
+	return false
 }
 
 func CloseDb() {

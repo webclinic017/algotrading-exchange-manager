@@ -1,24 +1,33 @@
 package db
 
 import (
-	"algo-ex-mgr/app/kite"
+	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v4"
 )
 
-func StoreTickInDb() {
-	for v := range kite.ChTick { // read from tick channel
+func InitTickStorage() {
+	go StoreNseIdxFutsInDb()
+	go StoreTicksInDb()
+}
+
+func StoreNseIdxFutsInDb() {
+	var dbTick []appdata.TickData
+
+	for v := range appdata.ChNseTicks { // read from tick channel
+		// fmt.Println("Tick: ", appdata.ChNseTicks)
 		dbTick = append(dbTick, v)
-		if len(dbTick) > 250 {
+		if len(dbTick) > 100 {
 			dBwg.Add(1)
-			go executeBatch(dbTick)
+			go executeBatch(dbTick, "ticks_nsefut")
 			dbTick = nil
 		}
 	}
 	dBwg.Add(1)
-	go executeBatch(dbTick)
+	go executeBatch(dbTick, "ticks_nsefut")
 	dbTick = nil
 
 	// wait for all executeBatch() to finish
@@ -26,7 +35,28 @@ func StoreTickInDb() {
 	dbPool.Close()
 }
 
-func executeBatch(dataTick []kite.TickData) {
+func StoreTicksInDb() {
+	var dbTick []appdata.TickData
+
+	for v := range appdata.ChStkTick { // read from tick channel
+		// fmt.Println("Tick: ", appdata.ChTick)
+		dbTick = append(dbTick, v)
+		if len(dbTick) > 100 {
+			dBwg.Add(1)
+			go executeBatch(dbTick, "ticks_stk")
+			dbTick = nil
+		}
+	}
+	dBwg.Add(1)
+	go executeBatch(dbTick, "ticks_stk")
+	dbTick = nil
+
+	// wait for all executeBatch() to finish
+	dBwg.Wait()
+	dbPool.Close()
+}
+
+func executeBatch(dataTick []appdata.TickData, tableName string) {
 	defer dBwg.Done()
 	defer func() {
 		if err := recover(); err != nil {
@@ -36,21 +66,23 @@ func executeBatch(dataTick []kite.TickData) {
 
 	batch := &pgx.Batch{}
 
-	queryInsertTimeseriesData := `INSERT INTO ticks_data
- (
-					time,
-					symbol,
-					last_traded_price,
-					buy_demand, sell_demand,
-					trades_till_now,
-					open_interest)
-					VALUES
-					($1, $2, $3, $4, $5, $6, $7);`
+	queryInsertTimeseriesData := `INSERT INTO %v
+	(
+		time,
+		symbol,
+		last_traded_price,
+		buy_demand, sell_demand,
+		trades_till_now,
+		open_interest)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7);`
+
+	sqlquery := fmt.Sprintf(queryInsertTimeseriesData, tableName)
 
 	for i := range dataTick {
-		var ct kite.TickData = dataTick[i]
+		var ct appdata.TickData = dataTick[i]
 
-		batch.Queue(queryInsertTimeseriesData,
+		batch.Queue(sqlquery,
 			ct.Timestamp,
 			ct.Symbol,
 			ct.LastTradedPrice,

@@ -7,6 +7,19 @@ import (
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
+func FetchOrderMargins(marginParam kiteconnect.GetMarginParams) ([]kiteconnect.OrderMargins, error) {
+	var OrderMargins []kiteconnect.OrderMargins
+	var err error
+
+	OrderMargins, err = kc.GetOrderMargins(marginParam)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return OrderMargins, nil
+}
+
 func PlaceOrder(orderParams kiteconnect.OrderParams, variety string) uint64 {
 
 	orderResponse, poerr := kc.PlaceOrder(variety, orderParams)

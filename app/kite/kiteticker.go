@@ -1,8 +1,12 @@
 package kite
 
 import (
+	"algo-ex-mgr/app/appdata"
+	"algo-ex-mgr/app/db"
 	"algo-ex-mgr/app/srv"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
@@ -11,27 +15,12 @@ import (
 )
 
 var (
-	TickerCnt            uint32 = 0
-	ticker               *kiteticker.Ticker
-	Tokens               []uint32
-	TokensWithNames      []string
-	ChTick               chan TickData
-	InsNamesMap          = make(map[string]string)
-	symbolFutStr         string
-	symbolMcxFutStr      string
-	KiteConnectionStatus bool = false
+	TickerCnt      uint32 = 0
+	ticker         *kiteticker.Ticker
+	subscribeToken []uint32
+	instrMap            = make(map[string]string)
+	Status         bool = false
 )
-
-type TickData struct {
-	Timestamp       time.Time
-	LastTradedPrice float64
-	Symbol          string
-	LastPrice       float64
-	Buy_Demand      uint32
-	Sell_Demand     uint32
-	TradesTillNow   uint32
-	OpenInterest    uint32
-}
 
 // Triggered when any error is raised
 func onError(err error) {
@@ -40,19 +29,19 @@ func onError(err error) {
 
 // Triggered when websocket connection is closed
 func onClose(code int, reason string) {
-	KiteConnectionStatus = false
+	Status = false
 	srv.InfoLogger.Println("Close: ", code, reason)
 }
 
 // Triggered when connection is established and ready to send and accept data
 func onConnect() {
 	srv.InfoLogger.Printf("Connected")
-	err := ticker.Subscribe(Tokens)
+	err := ticker.Subscribe(subscribeToken)
 	//err := ticker.Subscribe([]uint32{18257666})
 	if err != nil {
 		srv.ErrorLogger.Println("err: ", err)
 	}
-	err = ticker.SetMode("full", Tokens)
+	err = ticker.SetMode("full", subscribeToken)
 	//err = ticker.SetMode("full", []uint32{18257666})
 	if err != nil {
 		srv.ErrorLogger.Println("err: ", err)
@@ -63,19 +52,32 @@ func onConnect() {
 func onTick(tick kitemodels.Tick) {
 
 	TickerCnt++
+	instr := instrMap[fmt.Sprint(tick.InstrumentToken)]
+	// fmt.Println("Tick: ", tick)
 
-	ChTick <- TickData{
-		Timestamp:       tick.Timestamp.Time,
-		Symbol:          InsNamesMap[fmt.Sprint(tick.InstrumentToken)],
-		LastTradedPrice: tick.LastPrice,
-		Buy_Demand:      tick.TotalBuyQuantity,
-		Sell_Demand:     tick.TotalSellQuantity,
-		TradesTillNow:   tick.VolumeTraded,
-		OpenInterest:    tick.OI}
+	if strings.Contains(instr, "NIFTY-FUT") {
+		appdata.ChNseTicks <- appdata.TickData{
+			Timestamp:       tick.Timestamp.Time,
+			Symbol:          instr,
+			LastTradedPrice: tick.LastPrice,
+			Buy_Demand:      tick.TotalBuyQuantity,
+			Sell_Demand:     tick.TotalSellQuantity,
+			TradesTillNow:   tick.VolumeTraded,
+			OpenInterest:    tick.OI}
+	} else {
 
-	// srv.InfoLogger.Println("Time: ", tick.Timestamp.Time, "Instrument: ", InsNamesMap[fmt.Sprint(tick.InstrumentToken)], "LastPrice: ", tick.LastPrice, "Open: ", tick.OHLC.Open, "High: ", tick.OHLC.High, "Low: ", tick.OHLC.Low, "Close: ", tick.OHLC.Close)
+		appdata.ChStkTick <- appdata.TickData{
+			Timestamp:       tick.Timestamp.Time,
+			Symbol:          instr,
+			LastTradedPrice: tick.LastPrice,
+			Buy_Demand:      tick.TotalBuyQuantity,
+			Sell_Demand:     tick.TotalSellQuantity,
+			TradesTillNow:   tick.VolumeTraded,
+			OpenInterest:    tick.OI}
+	}
+	// srv.InfoLogger.Println("Time: ", tick.Timestamp.Time, "Instrument: ", instrMap[fmt.Sprint(tick.InstrumentToken)], "LastPrice: ", tick.LastPrice, "Open: ", tick.OHLC.Open, "High: ", tick.OHLC.High, "Low: ", tick.OHLC.Low, "Close: ", tick.OHLC.Close)
 
-	// Total Buy Quantity, Total Sell quantity, Volume traded, Turnover, Open Interest
+	// // Total Buy Quantity, Total Sell quantity, Volume traded, Turnover, Open Interest
 	// fmt.Println("Total Buy Quantity: ", tick.TotalBuyQuantity)
 	// fmt.Println("Total Sell Quantity: ", tick.TotalSellQuantity)
 	// fmt.Println("VolumeTraded: ", tick.VolumeTraded)
@@ -94,7 +96,7 @@ func onReconnect(attempt int, delay time.Duration) {
 // Triggered when maximum number of reconnect attempt is made and the program is terminated
 func onNoReconnect(attempt int) {
 	srv.InfoLogger.Printf("Maximum no of reconnect attempt reached: %d", attempt)
-	KiteConnectionStatus = false
+	Status = false
 
 }
 
@@ -105,9 +107,14 @@ func onOrderUpdate(order kiteconnect.Order) {
 
 func TickerInitialize(apiKey, accToken string) {
 
+	// get current tokens
+	instrMap = db.GetInstrumentsToken()
+	subscribeToken = getTokens(instrMap)
+
 	// Create new Kite ticker instance
 	ticker = kiteticker.New(apiKey, accToken)
-	ChTick = make(chan TickData, 1000)
+	appdata.ChNseTicks = make(chan appdata.TickData, 1000)
+	appdata.ChStkTick = make(chan appdata.TickData, 1000)
 
 	// Assign callbacks
 	ticker.OnError(onError)
@@ -120,7 +127,7 @@ func TickerInitialize(apiKey, accToken string) {
 
 	// Start the connection
 	srv.InfoLogger.Printf("Initiaing Ticker connection, time to make money --->>> drama unfurls now...")
-	KiteConnectionStatus = true
+	Status = true
 	go ticker.Serve()
 
 }
@@ -132,11 +139,12 @@ func CloseTicker() bool {
 		}
 	}()
 	// ticker.SetAutoReconnect(false)
-	KiteConnectionStatus = false
+	Status = false
 
 	ticker.Stop()
 	time.Sleep(time.Second * 3) // delay for ticker to terminte connection before we close channel
-	close(ChTick)
+	close(appdata.ChNseTicks)
+	close(appdata.ChStkTick)
 	srv.InfoLogger.Printf("Ticker closed for the day, hush!!!")
 
 	return false
@@ -144,17 +152,31 @@ func CloseTicker() bool {
 
 func TestTicker() {
 
-	for i := 1; i < 3866; i++ {
-		ChTick <- TickData{
-			Timestamp:       time.Now(),
-			Symbol:          "TEST_Signal",
-			LastTradedPrice: float64(i),
-			Buy_Demand:      uint32(3866 - i),
-			Sell_Demand:     12,
-			TradesTillNow:   13,
-			OpenInterest:    14}
+	// for i := 1; i < 3866; i++ {
+	// 	appdata.ChTick <- appdata.TickData{
+	// 		Timestamp:       time.Now(),
+	// 		Symbol:          "TEST_Signal",
+	// 		LastTradedPrice: float64(i),
+	// 		Buy_Demand:      uint32(3866 - i),
+	// 		Sell_Demand:     12,
+	// 		TradesTillNow:   13,
+	// 		OpenInterest:    14}
 
-		time.Sleep(time.Millisecond * 1)
+	// 	time.Sleep(time.Millisecond * 1)
+	// }
+	// close(appdata.ChTick)
+}
+
+// From instrMap, get the tokens
+func getTokens(instrMap map[string]string) []uint32 {
+
+	var tkn []uint32
+	var i = 0
+
+	for key, _ := range instrMap {
+		val, _ := strconv.ParseUint(key, 10, 64)
+		tkn = append(tkn, uint32(val))
+		i++
 	}
-	close(ChTick)
+	return tkn
 }

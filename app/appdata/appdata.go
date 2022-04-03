@@ -4,6 +4,23 @@ import (
 	"time"
 )
 
+// Global variables
+var (
+	ChNseTicks chan TickData
+	ChStkTick  chan TickData
+)
+
+type TickData struct {
+	Timestamp       time.Time
+	LastTradedPrice float64
+	Symbol          string
+	LastPrice       float64
+	Buy_Demand      uint32
+	Sell_Demand     uint32
+	TradesTillNow   uint32
+	OpenInterest    uint32
+}
+
 type Percentage struct {
 	Target       float64 // "target": 1,
 	SL           float64 // "sl": 1,
