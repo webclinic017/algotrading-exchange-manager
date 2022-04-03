@@ -92,6 +92,7 @@ go tool cover -html=coverage.out
 - rest ticks will be converted to 1-min candle and delete org data
 - Trading symbols are read from table (file based support removed)
 - Derivative Names - Name calculation replaced with data fetch from instruments file
+- Logs are created for each day. Two seperate files for general logs and trade specific logs
 
  #### Ticker 
 - [x] TOTP support

@@ -39,7 +39,7 @@ func StoreTicksInDb() {
 	var dbTick []appdata.TickData
 
 	for v := range appdata.ChStkTick { // read from tick channel
-		// fmt.Println("Tick: ", appdata.ChTick)
+		// fmt.Println("Tick: ", appdata.ChStkTick)
 		dbTick = append(dbTick, v)
 		if len(dbTick) > 100 {
 			dBwg.Add(1)

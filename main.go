@@ -4,7 +4,6 @@ import (
 	"algo-ex-mgr/app/db"
 	"algo-ex-mgr/app/kite"
 	"algo-ex-mgr/app/srv"
-	"algo-ex-mgr/app/trademgr"
 	"os"
 	"time"
 
@@ -78,7 +77,7 @@ func startMainSession() {
 func stopMainSession() {
 
 	kiteOk = kite.CloseTicker() // DB will close if channel gets closed
-	trademgr.StopTrader()       // Trader will terminate after closing the trades
+	// trademgr.StopTrader()       // Trader will terminate after closing the trades
 	wdg.Stop()
 }
 
@@ -90,7 +89,8 @@ func checkAPIs() {
 	// startMainSession()
 	// go trademgr.StartTrader()
 	// trademgr.StopTrader()
-	// time.Sleep(time.Minute * 5)
+	// time.Sleep(time.Second * 5)
+	// stopMainSession()
 	// os.Exit(0)
 
 	envOk = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
