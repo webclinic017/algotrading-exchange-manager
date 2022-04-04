@@ -18,9 +18,7 @@ func LoadEnvVariables(path string) bool {
 
 	err := godotenv.Load(path)
 	if err != nil {
-		println(err)
-		ErrorLogger.Println("Error loading .env file")
-		parseEnv = false
+		WarningLogger.Println("Error loading .env file", err)
 	}
 	// Load and check values
 	for _, value := range appdata.UserSettings {
