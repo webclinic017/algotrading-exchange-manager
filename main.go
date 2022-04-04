@@ -52,15 +52,12 @@ func startMainSession() {
 	wdg.Start()
 
 	envOk = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
-
 	if envOk {
 
 		dbOk = db.DbInit()
-
 		if dbOk {
 			// Kite login
 			kiteOk = kite.Init()
-
 			// Start Ticker and Trader
 			if kiteOk {
 				kite.TickerInitialize(srv.Env["ZERODHA_API_KEY"], os.Getenv("kiteaccessToken"))
@@ -97,7 +94,9 @@ func checkAPIs() {
 	dbOk = db.DbInit()
 	kiteOk = kite.Init()
 	status()
-	db.CloseDb()
+	if dbOk {
+		db.CloseDb()
+	}
 }
 
 func exMgrWdg() {
