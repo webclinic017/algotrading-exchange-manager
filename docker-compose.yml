@@ -19,10 +19,8 @@ services:
       TIMESCALEDB_PASSWORD    : ""
       TIMESCALEDB_ADDRESS     : ""
       TIMESCALEDB_PORT        : ""
-
     volumes:
-      - ./dockerTest/config:/app/app/zfiles/config
-      - ./dockerTest/log:/app/app/zfiles/log
+      - ./algoExchMgr/log:/app/zfiles/log
     
 # Use the below code to spawn TimescaleDB Container
 
