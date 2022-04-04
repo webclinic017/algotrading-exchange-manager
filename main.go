@@ -51,7 +51,7 @@ func startMainSession() {
 	wdg.AddFunc("@every 60s", exMgrWdg)
 	wdg.Start()
 
-	envOk = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
+	envOk = srv.LoadEnvVariables("./userSettings.env")
 	if envOk {
 
 		dbOk = db.DbInit()
@@ -90,7 +90,7 @@ func checkAPIs() {
 	// stopMainSession()
 	// os.Exit(0)
 
-	envOk = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
+	envOk = srv.LoadEnvVariables("./userSettings.env")
 	dbOk = db.DbInit()
 	kiteOk = kite.Init()
 	status()
