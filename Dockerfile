@@ -1,5 +1,5 @@
 
-FROM golang:1.16-alpine
+FROM golang:1.18-alpine
 
 WORKDIR /app
 COPY go.mod ./
@@ -8,7 +8,8 @@ RUN go mod download
 
 COPY app/ ./app
 COPY *.go ./
-RUN rm ./app/zfiles/config/*.env
+RUN rm ./app/zfiles/config/userSettings.env
+RUN rm ./app/zfiles/log/*.log
 
 RUN go build -o /algoexmgr
 
