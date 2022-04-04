@@ -39,7 +39,7 @@ func Init() {
 	fmt.Printf(DebugColor, "Debug")
 	fmt.Println("")
 
-	InfoLogger.Printf("\n\n#######################################################################################\n|\tNew Instance of algotrading-exchange-manager v0.4.1 (Rel. Date: 04-Apr-2022)    \n#######################################################################################\n")
+	InfoLogger.Printf("\n\n#######################################################################################\n|\tNew Instance of algotrading-exchange-manager v0.4.2 (Rel. Date: 04-Apr-2022)    \n#######################################################################################\n")
 }
 
 func InitTradeLogger() {

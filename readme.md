@@ -86,6 +86,9 @@ go tool cover -html=coverage.out
 
 ## Version : In-Development
 
+
+## Version : v0.4.2
+
 #### Logic's
 - Two sepreate tables to store ticks
 - nifty-futs will be preserved as ticks data
@@ -93,6 +96,7 @@ go tool cover -html=coverage.out
 - Trading symbols are read from table (file based support removed)
 - Derivative Names - Name calculation replaced with data fetch from instruments file
 - Logs are created for each day. Two seperate files for general logs and trade specific logs
+- Docker - Command and internal folder structure updated.
 
  #### Ticker 
 - [x] TOTP support
