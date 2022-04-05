@@ -8,3 +8,4 @@ userSettings.env
 zerodha-access-token.env
 app/zfiles/log
 
+docker-compose.yaml

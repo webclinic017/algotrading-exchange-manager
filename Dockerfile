@@ -12,7 +12,8 @@ RUN go mod download
 COPY app/ ./app 
 RUN rm -f ./app/zfiles/log/*.log
 
-RUN go build -o /algoexmgr
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o algoexmgr
+# RUN go build -o /algoexmgr
 
 
 ##
@@ -24,9 +25,9 @@ WORKDIR /
 
 COPY --from=build /algoexmgr /algoexmgr
 
-EXPOSE 8080
+# EXPOSE 8080
 
-USER nonroot:nonroot
+# USER nonroot:nonroot
 
 ENTRYPOINT ["/algoexmgr"]
 
