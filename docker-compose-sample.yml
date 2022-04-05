@@ -3,7 +3,7 @@ version: '3.4'
 services:
   goticker:
     image: paragba/algotrading-exchange-manager:latest
-    container_name: algo-ex-mgr
+    container_name: algoexmgr
     restart: unless-stopped
     environment:
       TZ: 'Asia/Kolkata'
@@ -34,8 +34,3 @@ services:
       - POSTGRES_PASSWORD=password
     ports:
       - "5432:5432"
-
-
-
-# docker run -d --name timescaledb-test -p 127.0.0.1:5432:5432 \
-# -e POSTGRES_PASSWORD=password timescale/timescaledb:latest-pg14
