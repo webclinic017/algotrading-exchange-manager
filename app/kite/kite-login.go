@@ -1,6 +1,7 @@
 package kite
 
 import (
+	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"net/url"
 	"os"
@@ -42,8 +43,8 @@ func loginKite() bool {
 		"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
 		"Zerodha Login",
 		"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
-	apiKey := srv.Env["ZERODHA_API_KEY"]
-	apiSecret := srv.Env["ZERODHA_API_SECRET"]
+	apiKey := appdata.Env["ZERODHA_API_KEY"]
+	apiSecret := appdata.Env["ZERODHA_API_SECRET"]
 
 	requestToken := KiteGetRequestToken()
 
@@ -84,7 +85,7 @@ func loginKite() bool {
 }
 
 func setAccessToken(accessToken string) bool {
-	kc = kiteconnect.New(srv.Env["ZERODHA_API_KEY"])
+	kc = kiteconnect.New(appdata.Env["ZERODHA_API_KEY"])
 	kc.SetAccessToken(accessToken)
 	margins, err := kc.GetUserMargins()
 	if err != nil {
@@ -105,8 +106,8 @@ func KiteGetRequestToken() string {
 
 	// ------------------------------------------------------------ 1. Start login, get reqId
 	data := requests.Datas{
-		"user_id":  srv.Env["ZERODHA_USER_ID"],
-		"password": srv.Env["ZERODHA_PASSWORD"],
+		"user_id":  appdata.Env["ZERODHA_USER_ID"],
+		"password": appdata.Env["ZERODHA_PASSWORD"],
 	}
 
 	req := requests.Requests()
@@ -123,15 +124,15 @@ func KiteGetRequestToken() string {
 
 	// ------------------------------------------------------------ 2. Do Two factor auth
 	// If TOTP not enabled, use PIN for login
-	twoAuth := srv.Env["ZERODHA_TOTP_SECRET_KEY"]
+	twoAuth := appdata.Env["ZERODHA_TOTP_SECRET_KEY"]
 	if twoAuth != "NOT-USED" {
-		twoAuth = srv.GetTOTPToken(srv.Env["ZERODHA_TOTP_SECRET_KEY"])
+		twoAuth = srv.GetTOTPToken(appdata.Env["ZERODHA_TOTP_SECRET_KEY"])
 	} else {
-		twoAuth = srv.Env["ZERODHA_PIN"]
+		twoAuth = appdata.Env["ZERODHA_PIN"]
 	}
 
 	data = requests.Datas{
-		"user_id":     srv.Env["ZERODHA_USER_ID"],
+		"user_id":     appdata.Env["ZERODHA_USER_ID"],
 		"request_id":  reqID,
 		"twofa_value": twoAuth,
 		// RULE - TWO FACTOR AUTH - MUST BE ENABLED
@@ -144,7 +145,7 @@ func KiteGetRequestToken() string {
 
 	// ------------------------------------------------------------ 3. Post login, access URL to get requestToken
 	req.SetTimeout(5)
-	resp, err = req.Get(srv.Env["ZERODHA_REQ_TOKEN_URL"] + srv.Env["ZERODHA_API_KEY"])
+	resp, err = req.Get(appdata.Env["ZERODHA_REQ_TOKEN_URL"] + appdata.Env["ZERODHA_API_KEY"])
 	if err != nil {
 		srv.WarningLogger.Println(err.Error())
 		arr := strings.Split(err.Error(), `"`)          // split on '&'

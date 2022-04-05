@@ -7,10 +7,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var (
-	Env = make(map[string]string)
-)
-
 func LoadEnvVariables(path string) bool {
 
 	// Load .env file, if not in production
@@ -22,7 +18,7 @@ func LoadEnvVariables(path string) bool {
 	}
 	// Load and check values
 	for _, value := range appdata.UserSettings {
-		Env[value] = os.Getenv(value)
+		appdata.Env[value] = os.Getenv(value)
 		if os.Getenv(value) == "" {
 			println(value, " is not set")
 			parseEnv = false

@@ -104,4 +104,9 @@ var UserSettings = []string{
 	"TIMESCALEDB_ADDRESS",
 	"TIMESCALEDB_USERNAME",
 	"TIMESCALEDB_PASSWORD",
-	"TIMESCALEDB_PORT"}
+	"TIMESCALEDB_PORT",
+	"ALGO_ANALYSIS_ADDRESS"}
+
+var (
+	Env = make(map[string]string)
+)

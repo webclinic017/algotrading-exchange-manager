@@ -1,6 +1,8 @@
 package main
 
 import (
+	"algo-ex-mgr/app/apiclient"
+	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/db"
 	"algo-ex-mgr/app/kite"
 	"algo-ex-mgr/app/srv"
@@ -18,14 +20,10 @@ var (
 func main() {
 
 	srv.Init()
-
-	// testTickerData()
-	// testDbFunction()
-
 	now := time.Now()
 	if (now.Hour() >= 9) && (now.Hour() < 16) &&
 		(now.Weekday() > 0) && (now.Weekday() < 6) {
-		startMainSession() // Check if conections are okay
+		startMainSession() // start if App invoked in trade time
 	} else {
 		checkAPIs() // Check if conections are okay
 	}
@@ -34,6 +32,8 @@ func main() {
 	sessionCron = cron.New()
 	sessionCron.AddFunc("0 0 9 * * 1-5", startMainSession)
 	sessionCron.AddFunc("0 0 16 * * 1-5", stopMainSession)
+	sessionCron.AddFunc("0 0 8 * * 1-5", preTradeOps)
+	sessionCron.AddFunc("0 0 17 * * 1-5", postTradeOps)
 	sessionCron.Start()
 
 	select {}
@@ -60,7 +60,7 @@ func startMainSession() {
 			kiteOk = kite.Init()
 			// Start Ticker and Trader
 			if kiteOk {
-				kite.TickerInitialize(srv.Env["ZERODHA_API_KEY"], os.Getenv("kiteaccessToken"))
+				kite.TickerInitialize(appdata.Env["ZERODHA_API_KEY"], os.Getenv("kiteaccessToken"))
 
 				// go trademgr.StartTrader() // TODO: what condition to apply?
 				db.InitTickStorage()
@@ -97,6 +97,7 @@ func checkAPIs() {
 	if dbOk {
 		db.CloseDb()
 	}
+
 }
 
 func exMgrWdg() {
@@ -152,4 +153,19 @@ func testTickerData() {
 	println("Testing Done")
 
 	select {}
+}
+
+func preTradeOps() {
+	srv.InfoLogger.Println("preTradeOps Started")
+	if !apiclient.Services("instruments", time.Now()) {
+		srv.ErrorLogger.Println("FAILED - instruments")
+	}
+
+}
+
+func postTradeOps() {
+	srv.InfoLogger.Println("postTradeOps Started")
+	if !apiclient.Services("candle1min-converter", time.Now()) {
+		srv.ErrorLogger.Println("FAILED - candle1min-converter")
+	}
 }
