@@ -55,7 +55,7 @@ func onTick(tick kitemodels.Tick) {
 	instr := instrMap[fmt.Sprint(tick.InstrumentToken)]
 	// fmt.Println("Tick: ", tick)
 
-	if strings.Contains(instr, "NIFTY-FUT") {
+	if strings.Contains(instr, "-FUT") {
 		appdata.ChNseTicks <- appdata.TickData{
 			Timestamp:       tick.Timestamp.Time,
 			Symbol:          instr,

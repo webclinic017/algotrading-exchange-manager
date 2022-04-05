@@ -85,7 +85,22 @@ go tool cover -html=coverage.out
 
 
 ## Version : In-Development
+- [ ] Strategies - read live data
+- [ ] Candle table - backtesting
+- [ ] Post candle cleanup
+- [ ] Evaluate movement of all *-FUT to ticks_nsefut table?
+- [ ] Order placement - local
+- [ ] Order placement - live testing
+- [ ] Order tracking
+- [ ] Order reconcillation
+- [ ] Order completion/exit
+- [ ] fast data (buffer) analysis. [tick based strategies]
+- [ ] DB buffer size optimisation
 
+## Version : v0.4.3
+- [x] all *-FUT are moved to ticks_nsefut table
+- [x] Scheduler/CronJob - 8:00 - instruments, 16:05 - candles
+- [x] Docker - multistage with distroless image
 
 ## Version : v0.4.2
 
