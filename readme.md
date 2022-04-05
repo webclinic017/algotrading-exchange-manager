@@ -96,6 +96,7 @@ go tool cover -html=coverage.out
 - [ ] Order completion/exit
 - [ ] fast data (buffer) analysis. [tick based strategies]
 - [ ] DB buffer size optimisation
+- [ ] Loggin file creation - clean ups and new daily file logic
 
 ## Version : v0.4.3
 - [x] all *-FUT are moved to ticks_nsefut table
