@@ -33,7 +33,7 @@ func main() {
 	sessionCron.AddFunc("0 0 9 * * 1-5", startMainSession)
 	sessionCron.AddFunc("0 0 16 * * 1-5", stopMainSession)
 	sessionCron.AddFunc("0 0 8 * * 1-5", preTradeOps)
-	sessionCron.AddFunc("0 0 17 * * 1-5", postTradeOps)
+	sessionCron.AddFunc("0 5 16 * * 1-5", postTradeOps)
 	sessionCron.Start()
 
 	select {}
@@ -158,7 +158,7 @@ func testTickerData() {
 func preTradeOps() {
 	srv.InfoLogger.Println("preTradeOps Started")
 	if !apiclient.Services("instruments", time.Now()) {
-		srv.ErrorLogger.Println("FAILED - instruments")
+		srv.ErrorLogger.Println("FAILED - preTradeOps/instruments")
 	}
 
 }
@@ -166,6 +166,6 @@ func preTradeOps() {
 func postTradeOps() {
 	srv.InfoLogger.Println("postTradeOps Started")
 	if !apiclient.Services("candle1min-converter", time.Now()) {
-		srv.ErrorLogger.Println("FAILED - candle1min-converter")
+		srv.ErrorLogger.Println("FAILED - postTradeOps/candle1min-converter")
 	}
 }

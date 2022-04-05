@@ -9,3 +9,4 @@ zerodha-access-token.env
 app/zfiles/log
 
 docker-compose.yaml
+algoExchMgr/log/
