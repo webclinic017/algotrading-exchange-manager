@@ -39,10 +39,9 @@ func Services(service string, date time.Time) bool {
 		"sid":  service,
 		"date": date.Format("2006-01-02"),
 	}
-	_, err := requests.Get(appdata.Env["ALGO_ANALYSIS_ADDRESS"]+"services/", p)
+	req := requests.Requests()
+	req.SetTimeout(120) // set timeout to 120 seconds, candle service requires time to respond
+	_, err := req.Get(appdata.Env["ALGO_ANALYSIS_ADDRESS"]+"services/", p)
 
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }

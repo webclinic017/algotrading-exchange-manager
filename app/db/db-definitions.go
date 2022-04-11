@@ -37,12 +37,12 @@ var DB_CREATE_TABLE_STK_TICKER = `CREATE TABLE ticks_stk
 									SELECT create_hypertable('ticks_stk', 'time');
 									SELECT set_chunk_time_interval('ticks_stk', INTERVAL '7 days');`
 
-var DB_COMPRESSION_QUERY = `ALTER TABLE ticks_data SET 
+var DB_NSEFUT_COMPRESSION_QUERY = `ALTER TABLE ticks_nsefut SET 
 							(
 								timescaledb.compress,
 								timescaledb.compress_segmentby = 'symbol'
 							); 
-							SELECT add_compression_policy('ticks_data ', INTERVAL '30 days');
+							SELECT add_compression_policy('ticks_nsefut ', INTERVAL '30 days');
 						`
 
 var DB_VIEW_EXISTS = `

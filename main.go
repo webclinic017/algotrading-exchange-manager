@@ -34,6 +34,7 @@ func main() {
 	sessionCron.AddFunc("0 0 16 * * 1-5", stopMainSession)
 	sessionCron.AddFunc("0 0 8 * * 1-5", preTradeOps)
 	sessionCron.AddFunc("0 5 16 * * 1-5", postTradeOps)
+	sessionCron.AddFunc("0 0 3 * * 6", weeklyMaintenance)
 	sessionCron.Start()
 
 	select {}
@@ -83,9 +84,10 @@ func checkAPIs() {
 		"\n\n\t-----------------------------",
 		"------------------------------------ Check API's --- MARKET OFF-TIME\n\n")
 
-	// startMainSession()
 	// go trademgr.StartTrader()
 	// trademgr.StopTrader()
+
+	// startMainSession()
 	// time.Sleep(time.Second * 5)
 	// stopMainSession()
 	// os.Exit(0)
@@ -128,33 +130,6 @@ func status() {
 	)
 }
 
-func testDbFunction() {
-
-	// appdata.ChTick = make(chan appdata.TickData, 1000)
-
-	// _ = srv.LoadEnvVariables("app/zfiles/config/userSettings.env")
-	// _ = db.DbInit()
-	// go db.StoreTickInDb()
-	// go kite.TestTicker()
-	// println("Testing Done")
-
-	// select {}
-}
-
-func testTickerData() {
-
-	startMainSession()
-	time.Sleep(time.Second * 20)
-	stopMainSession()
-	time.Sleep(time.Second * 20)
-	startMainSession()
-	time.Sleep(time.Second * 20)
-	stopMainSession()
-	println("Testing Done")
-
-	select {}
-}
-
 func preTradeOps() {
 	srv.InfoLogger.Println("preTradeOps Started")
 	if !apiclient.Services("instruments", time.Now()) {
@@ -165,7 +140,17 @@ func preTradeOps() {
 
 func postTradeOps() {
 	srv.InfoLogger.Println("postTradeOps Started")
-	if !apiclient.Services("candle1min-converter", time.Now()) {
+	if !apiclient.Services("createCandles", time.Now()) {
 		srv.ErrorLogger.Println("FAILED - postTradeOps/candle1min-converter")
 	}
 }
+
+// runs on every satrunday @ 3am
+func weeklyMaintenance() {
+	srv.InfoLogger.Println("weeklyMaintenance Started")
+	if !apiclient.Services("check and delete candles from nse_stk", time.Now()) {
+		srv.ErrorLogger.Println("FAILED weeklyMaintenance")
+	}
+}
+
+// [ ] weekly check and delete candles from nse_stk

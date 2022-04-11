@@ -80,7 +80,7 @@ func DbInit() bool {
 		if createTable(DB_TABLE_TICKER_NAME_STK, DB_CREATE_TABLE_STK_TICKER) {
 			if createTable(DB_TABLE_TICKER_NAME_NSE_IDX, DB_CREATE_TABLE_NSE_IDX_TICKER) {
 				// createViews()
-				// setupDbCompression()
+				setupDbCompression()
 				srv.InfoLogger.Printf("DB checks completed\n")
 				return true
 			}

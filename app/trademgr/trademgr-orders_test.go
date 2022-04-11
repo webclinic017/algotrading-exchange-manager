@@ -93,7 +93,7 @@ func TestPlaceOrder(t *testing.T) {
 
 	var warCheck = "Check results MANUALLY!!!"
 
-	fmt.Println(ErrorColor, warCheck)
+	fmt.Printf(ErrorColor, warCheck)
 	for _, test := range PlaceOrderTests {
 
 		ts.Strategy = test.argStrategy
