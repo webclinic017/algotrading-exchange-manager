@@ -4,6 +4,7 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/db"
 	"algo-ex-mgr/app/srv"
+	"os"
 	"testing"
 	"time"
 )
@@ -63,7 +64,8 @@ var DeriveInstrumentsNameTests = []DeriveInstrumentsNameTesting{
 func TestDeriveInstrumentsName(t *testing.T) {
 	t.Parallel()
 	srv.Init()
-	srv.LoadEnvVariables("home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
+	mydir, _ := os.Getwd()
+	srv.LoadEnvVariables(mydir + "/../../userSettings.env")
 	db.DbInit()
 
 	var order appdata.TradeSignal

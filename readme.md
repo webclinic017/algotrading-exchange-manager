@@ -100,6 +100,8 @@ go tool cover -html=coverage.out
 
 - Hypertable periods and Compression policy updated for ticks_nsefuts
 - DB table names updated
+- WdgMgr logic removed
+- TradeMgr - Basic core implementation started
 
 ## Version : v0.4.3
 - [x] all *-FUT are moved to ticks_nsefut table

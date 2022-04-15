@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func awaitContinousScan(symbol string, sID string) uint16 {
+func awaitSignalContinous(symbol string, sID string) uint16 {
 
 	var orderBookId uint16 = 0
 
@@ -33,7 +33,7 @@ func awaitContinousScan(symbol string, sID string) uint16 {
 	return orderBookId
 }
 
-func awaiTriggerTimeScan(symbol string, sID string, triggerTime time.Time) uint16 {
+func awaitSignalTimeTrigerred(symbol string, sID string, triggerTime time.Time) uint16 {
 
 	var orderBookId uint16 = 0
 	ttime := strconv.Itoa(int(triggerTime.Hour())) + ":" + strconv.Itoa(int(triggerTime.Minute()))

@@ -84,6 +84,15 @@ func loginKite() bool {
 	return false
 }
 
+func GetUserMargin() float64 {
+	margins, err := kc.GetUserMargins()
+	if err != nil {
+		return 0
+	}
+	return margins.Equity.Net
+
+}
+
 func setAccessToken(accessToken string) bool {
 	kc = kiteconnect.New(appdata.Env["ZERODHA_API_KEY"])
 	kc.SetAccessToken(accessToken)

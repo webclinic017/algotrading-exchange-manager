@@ -27,6 +27,7 @@ const (
 
 func Init() {
 	InitLogger()
+	InitTradeLogger()
 
 	fmt.Printf(InfoColor, "Info")
 	fmt.Println("")

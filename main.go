@@ -105,13 +105,13 @@ func checkAPIs() {
 func exMgrWdg() {
 
 	// db Reconnection on error
-	if (db.ErrCnt > 100) || (kite.TickerCnt < 100) {
-		srv.ErrorLogger.Print("\n\n\tWatchdogMgr - | db.ErrCnt:", db.ErrCnt, "\tkite.TickerCnt:", kite.TickerCnt, "\n\n")
-		// srv.ErrorLogger.Print("\n\n\tWatchdog - DB/Ticker Error, Restarting...\n\n")
-		// kite.CloseTicker() // close channel and DB store task
-		// startMainSession() // login kite, start ch & db task
-		time.Sleep(time.Minute * 1) // wait to establish connections
-	}
+	// if (db.ErrCnt > 100) || (kite.TickerCnt < 100) {
+	// srv.ErrorLogger.Print("\n\n\tWatchdogMgr - | db.ErrCnt:", db.ErrCnt, "\tkite.TickerCnt:", kite.TickerCnt, "\n\n")
+	// srv.ErrorLogger.Print("\n\n\tWatchdog - DB/Ticker Error, Restarting...\n\n")
+	// kite.CloseTicker() // close channel and DB store task
+	// startMainSession() // login kite, start ch & db task
+	// time.Sleep(time.Minute * 1) // wait to establish connections
+	// }
 	db.ErrCnt = 0
 	kite.TickerCnt = 0
 

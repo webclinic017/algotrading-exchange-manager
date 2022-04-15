@@ -6,13 +6,16 @@ import (
 	"algo-ex-mgr/app/kite"
 	"algo-ex-mgr/app/srv"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
-type PlaceOrderTesting struct {
+var warCheck = "Check results MANUALLY!!!"
+
+type ExecuteOrderT struct {
 	argStrategy    string
 	argInstr       string
 	argWeekSel     int
@@ -26,64 +29,34 @@ type PlaceOrderTesting struct {
 	argVarieties   string
 	argValidities  string
 	argProducts    string
-
-	// expected          float64
+	orderPlaced    bool
 }
 
 // ** This is live testcase - update dates are per current symbols dates and levels.
 // ** Result needs to be verified manually!!!
-var PlaceOrderTests = []PlaceOrderTesting{
+var ExecuteOrderTestArray = []ExecuteOrderT{
 
-	// {"2022-03-22", "INFY", 1, 73, 0, "bullish", "equity", 0, false, kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
-	// {"2022-04-02", "BANKNIFTY-FUT", 0 + WeekSel, 36000 + StrikePrice, 0 + OptionLevel,
-	// 	"bullish", "option-buy", 0 + MonthSel, SkipExpWkTrue,
-	// 	kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
+	// order placed only in trading time, rejected otherwise
+	{"SRB-001", "BANKNIFTY-FUT", 0 + WeekSel, 40000 + StrikePrice, 0 + OptionLevel,
+		"bullish", "option-buy", 0 + MonthSel, SkipExpWkTrue, kiteconnect.OrderTypeLimit,
+		kiteconnect.VarietyRegular, kiteconnect.ValidityDay, kiteconnect.ProductMIS, false},
 
-	// {"2022-04-02", "BANKNIFTY-FUT", 0 + WeekSel, 36000 + StrikePrice, 0 + OptionLevel,
-	// 	"bullish", "option-sell", 0 + MonthSel, SkipExpWkFalse,
-	// 	kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
-
-	// {"2022-04-02", "BANKNIFTY-FUT", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
-	// 	"bullish", "futures", 0 + MonthSel, SkipExpWkFalse,
-	// 	kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
-
-	// {"2022-04-02", "BANKNIFTY-FUT", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
-	// 	"bearish", "futures", 0 + MonthSel, SkipExpWkFalse,
-	// 	kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
-
-	// {"2022-04-02", "ASHOKLEY-FUT", 0 + WeekSel, 126 + StrikePrice, 0 + OptionLevel,
-	// 	"bullish", "option-buy", 0 + MonthSel, SkipExpWkFalse,
-	// 	kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
-
-	// {"2022-04-02", "ASHOKLEY-FUT", 0 + WeekSel, 126 + StrikePrice, 0 + OptionLevel,
-	// 	"bullish", "option-sell", 0 + MonthSel, SkipExpWkFalse,
-	// 	kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
-
-	// {"2022-04-02", "ASHOK LEYLAND", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
-	// 	"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
-	// 	kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
-
-	// {"2022-04-02", "ASHOK LEYLAND", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
-	// 	"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
-	// 	kiteconnect.VarietyRegular, kiteconnect.ProductCNC},
-
-	{"SRB-001", "VODAFONE IDEA", 0 + WeekSel, 10 + StrikePrice, 0 + OptionLevel,
+	// This order shall be placed (ensure strike price is within reach)
+	{"SRB-001", "ICICIPRULI", 0 + WeekSel, 540 + StrikePrice, 0 + OptionLevel,
 		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
-		kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS},
+		kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, true},
 
-	// {"RELIANCE INDUSTRIES", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
-	// 	"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
-	// 	kiteconnect.VarietyRegular, kiteconnect.ProductCNC},
-
-	// {"2022-04-02", "invalid", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
-	// 	"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
-	// 	kiteconnect.VarietyRegular, kiteconnect.ProductCNC},
+	// This order shall not get placed, since strikeprice is 0 (outside of circuit limit)
+	{"SRB-001", "ICICIPRULI", 0 + WeekSel, 10 + StrikePrice, 0 + OptionLevel,
+		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
+		kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, false},
 }
 
 func TestPlaceOrder(t *testing.T) {
 
 	srv.Init()
-	srv.LoadEnvVariables("/home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
+	mydir, _ := os.Getwd()
+	srv.LoadEnvVariables(mydir + "/../../userSettings.env")
 	db.DbInit()
 	kite.Init()
 	t.Parallel()
@@ -91,10 +64,8 @@ func TestPlaceOrder(t *testing.T) {
 	var order appdata.TradeSignal
 	var ts appdata.Strategies
 
-	var warCheck = "Check results MANUALLY!!!"
-
 	fmt.Printf(ErrorColor, warCheck)
-	for _, test := range PlaceOrderTests {
+	for _, test := range ExecuteOrderTestArray {
 
 		ts.Strategy = test.argStrategy
 		ts.CtrlParam.KiteSettings.Varieties = test.argVarieties
@@ -113,17 +84,150 @@ func TestPlaceOrder(t *testing.T) {
 
 		// expected := test.expected
 
-		orderID := PlaceOrder(order, ts, time.Now())
+		orderID := executeOrder(order, ts, time.Now(), 1)
 
-		if orderID == 0 {
+		if orderID == 0 && test.orderPlaced == true {
 			t.Errorf(ErrorColor, "\nderiveFuturesName() No data fetched - check dates and levels are correct. This UT is live with server\n")
 		} else {
 			// print result for manual check
-			fmt.Println()
 			fmt.Printf(InfoColor, order.Instr)
 			fmt.Printf(InfoColor, test.argOrderRoute)
 			fmt.Printf(InfoColorUint, orderID)
+			fmt.Println()
 		}
+
+	}
+	fmt.Println()
+}
+
+type DetermineOrderSizeT struct {
+	userMargin  float64
+	orderMargin float64
+	winningRate float64
+	maxBudget   float64
+	limitAmount float64
+	expResult   int
+}
+
+var DetermineOrderSizeTestArray = []DetermineOrderSizeT{
+
+	// {0.0, 0.0, 0.0, 0.0, 0, 0},
+	{50001.0, 40000.0, 100.0, 100.0, 0, 0},
+	{50002.0, 40000.0, 100.0, 100.0, 50000, 1},
+	{50002.0, 40000.0, 100.0, 100.0, 5000, 0},
+	{50003.0, 40000.0, 0.0, 100.0, 50000, 1},
+	{100004.0, 40000.0, 10.0, 100.0, 100004, 1},
+	{100005.0, 40000.0, 100.0, 100.0, 100000, 2},
+	{100006.0, 40000.0, 80.0, 100.0, 100000, 2},
+	{1007.0, 4000.0, 100.0, 100.0, 1000, 0},
+	{10008.0, 1000.0, 100.0, 100.0, 10000, 10},
+	{10001.0, 1000.0, 100.0, 10.0, 10000, 1},
+	{0.0, 1000.0, 100.0, 10.0, 10000, 0},
+}
+
+func TestDetermineOrderSize(t *testing.T) {
+
+	for _, test := range DetermineOrderSizeTestArray {
+
+		qty := determineOrderSize(test.userMargin, test.orderMargin, test.winningRate, test.maxBudget, test.limitAmount)
+		if test.expResult != qty {
+			t.Errorf("determineOrderSize() usermargin:%v expected:%v  actual:%v", test.userMargin, test.expResult, qty)
+		}
+
+	}
+	fmt.Println()
+}
+
+type EnterTradeT struct {
+	argStrategy    string
+	argInstr       string
+	MaxBudget      float64
+	WinningRate    float64
+	LimitAmount    float64
+	argWeekSel     int
+	argStrikePrice float64
+	argOptionLevel int
+	argDirection   string
+	argOrderRoute  string
+	argMonthSel    int
+	argSkipExpWk   bool
+	argOrderType   string
+	argVarieties   string
+	argValidities  string
+	argProducts    string
+	orderPlaced    bool
+}
+
+// ** This is live testcase - update dates are per current symbols dates and levels.
+// ** Result needs to be verified manually!!!
+var EnterTradeTestArray = []EnterTradeT{
+
+	// // order placed only in trading time, rejected otherwise
+	// {"SRB-001", "BANKNIFTY-FUT", 0 + WeekSel, 40000 + StrikePrice, 0 + OptionLevel,
+	// 	"bullish", "option-buy", 0 + MonthSel, SkipExpWkTrue, kiteconnect.OrderTypeLimit,
+	// 	kiteconnect.VarietyRegular, kiteconnect.ValidityDay, kiteconnect.ProductMIS, false},
+
+	// This order shall be placed (ensure strike price is within reach)
+	{"SRB-001", "ICICIPRULI", 100 + MaxBudgetPer, 100 + WinningRatePer, 1000 + LimitAmount, 0 + WeekSel, 540 + StrikePrice, 0 + OptionLevel,
+		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
+		kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, true},
+
+	// {"SRB-001", "ICICIPRULI", 50 + MaxBudgetPer, 100 + WinningRatePer, 1000 + LimitAmount, 0 + WeekSel, 540 + StrikePrice, 0 + OptionLevel,
+	// 	"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
+	// 	kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, true},
+
+	// // This order shall not get placed, since strikeprice is 0 (outside of circuit limit)
+	// {"SRB-001", "ICICIPRULI", 50 + MaxBudgetPer, 100 + WinningRatePer, 1000 + LimitAmount, 0 + WeekSel, 10 + StrikePrice, 0 + OptionLevel,
+	// 	"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
+	// 	kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, false},
+}
+
+func TestEnterTrade(t *testing.T) {
+
+	srv.Init()
+	mydir, _ := os.Getwd()
+	srv.LoadEnvVariables(mydir + "/../../userSettings.env")
+	db.DbInit()
+	kite.Init()
+	t.Parallel()
+
+	var order appdata.TradeSignal
+	var ts appdata.Strategies
+
+	fmt.Printf(ErrorColor, warCheck)
+	for _, test := range EnterTradeTestArray {
+
+		ts.Strategy = test.argStrategy
+		ts.CtrlParam.KiteSettings.Varieties = test.argVarieties
+		ts.CtrlParam.KiteSettings.Products = test.argProducts
+		ts.CtrlParam.KiteSettings.Validities = test.argValidities
+		ts.CtrlParam.KiteSettings.OrderType = test.argOrderType
+		ts.CtrlParam.TradeSettings.FuturesExpiryMonth = test.argMonthSel
+		ts.CtrlParam.TradeSettings.SkipExipryWeekFutures = test.argSkipExpWk
+		ts.CtrlParam.TradeSettings.OrderRoute = test.argOrderRoute
+		ts.CtrlParam.TradeSettings.OptionExpiryWeek = test.argWeekSel
+		ts.CtrlParam.TradeSettings.OptionLevel = test.argOptionLevel
+		ts.CtrlParam.Percentages.MaxBudget = test.MaxBudget
+		ts.CtrlParam.Percentages.WinningRate = test.WinningRate
+		ts.CtrlParam.TradeSettings.LimitAmount = test.LimitAmount
+
+		order.Dir = test.argDirection
+		order.Instr = test.argInstr
+		order.Entry = test.argStrikePrice
+
+		// expected := test.expected
+
+		enterTrade(order, ts)
+
+		// if orderID == 0 && test.orderPlaced == true {
+		// 	t.Errorf(ErrorColor, "\nderiveFuturesName() No data fetched - check dates and levels are correct. This UT is live with server\n")
+		// } else {
+		// print result for manual check
+		fmt.Printf(InfoColor, order.Instr)
+		fmt.Printf(InfoColor, test.argOrderRoute)
+		// fmt.Printf(InfoColorUint, orderID)
+		fmt.Println()
+		// }
 
 	}
 	fmt.Println()

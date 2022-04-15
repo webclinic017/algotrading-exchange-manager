@@ -155,7 +155,7 @@ func FetchInstrData(instrument string, strikelevel uint64, opdepth int, instrtyp
 	sqlQueryEQ := `SELECT tradingsymbol, lot_size
 					FROM user_symbols ts, tick_instr i
 					WHERE 
-						ts.symbol = i.name 
+						ts.symbol = i.tradingsymbol 
 					and 
 						ts.mysymbol = $1 
 					and

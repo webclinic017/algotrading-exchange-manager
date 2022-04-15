@@ -3,6 +3,7 @@ package main
 import (
 	"algo-ex-mgr/app/db"
 	"algo-ex-mgr/app/srv"
+	"os"
 	"testing"
 	"time"
 )
@@ -10,7 +11,8 @@ import (
 func TestPostTradeOps(t *testing.T) {
 
 	srv.Init()
-	srv.LoadEnvVariables("/home/parag/devArea/algotrading-exchange-manager/userSettings.env")
+	mydir, _ := os.Getwd()
+	srv.LoadEnvVariables(mydir + "/../../userSettings.env")
 	db.DbInit()
 	t.Parallel()
 

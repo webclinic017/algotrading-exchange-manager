@@ -2,6 +2,7 @@ package db
 
 import (
 	"algo-ex-mgr/app/srv"
+	"os"
 	"testing"
 )
 
@@ -32,7 +33,8 @@ var FetchInstrDataTests = []FetchInstrDataTesting{
 
 func TestFetchInstrData(t *testing.T) {
 	srv.Init()
-	srv.LoadEnvVariables("home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
+	mydir, _ := os.Getwd()
+	srv.LoadEnvVariables(mydir + "/../../userSettings.env")
 	DbInit()
 
 	for _, test := range FetchInstrDataTests {
@@ -47,7 +49,8 @@ func TestFetchInstrData(t *testing.T) {
 
 func TestGetInstrumentsToken(t *testing.T) {
 	srv.Init()
-	srv.LoadEnvVariables("/home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
+	mydir, _ := os.Getwd()
+	srv.LoadEnvVariables(mydir + "/../../userSettings.env")
 	DbInit()
 
 	actual := GetInstrumentsToken()

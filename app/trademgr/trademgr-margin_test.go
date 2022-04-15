@@ -6,6 +6,7 @@ import (
 	"algo-ex-mgr/app/kite"
 	"algo-ex-mgr/app/srv"
 	"fmt"
+	"os"
 
 	"math"
 	"testing"
@@ -19,6 +20,9 @@ const (
 	InfoColorUint  = "\033[1;34m%d\033[0m\t"
 	InfoColor      = "\033[1;34m%20s\033[0m\t"
 	ErrorColor     = "\033[1;31m%s\033[0m"
+	WinningRatePer = 0
+	MaxBudgetPer   = 0
+	LimitAmount    = 0
 	WeekSel        = 0
 	StrikePrice    = 0
 	OptionLevel    = 0
@@ -30,16 +34,17 @@ const (
 )
 
 type CalOrderMarginTesting struct {
-	argDate, argInstr string
-	argWeekSel        int
-	argStrikePrice    float64
-	argOptionLevel    int
-	argDirection      string
-	argOrderRoute     string
-	argMonthSel       int
-	argSkipExpWk      bool
-	argVarieties      string
-	argProducts       string
+	argDate        time.Time
+	argInstr       string
+	argWeekSel     int
+	argStrikePrice float64
+	argOptionLevel int
+	argDirection   string
+	argOrderRoute  string
+	argMonthSel    int
+	argSkipExpWk   bool
+	argVarieties   string
+	argProducts    string
 	// expected          float64
 }
 
@@ -47,48 +52,51 @@ type CalOrderMarginTesting struct {
 // ** Result needs to be verified manually!!!
 var CalOrderMarginTests = []CalOrderMarginTesting{
 
-	// {"2022-03-22", "INFY", 1, 73, 0, "bullish", "equity", 0, false, kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
-	{"2022-04-02", "BANKNIFTY-FUT", 0 + WeekSel, 36000 + StrikePrice, 0 + OptionLevel,
+	{time.Now(), "BANKNIFTY-FUT", 0 + WeekSel, 36000 + StrikePrice, 0 + OptionLevel,
 		"bullish", "option-buy", 0 + MonthSel, SkipExpWkTrue,
 		kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
 
-	{"2022-04-02", "BANKNIFTY-FUT", 0 + WeekSel, 36000 + StrikePrice, 0 + OptionLevel,
+	{time.Now(), "BANKNIFTY-FUT", 0 + WeekSel, 36000 + StrikePrice, 0 + OptionLevel,
 		"bullish", "option-sell", 0 + MonthSel, SkipExpWkFalse,
 		kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
 
-	{"2022-04-02", "BANKNIFTY-FUT", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
+	{time.Now(), "BANKNIFTY-FUT", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
 		"bullish", "futures", 0 + MonthSel, SkipExpWkFalse,
 		kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
 
-	{"2022-04-02", "BANKNIFTY-FUT", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
+	{time.Now(), "BANKNIFTY-FUT", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
 		"bearish", "futures", 0 + MonthSel, SkipExpWkFalse,
 		kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
 
-	{"2022-04-02", "ASHOKLEY-FUT", 0 + WeekSel, 126 + StrikePrice, 0 + OptionLevel,
+	{time.Now(), "ASHOKLEY-FUT", 0 + WeekSel, 126 + StrikePrice, 0 + OptionLevel,
 		"bullish", "option-buy", 0 + MonthSel, SkipExpWkFalse,
 		kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
 
-	{"2022-04-02", "ASHOKLEY-FUT", 0 + WeekSel, 126 + StrikePrice, 0 + OptionLevel,
+	{time.Now(), "ASHOKLEY-FUT", 0 + WeekSel, 126 + StrikePrice, 0 + OptionLevel,
 		"bullish", "option-sell", 0 + MonthSel, SkipExpWkFalse,
 		kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
 
-	{"2022-04-02", "ASHOK LEYLAND", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
+	{time.Now(), "ASIANPAINT", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
 		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
 		kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
 
-	{"2022-04-02", "ASHOK LEYLAND", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
+	{time.Now(), "ASIANPAINT", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
 		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
 		kiteconnect.VarietyRegular, kiteconnect.ProductCNC},
 
-	{"2022-04-02", "RELIANCE INDUSTRIES", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
+	{time.Now(), "BHARTIARTL", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
 		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
 		kiteconnect.VarietyRegular, kiteconnect.ProductCNC},
 
-	{"2022-04-02", "RELIANCE INDUSTRIES", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
+	{time.Now(), "BHARTIARTL", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
 		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
 		kiteconnect.VarietyRegular, kiteconnect.ProductCNC},
 
-	// {"2022-04-02", "invalid", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
+	{time.Now(), "ICICIBANK-FUT", 0 + WeekSel, 762 + StrikePrice, 0 + OptionLevel,
+		"bullish", "futures", 0 + MonthSel, SkipExpWkFalse,
+		kiteconnect.VarietyRegular, kiteconnect.ProductMIS},
+
+	// {time.Now(), "invalid", 0 + WeekSel, 0 + StrikePrice, 0 + OptionLevel,
 	// 	"bullish", "equity", 0 + MonthSel, SkipExpWkFalse,
 	// 	kiteconnect.VarietyRegular, kiteconnect.ProductCNC},
 }
@@ -96,7 +104,8 @@ var CalOrderMarginTests = []CalOrderMarginTesting{
 func TestCalOrderMargin(t *testing.T) {
 
 	srv.Init()
-	srv.LoadEnvVariables("/home/parag/devArea/algotrading-exchange-manager/app/zfiles/config/userSettings.env")
+	mydir, _ := os.Getwd()
+	srv.LoadEnvVariables(mydir + "/../../userSettings.env")
 	db.DbInit()
 	kite.Init()
 	t.Parallel()
@@ -106,8 +115,8 @@ func TestCalOrderMargin(t *testing.T) {
 
 	for _, test := range CalOrderMarginTests {
 
-		dateString := test.argDate
-		date, _ := time.Parse("2006-01-02", dateString)
+		// dateString := test.argDate
+		// date, _ := time.Parse("2006-01-02", dateString)
 
 		ts.CtrlParam.KiteSettings.Varieties = test.argVarieties
 		ts.CtrlParam.KiteSettings.Products = test.argProducts
@@ -124,7 +133,7 @@ func TestCalOrderMargin(t *testing.T) {
 
 		// expected := test.expected
 
-		actual := getOrderMargin(order, ts, date)
+		actual := getOrderMargin(order, ts, test.argDate)
 
 		if len(actual) == 0 {
 			t.Errorf(ErrorColor, "\nderiveFuturesName() No data fetched - check dates/levels/Server Auth code. This UT is live with server\n")

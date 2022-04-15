@@ -1,7 +1,7 @@
 package kite
 
 import (
-	"fmt"
+	"algo-ex-mgr/app/srv"
 	"strconv"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
@@ -20,18 +20,29 @@ func FetchOrderMargins(marginParam kiteconnect.GetMarginParams) ([]kiteconnect.O
 	return OrderMargins, nil
 }
 
-func PlaceOrder(orderParams kiteconnect.OrderParams, variety string) uint64 {
+func FetchOrderTrades(orderId uint64) []kiteconnect.Trade {
+	odr := strconv.FormatUint(orderId, 10)
+	order, err := kc.GetOrderTrades(odr)
+	if err != nil {
+		srv.TradesLogger.Println(err.Error())
+		return nil
+	}
+	srv.TradesLogger.Println(order)
+	return order
+}
+
+func ExecOrder(orderParams kiteconnect.OrderParams, variety string) uint64 {
 
 	orderResponse, poerr := kc.PlaceOrder(variety, orderParams)
 	if poerr != nil {
-		print(poerr)
+		srv.TradesLogger.Println(poerr.Error())
 		return 0
 	}
 
 	// Resp : convert string to uint
 	s, err := strconv.ParseUint(orderResponse.OrderID, 10, 64)
 	if err == nil {
-		fmt.Printf("%T, %v\n", s, s)
+		srv.TradesLogger.Printf("%T, %v\n", s, s)
 	}
 	return s
 }

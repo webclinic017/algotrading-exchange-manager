@@ -21,8 +21,6 @@ var (
 
 const (
 	tradeOperatorSleepTime = time.Second * 10
-	CONTINOUS_SCAN         = true
-	TIME_TRIGGERED_SCAN    = false
 )
 
 // Scan DB for all strategies with strategy_en = 1. Each funtion is executed in a separate thread and remains active till the trade is complete.
@@ -32,7 +30,6 @@ func StartTrader() {
 	var wgTrademgr sync.WaitGroup
 	terminateTradeOperator = false
 
-	srv.InitTradeLogger()
 	srv.TradesLogger.Print(
 		"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
 		"Trade Manager",
@@ -41,9 +38,20 @@ func StartTrader() {
 	// 1. Read trading strategies from dB
 	tradeStrategies = db.ReadStrategiesFromDb()
 
-	// 2. Setup operators for each strategy
-	for each := range tradeStrategies {
-		tradeOperator(tradeStrategies[each], &wgTrademgr) // for each strategy
+	// 2. Setup operators for each symbol in every strategy
+	for eachStrategy := range tradeStrategies {
+
+		if checkTriggerDays(tradeStrategies[eachStrategy]) { // check if the current day is a trading day.
+
+			// Read symbols within each strategy
+			tradeSymbols := strings.Split(tradeStrategies[eachStrategy].Instruments, ",")
+
+			for eachSymbol := range tradeSymbols {
+				// Check if continous OR time trigerred strategy
+				wgTrademgr.Add(1)
+				go operateSymbol(tradeSymbols[eachSymbol], *tradeStrategies[eachStrategy], wgTrademgr)
+			}
+		}
 	}
 
 	// 3. wait till all trades are completed
@@ -58,36 +66,32 @@ func StopTrader() {
 	terminateTradeOperator = true
 }
 
-// Scans for all strategies and spawn thread for each symbol in that strategy
-// 	[x] 1. wait for trigger time and invoke api (blocking call)
-// 	[x] 2. read db for valid signal
-// 	[ ] 3. on signal, execute trade (blocking call)
-// 	[ ] 4. on trade completion, update db
-// 	[ ] 5. montitor trade positions (blocking call)
-// 	[ ] 6. check exit conditions (blocking call)
-// 	[ ] 7. on signal, exit trade	(blocking call)
-// 	[ ] 8. on exit, update db
-func tradeOperator(tradeStrategies *appdata.Strategies, wgTrademgr *sync.WaitGroup) {
+// TODO: master exit condition & EoD termniation
 
-	srv.TradesLogger.Println("\n(TradeOperator Setup) ", tradeStrategies)
+// symbolTradeManager
+func operateSymbol(tradeSymbol string, tradeStrategies appdata.Strategies, wgTrademgr sync.WaitGroup) {
+	defer wgTrademgr.Done()
 
-	if checkTriggerDays(tradeStrategies) { // check if the current day is a trading day.
+	var orderBookId uint16
 
-		// Read symbols within each strategy
-		tradeSymbols := strings.Split(tradeStrategies.Instruments, ",")
-
-		for each := range tradeSymbols {
-
-			// Check if continous OR time trigerred strategy
-			if tradeStrategies.Trigger_time.Hour() == 0 {
-				wgTrademgr.Add(1)
-				go symbolTradeManager(CONTINOUS_SCAN, tradeSymbols[each], tradeStrategies, wgTrademgr)
-			} else {
-				wgTrademgr.Add(1)
-				go symbolTradeManager(TIME_TRIGGERED_SCAN, tradeSymbols[each], tradeStrategies, wgTrademgr)
-			}
-		}
+	// ------------------------------------------------------------------------ trade entry check
+	// Check if continous OR time trigerred strategy
+	if tradeStrategies.Trigger_time.Hour() == 0 {
+		orderBookId = awaitSignalContinous(tradeSymbol, tradeStrategies.Strategy)
+	} else {
+		orderBookId = awaitSignalTimeTrigerred(tradeSymbol, tradeStrategies.Strategy, tradeStrategies.Trigger_time)
 	}
+	order := db.FetchOrderData(orderBookId)
+
+	// ------------------------------------------------------------------------ enter trade (order)
+	if order != nil {
+		enterTrade(*order[0], tradeStrategies)
+	}
+
+	// ------------------------------------------------------------------------ monitor trade exits
+
+	// ------------------------------------------------------------------------ exit trade
+
 }
 
 // Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.
@@ -104,24 +108,4 @@ func checkTriggerDays(tradeStrategies *appdata.Strategies) bool {
 	}
 	srv.TradesLogger.Println(tradeStrategies.Strategy, " : Trade signal skipped due to no valid day trigger present")
 	return false
-}
-
-// TODO: master exit condition & EoD termniation
-
-// Scan signal
-func symbolTradeManager(continous bool, tradeSymbol string, tradeStrategies *appdata.Strategies, wgTrademgr *sync.WaitGroup) {
-	defer wgTrademgr.Done()
-
-	var orderBookId uint16
-
-	if continous {
-		orderBookId = awaitContinousScan(tradeSymbol, tradeStrategies.Strategy)
-	} else {
-		orderBookId = awaiTriggerTimeScan(tradeSymbol, tradeStrategies.Strategy, tradeStrategies.Trigger_time)
-	}
-	order := db.FetchOrderData(orderBookId)
-
-	if order != nil {
-		placeOrder(order[0], tradeStrategies)
-	}
 }

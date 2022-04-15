@@ -22,10 +22,11 @@ type TickData struct {
 }
 
 type Percentage struct {
-	Target       float64 // "target": 1,
-	SL           float64 // "sl": 1,
-	DeepSL       float64 // "deepsl": 1
-	Limit_budget float64 // "limit_budget": 50%,
+	Target      float64 // "target": 1,
+	SL          float64 // "sl": 1,
+	DeepSL      float64 // "deepsl": 1
+	MaxBudget   float64 // "limit_budget": 50%,
+	WinningRate float64 // "winning_rate": 80%,
 }
 
 type TargetControls struct {
