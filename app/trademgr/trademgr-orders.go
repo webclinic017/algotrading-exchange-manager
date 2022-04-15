@@ -11,7 +11,7 @@ import (
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
-func enterTrade(order appdata.TradeSignal, ts appdata.Strategies) bool {
+func tradeEnter(order appdata.TradeSignal, ts appdata.Strategies) bool {
 
 	entryTime := time.Now()
 

@@ -73,23 +73,22 @@ type Strategies struct {
 }
 
 type TradeSignal struct {
-	Id             uint16    // 1
-	Date           time.Time // 2
-	Instr          string    // 3
-	Strategy       string    // 4
-	Dir            string    // 5
-	Entry          float64   // 6
-	Entry_time     time.Time // 7
-	Target         float64   // 8
-	Stoploss       float64   // 9
-	Trade_id       uint64    // 10
-	Exit_val       float64   // 11
-	Exit_time      time.Time // 12
-	Exit_reason    string    // 13
-	Swing_min      float64   // 14
-	Swing_max      float64   // 15
-	Swing_min_time time.Time // 16
-	Swing_max_time time.Time // 17
+	Id                 uint16    // 1
+	Date               time.Time // 2
+	Instr              string    // 3
+	Strategy           string    // 4
+	Status             string    // 5
+	Instr_id           int       // 6
+	Dir                string    // 6
+	Entry              float64   //
+	Target             float64   //
+	Stoploss           float64   //
+	Order_id           uint64    //
+	Order_trades_entry string
+	Order_trades_exit  string
+	Order_simulation   string
+	Exit_reason        string
+	Post_analysis      string
 }
 
 // Env variables required

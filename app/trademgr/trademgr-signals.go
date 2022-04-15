@@ -2,13 +2,12 @@ package trademgr
 
 import (
 	"algo-ex-mgr/app/apiclient"
-	"algo-ex-mgr/app/db"
 	"algo-ex-mgr/app/srv"
 	"strconv"
 	"time"
 )
 
-func awaitSignalContinous(symbol string, sID string) uint16 {
+func signalAwaitContinous(symbol string, sID string) uint16 {
 
 	var orderBookId uint16 = 0
 
@@ -16,11 +15,11 @@ func awaitSignalContinous(symbol string, sID string) uint16 {
 		time.Sleep(tradeOperatorSleepTime)
 
 		srv.TradesLogger.Println(" ▶ (Continious Scan) Invoking API [", sID, "-", symbol, "]")
-		result, sigData := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
+		result, _ := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
 
 		if result {
 			srv.TradesLogger.Println(" ⏪ {Trade Signal found} [", sID, "-", symbol, "]")
-			orderBookId = db.StoreTradeSignalInDb(sigData)
+			// orderBookId = db.StoreTradeSignalInDb(sigData)
 			break
 		}
 
@@ -33,7 +32,7 @@ func awaitSignalContinous(symbol string, sID string) uint16 {
 	return orderBookId
 }
 
-func awaitSignalTimeTrigerred(symbol string, sID string, triggerTime time.Time) uint16 {
+func signalAwaitTimeTrigerred(symbol string, sID string, triggerTime time.Time) uint16 {
 
 	var orderBookId uint16 = 0
 	ttime := strconv.Itoa(int(triggerTime.Hour())) + ":" + strconv.Itoa(int(triggerTime.Minute()))
@@ -45,7 +44,7 @@ func awaitSignalTimeTrigerred(symbol string, sID string, triggerTime time.Time) 
 			if curTime.Minute() == triggerTime.Minute() { // trigger time reached
 
 				srv.TradesLogger.Println(" ▶ Invoking TimeTrigerred API [ (", ttime, ") -", sID, "-", symbol, "]")
-				result, sigData := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
+				result, _ := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
 
 				if result {
 					srv.TradesLogger.Println(" ⏪ {Trade Signal found}",
@@ -56,7 +55,7 @@ func awaitSignalTimeTrigerred(symbol string, sID string, triggerTime time.Time) 
 						"-",
 						symbol,
 						"]")
-					orderBookId = db.StoreTradeSignalInDb(sigData)
+					// orderBookId = db.StoreTradeSignalInDb(sigData)
 				}
 				break
 			}

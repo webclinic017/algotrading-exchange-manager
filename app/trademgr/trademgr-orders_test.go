@@ -217,7 +217,7 @@ func TestEnterTrade(t *testing.T) {
 
 		// expected := test.expected
 
-		enterTrade(order, ts)
+		tradeEnter(order, ts)
 
 		// if orderID == 0 && test.orderPlaced == true {
 		// 	t.Errorf(ErrorColor, "\nderiveFuturesName() No data fetched - check dates and levels are correct. This UT is live with server\n")

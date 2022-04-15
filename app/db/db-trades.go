@@ -4,13 +4,12 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/georgysavva/scany/pgxscan"
 )
 
-func StoreTradeSignalInDb(sigData string) uint16 {
+func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -18,49 +17,60 @@ func StoreTradeSignalInDb(sigData string) uint16 {
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	sqlTradeSig := `INSERT INTO signals_trading (
-		strategy,
+	sqlTradeSig := `INSERT INTO order_trades (
 		date,
+		instr,
+		strategy,
+		status,
+		instr_id,
 		dir,
+		entry,
 		target,
 		stoploss,
-		instr)
+		order_id,
+		order_trades_entry,
+		order_trade_exit,
+		order_simulation,
+		exit_reason,
+		post_analysis)
 		VALUES
-		($1, $2, $3, $4, $5, $6);`
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`
 
-	var tradeSignal []*appdata.TradeSignal
-	err := json.Unmarshal([]byte(sigData), &tradeSignal)
+	_, err := myCon.Exec(ctx, sqlTradeSig,
+		tr.Date,
+		tr.Instr,
+		tr.Strategy,
+		tr.Status,
+		tr.Instr_id,
+		tr.Dir,
+		tr.Entry,
+		tr.Target,
+		tr.Stoploss,
+		tr.Order_id,
+		tr.Order_trades_entry,
+		tr.Order_trades_exit,
+		tr.Order_simulation,
+		tr.Exit_reason,
+		tr.Post_analysis,
+	)
+
 	if err != nil {
-		srv.ErrorLogger.Printf("TradeSignal - API JSON data parse error: %v\n", err)
-	}
-
-	// // fmt.Printf("%+v\n", tradeSignal[0])
-	// // fmt.Println(tradeSignal[0].T_entry)
-
-	_, err = myCon.Exec(ctx, sqlTradeSig,
-		tradeSignal[0].Strategy,
-		tradeSignal[0].Date,
-		tradeSignal[0].Dir,
-		tradeSignal[0].Target,
-		tradeSignal[0].Stoploss,
-		tradeSignal[0].Instr)
-
-	if err != nil {
-		srv.ErrorLogger.Printf("Unable to insert data into 'symbol ID' database: %v\n", err)
+		srv.ErrorLogger.Printf("Unable to insert strategy-symbol in DB: %v\n", err)
 	}
 
 	rows, err := myCon.Query(ctx, `
 		SELECT id 
-		FROM signals_trading 
+		FROM order_trades 
 		WHERE  (
 				instr = $1 
 			AND 
 				date = $2
 			AND 
 				strategy = $3)`,
-		tradeSignal[0].Instr,
-		tradeSignal[0].Date,
-		tradeSignal[0].Strategy)
+		tr.Instr,
+		tr.Date,
+		tr.Strategy)
+	// RULE: Instrument, Date, Strategy (combined) must be unique
 
 	if err != nil {
 		srv.ErrorLogger.Printf("TradeSignal DB store error %v\n", err)
@@ -92,7 +102,7 @@ func StoreTradeSignalInDb(sigData string) uint16 {
 	if (len(orderId)) == 1 {
 		return orderId[0]
 	} else if (len(orderId)) > 1 {
-		srv.ErrorLogger.Printf("TradeSignal - Multiple entries in DB - Skipping trades for %v %v\n", tradeSignal[0].Strategy, err)
+		srv.ErrorLogger.Printf("TradeSignal - Multiple entries in DB - Skipping trades for %v %v\n", tr.Strategy, err)
 	} else {
 		srv.ErrorLogger.Printf("TradeSignal DB unkown error %v\n", err)
 
