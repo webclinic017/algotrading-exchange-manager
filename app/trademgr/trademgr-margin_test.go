@@ -124,7 +124,7 @@ func TestCalOrderMargin(t *testing.T) {
 
 		// expected := test.expected
 
-		actual := CalOrderMargin(order, ts, date)
+		actual := getOrderMargin(order, ts, date)
 
 		if len(actual) == 0 {
 			t.Errorf(ErrorColor, "\nderiveFuturesName() No data fetched - check dates/levels/Server Auth code. This UT is live with server\n")

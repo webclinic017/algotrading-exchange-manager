@@ -98,6 +98,9 @@ go tool cover -html=coverage.out
 - [ ] DB buffer size optimisation
 - [ ] Loggin file creation - clean ups and new daily file logic
 
+- Hypertable periods and Compression policy updated for ticks_nsefuts
+- DB table names updated
+
 ## Version : v0.4.3
 - [x] all *-FUT are moved to ticks_nsefut table
 - [x] Scheduler/CronJob - 8:00 - instruments, 16:05 - candles

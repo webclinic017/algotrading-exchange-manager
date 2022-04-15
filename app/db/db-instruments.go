@@ -27,7 +27,7 @@ func getFuturesTokens() map[string]string {
 	var tokensMap = make(map[string]string)
 
 	sqlQueryFutures := `SELECT i.instrument_token, ts.mysymbol
-    FROM tracking_symbols ts, instruments i
+    FROM user_symbols ts, tick_instr i
     WHERE 
     		ts.symbol = i.name
 		and 
@@ -77,7 +77,7 @@ func getNseEqTokens() map[string]string {
 	var tokensMap = make(map[string]string)
 
 	sqlQueryStocks := `SELECT i.instrument_token, ts.mysymbol
-	FROM tracking_symbols ts, instruments i
+	FROM user_symbols ts, tick_instr i
 	WHERE 
 			ts.symbol = i.tradingsymbol
 		and 
@@ -131,7 +131,7 @@ func FetchInstrData(instrument string, strikelevel uint64, opdepth int, instrtyp
 	defer myCon.Release()
 
 	sqlQueryOptn := `SELECT tradingsymbol, lot_size
-					FROM tracking_symbols ts, instruments i
+					FROM user_symbols ts, tick_instr i
 					WHERE 
 							i.exchange = 'NFO'
 						and
@@ -153,7 +153,7 @@ func FetchInstrData(instrument string, strikelevel uint64, opdepth int, instrtyp
 					LIMIT 10;`
 
 	sqlQueryEQ := `SELECT tradingsymbol, lot_size
-					FROM tracking_symbols ts, instruments i
+					FROM user_symbols ts, tick_instr i
 					WHERE 
 						ts.symbol = i.name 
 					and 
@@ -165,7 +165,7 @@ func FetchInstrData(instrument string, strikelevel uint64, opdepth int, instrtyp
 					LIMIT 10;`
 
 	sqlQueryFUT := `SELECT tradingsymbol, lot_size
-					FROM tracking_symbols ts, instruments i
+					FROM user_symbols ts, tick_instr i
 					WHERE 
 							ts.symbol = i.name 
 						and 

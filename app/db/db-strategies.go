@@ -16,17 +16,17 @@ func ReadStrategiesFromDb() []*appdata.Strategies {
 
 	var ts []*appdata.Strategies
 
-	err := pgxscan.Select(ctx, dbPool, &ts, `SELECT * FROM strategies where enabled = 'true'`)
+	err := pgxscan.Select(ctx, dbPool, &ts, `SELECT * FROM user_strategies where enabled = 'true'`)
 
 	if err != nil {
-		srv.ErrorLogger.Printf("Strategies read error %v\n", err)
+		srv.ErrorLogger.Printf("user_strategies read error %v\n", err)
 		return nil
 	}
 
 	for each := range ts {
 		err = json.Unmarshal([]byte(ts[each].Controls), &ts[each].CtrlParam)
 		if err != nil {
-			srv.ErrorLogger.Printf("Strategies read error %v\n", err)
+			srv.ErrorLogger.Printf("user_strategies read error %v\n", err)
 		}
 	}
 

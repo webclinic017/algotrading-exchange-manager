@@ -10,7 +10,7 @@ import (
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
-func CalOrderMargin(order appdata.TradeSignal, ts appdata.Strategies, tm time.Time) []kiteconnect.OrderMargins {
+func getOrderMargin(order appdata.TradeSignal, ts appdata.Strategies, tm time.Time) []kiteconnect.OrderMargins {
 
 	var marginParam kiteconnect.GetMarginParams
 
