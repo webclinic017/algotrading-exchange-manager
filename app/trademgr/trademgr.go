@@ -73,7 +73,10 @@ func operateSymbol(tradeSymbol string, tradeStrategies appdata.Strategies, wgTra
 	defer wgTrademgr.Done()
 
 	var orderBookId uint16
+	var sigData string
 	var tr appdata.TradeSignal
+	sigData = ""
+	tr.Id = 0 // create entry in db
 	tr.Date = time.Now()
 	tr.Strategy = tradeStrategies.Strategy
 	tr.Instr = tradeSymbol
@@ -83,25 +86,26 @@ func operateSymbol(tradeSymbol string, tradeStrategies appdata.Strategies, wgTra
 	tr.Order_simulation = "{}"
 	tr.Post_analysis = "{}"
 
-	orderBookId = db.StoreTradeSignalInDb(tr)
-	srv.TradesLogger.Println("orderBookId: ", orderBookId)
+	orderBookId = db.StoreTradeSignalInDb(tr, "")
+	tr.Id = orderBookId
 	if orderBookId == 0 {
 		srv.TradesLogger.Println("EXIT: Could not register for signal/symbol orderBookId: ", orderBookId)
+		// RULE: if orderBookId is 0, then the strategy-symbol combination will not be auto traded
 		return
 	}
 
-	// ------------------------------------------------------------------------ trade entry check
-	// Check if continous OR time trigerred strategy
+	// ------------------------------------------------------------------------ trade entry check (Scan Signals)
 	if tradeStrategies.Trigger_time.Hour() == 0 {
-		orderBookId = signalAwaitContinous(tradeSymbol, tradeStrategies.Strategy)
+		sigData = signalAwaitContinous(tradeSymbol, tradeStrategies.Strategy, &tr)
 	} else {
-		orderBookId = signalAwaitTimeTrigerred(tradeSymbol, tradeStrategies.Strategy, tradeStrategies.Trigger_time)
+		sigData = signalAwaitTimeTrigerred(tradeSymbol, tradeStrategies.Strategy, tradeStrategies.Trigger_time, &tr)
 	}
-	order := db.FetchOrderData(orderBookId)
+	db.StoreTradeSignalInDb(tr, sigData)
 
 	// ------------------------------------------------------------------------ enter trade (order)
-	if order != nil {
-		tradeEnter(*order[0], tradeStrategies)
+	if tr.Dir != "" {
+		tradeEnter(&tr, tradeStrategies)
+		db.StoreTradeSignalInDb(tr, "")
 	}
 
 	// ------------------------------------------------------------------------ monitor trade exits

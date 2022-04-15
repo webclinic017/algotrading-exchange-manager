@@ -23,14 +23,18 @@ func SignalAnalyzer(multiSymbol string, algo string, symbol string, date string)
 		return false, "nil"
 	}
 
+	// TODO: CRITICAL - Improve resp parsing, does it cover all cases? may trigger run time resets
 	var js interface{}
-	json.Unmarshal([]byte(resp.Text()), &js)
+	if resp.Text() != "Internal Server Error" {
+		json.Unmarshal([]byte(resp.Text()), &js)
 
-	if len(js.([]interface{})) > 0 {
-		return true, resp.Text()
-	} else {
-		return false, "nil"
+		if len(js.([]interface{})) > 0 {
+			return true, resp.Text()
+		} else {
+			return false, "nil"
+		}
 	}
+	return false, "nil"
 }
 
 func Services(service string, date time.Time) bool {

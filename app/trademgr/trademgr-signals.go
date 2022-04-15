@@ -2,39 +2,37 @@ package trademgr
 
 import (
 	"algo-ex-mgr/app/apiclient"
+	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"strconv"
 	"time"
 )
 
-func signalAwaitContinous(symbol string, sID string) uint16 {
-
-	var orderBookId uint16 = 0
+func signalAwaitContinous(symbol string, sID string, tr *appdata.TradeSignal) string {
 
 	for {
 		time.Sleep(tradeOperatorSleepTime)
 
 		srv.TradesLogger.Println(" ▶ (Continious Scan) Invoking API [", sID, "-", symbol, "]")
-		result, _ := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
+		result, sigData := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
 
 		if result {
+			tr.Status = "Continous - Trade Signal found"
 			srv.TradesLogger.Println(" ⏪ {Trade Signal found} [", sID, "-", symbol, "]")
-			// orderBookId = db.StoreTradeSignalInDb(sigData)
-			break
+			return sigData
 		}
 
 		if terminateTradeOperator { // termination requested
+			tr.Status = "Continous - Termination requested"
 			srv.TradesLogger.Println(" ❎ (Continious Scan) Termination requested [", sID, "-", symbol, "]")
-			break
+			return ""
 		}
 
 	}
-	return orderBookId
 }
 
-func signalAwaitTimeTrigerred(symbol string, sID string, triggerTime time.Time) uint16 {
+func signalAwaitTimeTrigerred(symbol string, sID string, triggerTime time.Time, tr *appdata.TradeSignal) string {
 
-	var orderBookId uint16 = 0
 	ttime := strconv.Itoa(int(triggerTime.Hour())) + ":" + strconv.Itoa(int(triggerTime.Minute()))
 
 	for {
@@ -44,9 +42,10 @@ func signalAwaitTimeTrigerred(symbol string, sID string, triggerTime time.Time) 
 			if curTime.Minute() == triggerTime.Minute() { // trigger time reached
 
 				srv.TradesLogger.Println(" ▶ Invoking TimeTrigerred API [ (", ttime, ") -", sID, "-", symbol, "]")
-				result, _ := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
+				result, sigData := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
 
 				if result {
+					tr.Status = "TimeTrigerred - Trade Signal found"
 					srv.TradesLogger.Println(" ⏪ {Trade Signal found}",
 						"[",
 						ttime,
@@ -55,7 +54,7 @@ func signalAwaitTimeTrigerred(symbol string, sID string, triggerTime time.Time) 
 						"-",
 						symbol,
 						"]")
-					// orderBookId = db.StoreTradeSignalInDb(sigData)
+					return sigData
 				}
 				break
 			}
@@ -63,8 +62,9 @@ func signalAwaitTimeTrigerred(symbol string, sID string, triggerTime time.Time) 
 
 		// termination requested
 		if terminateTradeOperator {
+			tr.Status = "TimeTrigerred - Termination requested"
 			srv.TradesLogger.Println(" ❎ (TimeTrigerred) Termination requested ", sID, "symbol : ", symbol)
-			return 0
+			return ""
 		}
 
 		time.Sleep(tradeOperatorSleepTime)
@@ -77,6 +77,5 @@ func signalAwaitTimeTrigerred(symbol string, sID string, triggerTime time.Time) 
 			symbol,
 			"]")
 	}
-
-	return orderBookId
+	return ""
 }

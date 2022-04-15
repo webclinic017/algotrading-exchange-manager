@@ -11,19 +11,19 @@ import (
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
-func tradeEnter(order appdata.TradeSignal, ts appdata.Strategies) bool {
+func tradeEnter(order *appdata.TradeSignal, ts appdata.Strategies) bool {
 
 	entryTime := time.Now()
 
 	userMargin := kite.GetUserMargin()
 
-	orderMargin := getOrderMargin(order, ts, entryTime)
+	orderMargin := getOrderMargin(*order, ts, entryTime)
 
 	tradeQty := determineOrderSize(userMargin, orderMargin[0].Total,
 		ts.CtrlParam.Percentages.WinningRate, ts.CtrlParam.Percentages.MaxBudget,
 		ts.CtrlParam.TradeSettings.LimitAmount)
 
-	orderId := executeOrder(order, ts, entryTime, tradeQty)
+	orderId := executeOrder(*order, ts, entryTime, tradeQty)
 	TradesList := kite.FetchOrderTrades(orderId)
 
 	srv.TradesLogger.Print("Trade executed: ", TradesList)

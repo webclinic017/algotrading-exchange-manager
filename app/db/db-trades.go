@@ -4,12 +4,13 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/georgysavva/scany/pgxscan"
 )
 
-func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
+func StoreTradeSignalInDb(tr appdata.TradeSignal, sigData string) uint16 {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -17,7 +18,20 @@ func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	sqlTradeSig := `INSERT INTO order_trades (
+	if sigData != "" { // signal found, parse json
+		var apiSignal []*appdata.ApiSignal
+		err := json.Unmarshal([]byte(sigData), &apiSignal)
+		if err != nil {
+			srv.TradesLogger.Printf("apiSignal - API JSON data parse error: %v\n", err)
+		}
+		tr.Dir = apiSignal[0].Dir
+		tr.Entry = apiSignal[0].Entry
+		tr.Target = apiSignal[0].Target
+		tr.Stoploss = apiSignal[0].Stoploss
+	}
+
+	var sqlquery string
+	sqlCreateTradeSig := `INSERT INTO order_trades (
 		date,
 		instr,
 		strategy,
@@ -36,7 +50,32 @@ func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 		VALUES
 		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`
 
-	_, err := myCon.Exec(ctx, sqlTradeSig,
+	sqlUpdateTradeSig := `INSERT INTO order_trades (
+			date,
+			instr,
+			strategy,
+			status,
+			instr_id,
+			dir,
+			entry,
+			target,
+			stoploss,
+			order_id,
+			order_trades_entry,
+			order_trade_exit,
+			order_simulation,
+			exit_reason,
+			post_analysis)
+			VALUES
+			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`
+
+	if tr.Id == 0 {
+		sqlquery = sqlCreateTradeSig
+	} else {
+		sqlquery = sqlUpdateTradeSig
+	}
+
+	_, err := myCon.Exec(ctx, sqlquery,
 		tr.Date,
 		tr.Instr,
 		tr.Strategy,
