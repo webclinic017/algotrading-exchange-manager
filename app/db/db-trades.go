@@ -4,13 +4,12 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/georgysavva/scany/pgxscan"
 )
 
-func StoreTradeSignalInDb(tr appdata.TradeSignal, sigData string) uint16 {
+func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -18,17 +17,17 @@ func StoreTradeSignalInDb(tr appdata.TradeSignal, sigData string) uint16 {
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	if sigData != "" { // signal found, parse json
-		var apiSignal []*appdata.ApiSignal
-		err := json.Unmarshal([]byte(sigData), &apiSignal)
-		if err != nil {
-			srv.TradesLogger.Printf("apiSignal - API JSON data parse error: %v\n", err)
-		}
-		tr.Dir = apiSignal[0].Dir
-		tr.Entry = apiSignal[0].Entry
-		tr.Target = apiSignal[0].Target
-		tr.Stoploss = apiSignal[0].Stoploss
-	}
+	// if sigData != "" { // signal found, parse json
+	// 	var apiSignal []*appdata.ApiSignal
+	// 	err := json.Unmarshal([]byte(sigData), &apiSignal)
+	// 	if err != nil {
+	// 		srv.TradesLogger.Printf("apiSignal - API JSON data parse error: %v\n", err)
+	// 	}
+	// 	tr.Dir = apiSignal[0].Dir
+	// 	tr.Entry = apiSignal[0].Entry
+	// 	tr.Target = apiSignal[0].Target
+	// 	tr.Stoploss = apiSignal[0].Stoploss
+	// }
 
 	var sqlquery string
 	sqlCreateTradeSig := `INSERT INTO order_trades (

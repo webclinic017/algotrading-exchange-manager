@@ -2,39 +2,51 @@ package apiclient
 
 import (
 	"algo-ex-mgr/app/appdata"
+	"algo-ex-mgr/app/srv"
 	"encoding/json"
+	"net/http"
 	"time"
 
 	"github.com/asmcos/requests"
 )
 
-func SignalAnalyzer(multiSymbol string, algo string, symbol string, date string) (bool, string) {
+func SignalAnalyzer(tr *appdata.TradeSignal) bool {
 
 	p := requests.Params{
-		"multisymbol": multiSymbol,
-		"algo":        algo,
-		"symbol":      symbol,
-		"date":        date,
+		"multisymbol": "false",
+		"algo":        tr.Strategy,
+		"symbol":      tr.Instr,
+		"date":        time.Now().Format("2006-01-02"),
 	}
 	resp, err := requests.Get(appdata.Env["ALGO_ANALYSIS_ADDRESS"]+"tradesignals/", p)
 	// resp, err := requests.Get("http://localhost:5000/tradesignals/", p)
 
+	println(resp, resp)
+
 	if err != nil {
-		return false, "nil"
+		srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", err.Error())
+		return false
 	}
 
-	// TODO: CRITICAL - Improve resp parsing, does it cover all cases? may trigger run time resets
-	var js interface{}
-	if resp.Text() != "Internal Server Error" {
-		json.Unmarshal([]byte(resp.Text()), &js)
+	if resp.R.StatusCode == http.StatusOK {
 
-		if len(js.([]interface{})) > 0 {
-			return true, resp.Text()
+		apiSig := appdata.ApiSignal{}
+
+		json.Unmarshal([]byte(resp.Text()), &apiSig)
+		if apiSig.Status == "signal-processed" { // register only if processed correctly
+			tr.Dir = apiSig.Dir
+			tr.Entry = apiSig.Entry
+			tr.Stoploss = apiSig.Stoploss
+			return true
 		} else {
-			return false, "nil"
+			srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", apiSig.Status)
+			return false
 		}
+	} else {
+
+		srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", resp.R.StatusCode)
+		return false
 	}
-	return false, "nil"
 }
 
 func Services(service string, date time.Time) bool {

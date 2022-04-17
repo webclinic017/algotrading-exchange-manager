@@ -73,23 +73,15 @@ type Strategies struct {
 }
 
 type ApiSignal struct {
-	Id             uint16    // 1
-	Date           time.Time // 2
-	Instr          string    // 3
-	Strategy       string    // 4
-	Dir            string    // 5
-	Entry          float64   // 6
-	Entry_time     time.Time // 7
-	Target         float64   // 8
-	Stoploss       float64   // 9
-	Trade_id       uint64    // 10
-	Exit_val       float64   // 11
-	Exit_time      time.Time // 12
-	Exit_reason    string    // 13
-	Swing_min      float64   // 14
-	Swing_max      float64   // 15
-	Swing_min_time time.Time // 16
-	Swing_max_time time.Time // 17
+	Status   string    `json:"status"`
+	Id       uint16    `json:"id"`
+	Date     time.Time `json:"date"`
+	Instr    string    `json:"instr"`
+	Strategy string    `json:"strategy"`
+	Dir      string    `json:"dir"`
+	Entry    float64   `json:"entry"`
+	Target   float64   `json:"target"`
+	Stoploss float64   `json:"stoploss"`
 }
 
 type TradeSignal struct {

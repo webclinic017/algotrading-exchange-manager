@@ -73,20 +73,19 @@ func operateSymbol(tradeSymbol string, tradeStrategies appdata.Strategies, wgTra
 	defer wgTrademgr.Done()
 
 	var orderBookId uint16
-	var sigData string
 	var tr appdata.TradeSignal
-	sigData = ""
+	var result bool
 	tr.Id = 0 // create entry in db
 	tr.Date = time.Now()
 	tr.Strategy = tradeStrategies.Strategy
 	tr.Instr = tradeSymbol
-	tr.Status = "Registered"
+	tr.Status = "AwaitSignal"
 	tr.Order_trades_entry = "{}"
 	tr.Order_trades_exit = "{}"
 	tr.Order_simulation = "{}"
 	tr.Post_analysis = "{}"
 
-	orderBookId = db.StoreTradeSignalInDb(tr, "")
+	orderBookId = db.StoreTradeSignalInDb(tr)
 	tr.Id = orderBookId
 	if orderBookId == 0 {
 		srv.TradesLogger.Println("EXIT: Could not register for signal/symbol orderBookId: ", orderBookId)
@@ -94,24 +93,53 @@ func operateSymbol(tradeSymbol string, tradeStrategies appdata.Strategies, wgTra
 		return
 	}
 
-	// ------------------------------------------------------------------------ trade entry check (Scan Signals)
-	if tradeStrategies.Trigger_time.Hour() == 0 {
-		sigData = signalAwaitContinous(tradeSymbol, tradeStrategies.Strategy, &tr)
-	} else {
-		sigData = signalAwaitTimeTrigerred(tradeSymbol, tradeStrategies.Strategy, tradeStrategies.Trigger_time, &tr)
+	for {
+		switch tr.Status {
+
+		// ------------------------------------------------------------------------ trade entry check (Scan Signals)
+		case "AwaitSignal":
+			if tradeEnterSignalCheck(tradeSymbol, tradeStrategies, &tr) {
+				tr.Status = "Trigerred"
+				db.StoreTradeSignalInDb(tr)
+			}
+
+		// ------------------------------------------------------------------------ enter trade (order)
+		case "Trigerred":
+			if tr.Dir != "" { // on valid signal
+				result = tradeEnter(&tr, tradeStrategies)
+				tr.Status = "TradeMonitoring"
+				db.StoreTradeSignalInDb(tr)
+			}
+
+		// ------------------------------------------------------------------------ monitor trade exits
+		case "TradeMonitoring":
+			if tradeExitSignalCheck(tradeSymbol, tradeStrategies, &tr) {
+				tr.Status = "ExitTrade"
+				db.StoreTradeSignalInDb(tr)
+			}
+
+		// ------------------------------------------------------------------------ exit trade
+		case "ExitTrade":
+			if result {
+				tr.Status = "TradeCompleted"
+				db.StoreTradeSignalInDb(tr)
+			}
+		case "TradeCompleted":
+			if result {
+				db.StoreTradeSignalInDb(tr)
+				break
+			}
+
+		default: // Terminate trade if any other status
+			db.StoreTradeSignalInDb(tr)
+			break
+
+		}
+
+		time.Sleep(tradeOperatorSleepTime)
+		// read db and sync again
+		// tr = db.ReadTradeSignalFromDb(orderBookId)
 	}
-	db.StoreTradeSignalInDb(tr, sigData)
-
-	// ------------------------------------------------------------------------ enter trade (order)
-	if tr.Dir != "" {
-		tradeEnter(&tr, tradeStrategies)
-		db.StoreTradeSignalInDb(tr, "")
-	}
-
-	// ------------------------------------------------------------------------ monitor trade exits
-
-	// ------------------------------------------------------------------------ exit trade
-
 }
 
 // Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.

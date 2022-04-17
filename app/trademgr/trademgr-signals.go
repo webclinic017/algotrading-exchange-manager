@@ -3,79 +3,53 @@ package trademgr
 import (
 	"algo-ex-mgr/app/apiclient"
 	"algo-ex-mgr/app/appdata"
-	"algo-ex-mgr/app/srv"
-	"strconv"
 	"time"
 )
 
-func signalAwaitContinous(symbol string, sID string, tr *appdata.TradeSignal) string {
+func tradeEnterSignalCheck(symbol string, tradeStrategies appdata.Strategies, tr *appdata.TradeSignal) bool {
 
-	for {
-		time.Sleep(tradeOperatorSleepTime)
+	result := false
+	curTime := time.Now()
 
-		srv.TradesLogger.Println(" ▶ (Continious Scan) Invoking API [", sID, "-", symbol, "]")
-		result, sigData := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
+	if tradeStrategies.Trigger_time.Hour() == 0 {
+		result = apiclient.SignalAnalyzer(tr, "-entry")
 
-		if result {
-			tr.Status = "Continous - Trade Signal found"
-			srv.TradesLogger.Println(" ⏪ {Trade Signal found} [", sID, "-", symbol, "]")
-			return sigData
+	} else if curTime.Hour() == tradeStrategies.Trigger_time.Hour() {
+		if curTime.Minute() == tradeStrategies.Trigger_time.Minute() { // trigger time reached
+
+			result = apiclient.SignalAnalyzer(tr, "-entry")
 		}
-
-		if terminateTradeOperator { // termination requested
-			tr.Status = "Continous - Termination requested"
-			srv.TradesLogger.Println(" ❎ (Continious Scan) Termination requested [", sID, "-", symbol, "]")
-			return ""
-		}
-
 	}
+
+	if result {
+		return true
+	}
+
+	// srv.TradesLogger.Println(" ⏳", "[", ttime, "-", sID, "-", symbol, "]")
+
+	return false
 }
 
-func signalAwaitTimeTrigerred(symbol string, sID string, triggerTime time.Time, tr *appdata.TradeSignal) string {
+func tradeExitSignalCheck(symbol string, tradeStrategies appdata.Strategies, tr *appdata.TradeSignal) bool {
 
-	ttime := strconv.Itoa(int(triggerTime.Hour())) + ":" + strconv.Itoa(int(triggerTime.Minute()))
+	result := false
+	curTime := time.Now()
 
-	for {
-		curTime := time.Now()
+	if tradeStrategies.Trigger_time.Hour() == 0 {
+		result = apiclient.SignalAnalyzer(tr, "-exit")
 
-		if curTime.Hour() == triggerTime.Hour() {
-			if curTime.Minute() == triggerTime.Minute() { // trigger time reached
+	} else if curTime.Hour() == tradeStrategies.Trigger_time.Hour() {
+		if curTime.Minute() == tradeStrategies.Trigger_time.Minute() { // trigger time reached
 
-				srv.TradesLogger.Println(" ▶ Invoking TimeTrigerred API [ (", ttime, ") -", sID, "-", symbol, "]")
-				result, sigData := apiclient.SignalAnalyzer("false", sID, symbol, "2022-02-09")
-
-				if result {
-					tr.Status = "TimeTrigerred - Trade Signal found"
-					srv.TradesLogger.Println(" ⏪ {Trade Signal found}",
-						"[",
-						ttime,
-						"-",
-						sID,
-						"-",
-						symbol,
-						"]")
-					return sigData
-				}
-				break
-			}
+			result = apiclient.SignalAnalyzer(tr, "-exit")
 		}
-
-		// termination requested
-		if terminateTradeOperator {
-			tr.Status = "TimeTrigerred - Termination requested"
-			srv.TradesLogger.Println(" ❎ (TimeTrigerred) Termination requested ", sID, "symbol : ", symbol)
-			return ""
-		}
-
-		time.Sleep(tradeOperatorSleepTime)
-		srv.TradesLogger.Println(" ⏳",
-			"[",
-			ttime,
-			"-",
-			sID,
-			"-",
-			symbol,
-			"]")
 	}
-	return ""
+
+	if result {
+		return true
+	}
+
+	// srv.TradesLogger.Println(" ⏳", "[", ttime, "-", sID, "-", symbol, "]")
+
+	return false
 }
