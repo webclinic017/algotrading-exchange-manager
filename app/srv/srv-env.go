@@ -19,7 +19,7 @@ func LoadEnvVariables(path string) bool {
 	// Load and check values
 	for _, value := range appdata.UserSettings {
 		appdata.Env[value] = os.Getenv(value)
-		if os.Getenv(value) == "" {
+		if os.Getenv(value) == "" && value != "DB_TEST_PREFIX" {
 			println(value, " is not set")
 			parseEnv = false
 		}

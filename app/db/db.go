@@ -1,6 +1,7 @@
 package db
 
 import (
+	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"context"
 	"os"
@@ -77,12 +78,20 @@ func DbInit() bool {
 		}
 
 		// 3. Check if 'ticker' table exists, if not CREATE it
-		if createTable(DB_TABLE_TICKER_NAME_STK, DB_CREATE_TABLE_STK_TICKER) {
-			if createTable(DB_TABLE_TICKER_NAME_NSE_IDX, DB_CREATE_TABLE_NSE_IDX_TICKER) {
-				// createViews()
-				setupDbCompression()
-				srv.InfoLogger.Printf("DB checks completed\n")
-				return true
+		if createTable(appdata.Env["DB_TBL_TICK_NSEFUT"]+appdata.Env["DB_TEST_PREFIX"], DB_CREATE_TABLE_TICKER) {
+			if createTable(appdata.Env["DB_TBL_TICK_NSESTK"]+appdata.Env["DB_TEST_PREFIX"], DB_CREATE_TABLE_TICKER) {
+				if createTable(appdata.Env["DB_TBL_PREFIX_USER_ID"]+appdata.Env["DB_TBL_USER_SYMBOLS"]+appdata.Env["DB_TEST_PREFIX"], DB_CREATE_TABLE_USER_SYMBOLS) {
+					if createTable(appdata.Env["DB_TBL_PREFIX_USER_ID"]+appdata.Env["DB_TBL_USER_SETTING"]+appdata.Env["DB_TEST_PREFIX"], DB_CREATE_TABLE_USER_SETTING) {
+						if createTable(appdata.Env["DB_TBL_PREFIX_USER_ID"]+appdata.Env["DB_TBL_USER_STRATEGIES"]+appdata.Env["DB_TEST_PREFIX"], DB_CREATE_TABLE_USER_STRATEGIES) {
+							if createTable(appdata.Env["DB_TBL_PREFIX_USER_ID"]+appdata.Env["DB_TBL_ORDER_BOOK"]+appdata.Env["DB_TEST_PREFIX"], DB_CREATE_TABLE_ORDER_BOOK) {
+								// createViews()
+								setupDbCompression(appdata.Env["DB_TICK_TABLE_NSEFUT"] + appdata.Env["DB_TEST_PREFIX"])
+								srv.InfoLogger.Printf("DB checks completed\n")
+								return true
+							}
+						}
+					}
+				}
 			}
 		}
 	}

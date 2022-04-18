@@ -3,6 +3,7 @@ package db
 import (
 	"algo-ex-mgr/app/srv"
 	"context"
+	"strings"
 )
 
 func createTable(tblName string, sqlquery string) bool {
@@ -16,7 +17,9 @@ func createTable(tblName string, sqlquery string) bool {
 
 	if len(retVal) == 0 {
 		srv.InfoLogger.Printf("%s Does not exist, creating now!\n", tblName)
-		_, err := myCon.Exec(ctx, sqlquery)
+		query := strings.ReplaceAll(sqlquery, "$1", tblName)
+
+		_, err := myCon.Exec(ctx, query)
 		if err != nil {
 			srv.WarningLogger.Printf("Failed to CREATE %s table : %v\n", tblName, err)
 			myCon.Release()
