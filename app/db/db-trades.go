@@ -9,6 +9,66 @@ import (
 	"github.com/georgysavva/scany/pgxscan"
 )
 
+func ReadTradeSignalFromDb(orderBookId uint16) (status bool, tr *appdata.TradeSignal) {
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	ctx := context.Background()
+	myCon, _ := dbPool.Acquire(ctx)
+	defer myCon.Release()
+
+	var ts []*appdata.TradeSignal
+
+	sqlquery := fmt.Sprintf("SELECT * FROM order_trades WHERE id = %d", orderBookId)
+
+	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
+
+	if err != nil {
+		srv.ErrorLogger.Printf("order_trades read error %v\n", err)
+		return false, nil
+
+	}
+
+	if len(ts) == 0 {
+		srv.ErrorLogger.Printf("order_trades read error %v\n", err)
+		return false, nil
+	}
+
+	return true, ts[0]
+
+}
+
+func ReadAllTradeSignalFromDb() []*appdata.TradeSignal {
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	ctx := context.Background()
+	myCon, _ := dbPool.Acquire(ctx)
+	defer myCon.Release()
+
+	var ts []*appdata.TradeSignal
+
+	sqlquery := fmt.Sprintf("SELECT * FROM order_trades WHERE status != '%s'", "TradeCompleted")
+
+	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
+
+	if err != nil {
+		srv.ErrorLogger.Printf("order_trades read error %v\n", err)
+		return nil
+
+	}
+
+	if len(ts) == 0 {
+		srv.ErrorLogger.Printf("order_trades read error %v\n", err)
+		return nil
+	}
+
+	return ts
+
+}
+
 func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 	lock.Lock()
 	defer lock.Unlock()

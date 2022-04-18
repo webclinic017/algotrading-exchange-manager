@@ -4,6 +4,7 @@
 package trademgr
 
 import (
+	"algo-ex-mgr/app/apiclient"
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/db"
 	"algo-ex-mgr/app/srv"
@@ -14,47 +15,54 @@ import (
 )
 
 // tradeStrategies - list of all strategies to be executed. Read once from db at start of day
-var (
-	tradeStrategies        []*appdata.Strategies
-	terminateTradeOperator bool = false
-)
-
 const (
 	tradeOperatorSleepTime = time.Second * 10
 )
 
 // Scan DB for all strategies with strategy_en = 1. Each funtion is executed in a separate thread and remains active till the trade is complete.
 // TODO: recovery logic for server restarts
-func StartTrader() {
+func StartTrader(daystart bool) {
 
 	var wgTrademgr sync.WaitGroup
-	terminateTradeOperator = false
 
 	srv.TradesLogger.Print(
 		"\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
 		"Trade Manager",
 		"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 
-	// 1. Read trading strategies from dB
-	tradeStrategies = db.ReadStrategiesFromDb()
+	// --------------------------------- Read trading strategies from dB
+	tradeStrategies := db.ReadStrategiesFromDb()
 
-	// 2. Setup operators for each symbol in every strategy
-	for eachStrategy := range tradeStrategies {
+	// --------------------------------- Read if trades already in progress
+	trSig := db.ReadAllTradeSignalFromDb()
+	for eachSymbol := range trSig {
+		for eachStrategy := range tradeStrategies {
+			if trSig[eachSymbol].Strategy == tradeStrategies[eachStrategy].Strategy {
 
-		if checkTriggerDays(tradeStrategies[eachStrategy]) { // check if the current day is a trading day.
-
-			// Read symbols within each strategy
-			tradeSymbols := strings.Split(tradeStrategies[eachStrategy].Instruments, ",")
-
-			for eachSymbol := range tradeSymbols {
-				// Check if continous OR time trigerred strategy
 				wgTrademgr.Add(1)
-				go operateSymbol(tradeSymbols[eachSymbol], *tradeStrategies[eachStrategy], wgTrademgr)
+				go operateSymbol("nil", tradeStrategies[eachStrategy], trSig[eachSymbol].Id, wgTrademgr)
 			}
 		}
 	}
 
-	// 3. wait till all trades are completed
+	// --------------------------------- Setup operators for each symbol in every strategy
+	if daystart {
+		for eachStrategy := range tradeStrategies {
+
+			if checkTriggerDays(tradeStrategies[eachStrategy]) {
+				// check if the current day is a trading day.
+
+				// Read symbols within each strategy
+				tradeSymbols := strings.Split(tradeStrategies[eachStrategy].Instruments, ",")
+
+				for eachSymbol := range tradeSymbols {
+					wgTrademgr.Add(1)
+					go operateSymbol(tradeSymbols[eachSymbol], tradeStrategies[eachStrategy], 0, wgTrademgr)
+				}
+			}
+		}
+	}
+	// --------------------------------- Await till all trades are completed
 	wgTrademgr.Wait()
 	os.Exit(0)
 
@@ -63,48 +71,56 @@ func StartTrader() {
 // to stop trademanager and exit all positions
 func StopTrader() {
 	srv.TradesLogger.Println("(Terminating Trader) - Signal received")
-	terminateTradeOperator = true
+
 }
 
 // TODO: master exit condition & EoD termniation
 
 // symbolTradeManager
-func operateSymbol(tradeSymbol string, tradeStrategies appdata.Strategies, wgTrademgr sync.WaitGroup) {
+func operateSymbol(tradeSymbol string, tradeStrategies appdata.Strategies, trId uint16, wgTrademgr sync.WaitGroup) {
 	defer wgTrademgr.Done()
 
 	var orderBookId uint16
 	var tr appdata.TradeSignal
 	var result bool
-	tr.Id = 0 // create entry in db
-	tr.Date = time.Now()
-	tr.Strategy = tradeStrategies.Strategy
-	tr.Instr = tradeSymbol
-	tr.Status = "AwaitSignal"
-	tr.Order_trades_entry = "{}"
-	tr.Order_trades_exit = "{}"
-	tr.Order_simulation = "{}"
-	tr.Post_analysis = "{}"
 
-	orderBookId = db.StoreTradeSignalInDb(tr)
-	tr.Id = orderBookId
-	if orderBookId == 0 {
-		srv.TradesLogger.Println("EXIT: Could not register for signal/symbol orderBookId: ", orderBookId)
-		// RULE: if orderBookId is 0, then the strategy-symbol combination will not be auto traded
-		return
+	if trId == 0 {
+		tr.Status = "Initiate"
+	} else {
+		tr.Status = "Resume"
 	}
 
+tradingloop:
 	for {
 		switch tr.Status {
+
+		// ------------------------------------------------------------------------ New symbol being registered for trade
+		case "Initiate":
+			tr.Date = time.Now()
+			tr.Strategy = tradeStrategies.Strategy
+			tr.Instr = tradeSymbol
+			tr.Status = "AwaitSignal"
+			tr.Order_trades_entry = "{}"
+			tr.Order_trades_exit = "{}"
+			tr.Order_simulation = "{}"
+			tr.Post_analysis = "{}"
+			tr.Status = "AwaitSignal"
+			tr.Id = db.StoreTradeSignalInDb(tr)
+
+		// ------------------------------------------------------------------------ Resume previously registered symbol
+		case "Resume":
+			loadValues(&tr, orderBookId)
+			db.StoreTradeSignalInDb(tr)
 
 		// ------------------------------------------------------------------------ trade entry check (Scan Signals)
 		case "AwaitSignal":
 			if tradeEnterSignalCheck(tradeSymbol, tradeStrategies, &tr) {
-				tr.Status = "Trigerred"
+				tr.Status = "PlaceOrders"
 				db.StoreTradeSignalInDb(tr)
 			}
 
 		// ------------------------------------------------------------------------ enter trade (order)
-		case "Trigerred":
+		case "PlaceOrders":
 			if tr.Dir != "" { // on valid signal
 				result = tradeEnter(&tr, tradeStrategies)
 				tr.Status = "TradeMonitoring"
@@ -113,37 +129,39 @@ func operateSymbol(tradeSymbol string, tradeStrategies appdata.Strategies, wgTra
 
 		// ------------------------------------------------------------------------ monitor trade exits
 		case "TradeMonitoring":
-			if tradeExitSignalCheck(tradeSymbol, tradeStrategies, &tr) {
+			if apiclient.SignalAnalyzer(&tr, "-exit") {
 				tr.Status = "ExitTrade"
 				db.StoreTradeSignalInDb(tr)
 			}
 
-		// ------------------------------------------------------------------------ exit trade
+		// ------------------------------------------------------------------------ squareoff trade
 		case "ExitTrade":
 			if result {
 				tr.Status = "TradeCompleted"
 				db.StoreTradeSignalInDb(tr)
 			}
+
+		// ------------------------------------------------------------------------ complete housekeeping
 		case "TradeCompleted":
 			if result {
 				db.StoreTradeSignalInDb(tr)
-				break
+				break tradingloop
 			}
 
-		default: // Terminate trade if any other status
+		// --------------------------------------------------------------- Terminate trade if any other status
+		default:
 			db.StoreTradeSignalInDb(tr)
-			break
-
+			break tradingloop
 		}
 
 		time.Sleep(tradeOperatorSleepTime)
-		// read db and sync again
-		// tr = db.ReadTradeSignalFromDb(orderBookId)
+		loadValues(&tr, orderBookId)
+		// TODO: check if exit is requested
 	}
 }
 
 // Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.
-func checkTriggerDays(tradeStrategies *appdata.Strategies) bool {
+func checkTriggerDays(tradeStrategies appdata.Strategies) bool {
 
 	triggerdays := strings.Split(tradeStrategies.Trigger_days, ",")
 	currentday := time.Now().Weekday().String()
@@ -155,5 +173,35 @@ func checkTriggerDays(tradeStrategies *appdata.Strategies) bool {
 		}
 	}
 	srv.TradesLogger.Println(tradeStrategies.Strategy, " : Trade signal skipped due to no valid day trigger present")
+	return false
+}
+
+func loadValues(tr *appdata.TradeSignal, orderBookId uint16) {
+	status, trtemp := db.ReadTradeSignalFromDb(orderBookId)
+	if status {
+		tr.Id = trtemp.Id
+		tr.Date = trtemp.Date
+		tr.Strategy = trtemp.Strategy
+		tr.Instr = trtemp.Instr
+		tr.Status = trtemp.Status
+		tr.Order_trades_entry = trtemp.Order_trades_entry
+		tr.Order_trades_exit = trtemp.Order_trades_exit
+		tr.Order_simulation = trtemp.Order_simulation
+		tr.Post_analysis = trtemp.Post_analysis
+	}
+
+}
+
+func tradeEnterSignalCheck(symbol string, tradeStrategies appdata.Strategies, tr *appdata.TradeSignal) bool {
+
+	if tradeStrategies.Trigger_time.Hour() == 0 {
+		return apiclient.SignalAnalyzer(tr, "-entry")
+
+	} else if time.Now().Hour() == tradeStrategies.Trigger_time.Hour() {
+		if time.Now().Minute() == tradeStrategies.Trigger_time.Minute() { // trigger time reached
+
+			return apiclient.SignalAnalyzer(tr, "-entry")
+		}
+	}
 	return false
 }

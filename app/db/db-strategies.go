@@ -9,12 +9,12 @@ import (
 	"github.com/georgysavva/scany/pgxscan"
 )
 
-func ReadStrategiesFromDb() []*appdata.Strategies {
+func ReadStrategiesFromDb() []appdata.Strategies {
 	ctx := context.Background()
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	var ts []*appdata.Strategies
+	var ts []appdata.Strategies
 
 	err := pgxscan.Select(ctx, dbPool, &ts, `SELECT * FROM user_strategies where enabled = 'true'`)
 

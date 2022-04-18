@@ -10,11 +10,11 @@ import (
 	"github.com/asmcos/requests"
 )
 
-func SignalAnalyzer(tr *appdata.TradeSignal) bool {
+func SignalAnalyzer(tr *appdata.TradeSignal, mode string) bool {
 
 	p := requests.Params{
 		"multisymbol": "false",
-		"algo":        tr.Strategy,
+		"algo":        tr.Strategy + mode,
 		"symbol":      tr.Instr,
 		"date":        time.Now().Format("2006-01-02"),
 	}
