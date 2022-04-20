@@ -10,6 +10,7 @@ import (
 	"github.com/asmcos/requests"
 )
 
+// todo: add multi symbol support in response? current hardcoded to first signal
 func SignalAnalyzer(tr *appdata.TradeSignal, mode string) bool {
 
 	p := requests.Params{
@@ -19,9 +20,6 @@ func SignalAnalyzer(tr *appdata.TradeSignal, mode string) bool {
 		"date":        time.Now().Format("2006-01-02"),
 	}
 	resp, err := requests.Get(appdata.Env["ALGO_ANALYSIS_ADDRESS"]+"tradesignals/", p)
-	// resp, err := requests.Get("http://localhost:5000/tradesignals/", p)
-
-	println(resp, resp)
 
 	if err != nil {
 		srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", err.Error())
@@ -30,16 +28,26 @@ func SignalAnalyzer(tr *appdata.TradeSignal, mode string) bool {
 
 	if resp.R.StatusCode == http.StatusOK {
 
-		apiSig := appdata.ApiSignal{}
+		var apiSig []appdata.ApiSignal
 
-		json.Unmarshal([]byte(resp.Text()), &apiSig)
-		if apiSig.Status == "signal-processed" { // register only if processed correctly
-			tr.Dir = apiSig.Dir
-			tr.Entry = apiSig.Entry
-			tr.Stoploss = apiSig.Stoploss
+		// fmt.Println(resp.Text())
+		err := json.Unmarshal([]byte(resp.Text()), &apiSig)
+		if err != nil {
+			srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", err.Error())
+			return false
+		}
+		// check if signal processed for the same as requested
+		if apiSig[0].Status == "signal-processed" &&
+			apiSig[0].Instr == tr.Instr &&
+			apiSig[0].Strategy == tr.Strategy { // register only if processed correctly
+
+			tr.Dir = apiSig[0].Dir
+			tr.Entry = apiSig[0].Entry
+			tr.Stoploss = apiSig[0].Stoploss
+			tr.Target = apiSig[0].Target
 			return true
 		} else {
-			srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", apiSig.Status)
+			srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", apiSig[0].Status)
 			return false
 		}
 	} else {

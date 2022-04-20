@@ -118,43 +118,12 @@ func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	// if sigData != "" { // signal found, parse json
-	// 	var apiSignal []*appdata.ApiSignal
-	// 	err := json.Unmarshal([]byte(sigData), &apiSignal)
-	// 	if err != nil {
-	// 		srv.TradesLogger.Printf("apiSignal - API JSON data parse error: %v\n", err)
-	// 	}
-	// 	tr.Dir = apiSignal[0].Dir
-	// 	tr.Entry = apiSignal[0].Entry
-	// 	tr.Target = apiSignal[0].Target
-	// 	tr.Stoploss = apiSignal[0].Stoploss
-	// }
-
 	tblName := appdata.Env["DB_TBL_PREFIX_USER_ID"] +
 		appdata.Env["DB_TBL_ORDER_BOOK"] +
 		appdata.Env["DB_TEST_PREFIX"]
 
-	var sqlquery string
-	sqlCreateTradeSig := `INSERT INTO ` + tblName + `(
-		date,
-		instr,
-		strategy,
-		status,
-		instr_id,
-		dir,
-		entry,
-		target,
-		stoploss,
-		order_id,
-		order_trade_entry,
-		order_trade_exit,
-		order_simulation,
-		exit_reason,
-		post_analysis)
-		VALUES
-		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`
-
-	sqlUpdateTradeSig := `INSERT INTO ` + tblName + `(
+	if tr.Id == 0 {
+		sqlCreateTradeSig := `INSERT INTO ` + tblName + `(
 			date,
 			instr,
 			strategy,
@@ -173,32 +142,67 @@ func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 			VALUES
 			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`
 
-	if tr.Id == 0 {
-		sqlquery = sqlCreateTradeSig
+		_, err := myCon.Exec(ctx, sqlCreateTradeSig,
+			tr.Date,
+			tr.Instr,
+			tr.Strategy,
+			tr.Status,
+			tr.Instr_id,
+			tr.Dir,
+			tr.Entry,
+			tr.Target,
+			tr.Stoploss,
+			tr.Order_id,
+			tr.Order_trade_entry,
+			tr.Order_trade_exit,
+			tr.Order_simulation,
+			tr.Exit_reason,
+			tr.Post_analysis,
+		)
+		if err != nil {
+			srv.ErrorLogger.Printf("Unable to insert strategy-symbol in DB: %v\n", err)
+		}
 	} else {
-		sqlquery = sqlUpdateTradeSig
-	}
 
-	_, err := myCon.Exec(ctx, sqlquery,
-		tr.Date,
-		tr.Instr,
-		tr.Strategy,
-		tr.Status,
-		tr.Instr_id,
-		tr.Dir,
-		tr.Entry,
-		tr.Target,
-		tr.Stoploss,
-		tr.Order_id,
-		tr.Order_trade_entry,
-		tr.Order_trade_exit,
-		tr.Order_simulation,
-		tr.Exit_reason,
-		tr.Post_analysis,
-	)
+		sqlUpdateTradeSig := ` UPDATE ` + tblName + ` SET 
+			date = $1,
+			instr = $2,
+			strategy = $3,
+			status = $4,
+			instr_id = $5,
+			dir = $6,
+			entry = $7,
+			target = $8,
+			stoploss = $9,
+			order_id = $10,
+			order_trade_entry = $11,
+			order_trade_exit = $12,
+			order_simulation = $13,
+			exit_reason = $14,
+			post_analysis = $15
+			WHERE id = $16;`
 
-	if err != nil {
-		srv.ErrorLogger.Printf("Unable to insert strategy-symbol in DB: %v\n", err)
+		_, err := myCon.Exec(ctx, sqlUpdateTradeSig,
+			tr.Date,
+			tr.Instr,
+			tr.Strategy,
+			tr.Status,
+			tr.Instr_id,
+			tr.Dir,
+			tr.Entry,
+			tr.Target,
+			tr.Stoploss,
+			tr.Order_id,
+			tr.Order_trade_entry,
+			tr.Order_trade_exit,
+			tr.Order_simulation,
+			tr.Exit_reason,
+			tr.Post_analysis,
+			tr.Id,
+		)
+		if err != nil {
+			srv.ErrorLogger.Printf("Unable to insert strategy-symbol in DB: %v\n", err)
+		}
 	}
 
 	sqquery := `

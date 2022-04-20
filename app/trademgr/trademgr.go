@@ -87,6 +87,7 @@ func operateSymbol(tradeSymbol string, tradeStrategies appdata.Strategies, trId 
 	if trId == 0 {
 		tr.Status = "Initiate"
 	} else {
+		tr.Id = trId
 		tr.Status = "Resume"
 	}
 
@@ -110,7 +111,6 @@ tradingloop:
 		// ------------------------------------------------------------------------ Resume previously registered symbol
 		case "Resume":
 			loadValues(&tr)
-			db.StoreTradeSignalInDb(tr)
 
 		// ------------------------------------------------------------------------ trade entry check (Scan Signals)
 		case "AwaitSignal":
@@ -198,12 +198,12 @@ func loadValues(tr *appdata.TradeSignal) {
 func tradeEnterSignalCheck(symbol string, tradeStrategies appdata.Strategies, tr *appdata.TradeSignal) bool {
 
 	if tradeStrategies.Trigger_time.Hour() == 0 {
-		return apiclient.SignalAnalyzer(tr, "-entry")
+		return apiclient.SignalAnalyzer(tr, "-entr")
 
 	} else if time.Now().Hour() == tradeStrategies.Trigger_time.Hour() {
 		if time.Now().Minute() == tradeStrategies.Trigger_time.Minute() { // trigger time reached
 
-			return apiclient.SignalAnalyzer(tr, "-entry")
+			return apiclient.SignalAnalyzer(tr, "-entr")
 		}
 	}
 	return false
