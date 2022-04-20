@@ -5,6 +5,38 @@ import (
 )
 
 // Global variables
+const (
+	InfoColorFloat = "\033[1;34m%.0f\033[0m\t"
+	InfoColorUint  = "\033[1;34m%d\033[0m\t"
+	InfoColor      = "\033[1;34m%20s\033[0m\t"
+	SuccessColor   = "\033[1;32m%20s\033[0m\t"
+	ErrorColor     = "\033[1;31m%s\033[0m"
+	DebugColor     = "\033[1;35m%s\033[0m"
+
+	ColorSuccess = "\033[37m\033[42m"
+	ColorInfo    = "\033[36m\033[46m"
+	ColorReset   = "\033[0m"
+	ColorRed     = "\033[31m"
+	ColorGreen   = "\033[32m"
+	ColorYellow  = "\033[33m"
+	ColorBlue    = "\033[34m"
+	ColorPurple  = "\033[35m"
+	ColorCyan    = "\033[36m"
+	ColorWhite   = "\033[37m\033[47m"
+)
+
+// Foreground text colors
+// const (
+// 	FgBlack Attribute = iota + 30
+// 	FgRed
+// 	FgGreen
+// 	FgYellow
+// 	FgBlue
+// 	FgMagenta
+// 	FgCyan
+// 	FgWhite
+// )
+
 var (
 	ChNseTicks chan TickData
 	ChStkTick  chan TickData
@@ -85,22 +117,22 @@ type ApiSignal struct {
 }
 
 type TradeSignal struct {
-	Id                 uint16    // 1
-	Date               time.Time // 2
-	Instr              string    // 3
-	Strategy           string    // 4
-	Status             string    // 5
-	Instr_id           int       // 6
-	Dir                string    // 6
-	Entry              float64   //
-	Target             float64   //
-	Stoploss           float64   //
-	Order_id           uint64    //
-	Order_trades_entry string
-	Order_trades_exit  string
-	Order_simulation   string
-	Exit_reason        string
-	Post_analysis      string
+	Id                uint16    // 1
+	Date              time.Time // 2
+	Instr             string    // 3
+	Strategy          string    // 4
+	Status            string    // 5
+	Instr_id          int       // 6
+	Dir               string    // 6
+	Entry             float64   //
+	Target            float64   //
+	Stoploss          float64   //
+	Order_id          uint64    //
+	Order_trade_entry string
+	Order_trade_exit  string
+	Order_simulation  string
+	Exit_reason       string
+	Post_analysis     string
 }
 
 // Env variables required

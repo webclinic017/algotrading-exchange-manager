@@ -6,6 +6,7 @@ import (
 	"algo-ex-mgr/app/db"
 	"algo-ex-mgr/app/kite"
 	"algo-ex-mgr/app/srv"
+	"algo-ex-mgr/app/trademgr"
 	"os"
 	"time"
 
@@ -63,7 +64,7 @@ func startMainSession() {
 			if kiteOk {
 				kite.TickerInitialize(appdata.Env["ZERODHA_API_KEY"], os.Getenv("kiteaccessToken"))
 
-				// go trademgr.StartTrader() // TODO: what condition to apply?
+				go trademgr.StartTrader(true) // TODO: what condition to apply?
 				db.InitTickStorage()
 				// start watchdog to recover from connections issues
 			}
@@ -83,14 +84,6 @@ func checkAPIs() {
 	srv.InfoLogger.Print(
 		"\n\n\t-----------------------------",
 		"------------------------------------ Check API's --- MARKET OFF-TIME\n\n")
-
-	// go trademgr.StartTrader()
-	// trademgr.StopTrader()
-
-	// startMainSession()
-	// time.Sleep(time.Second * 5)
-	// stopMainSession()
-	// os.Exit(0)
 
 	envOk = srv.LoadEnvVariables("./userSettings.env")
 	dbOk = db.DbInit()

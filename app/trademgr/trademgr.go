@@ -8,7 +8,6 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/db"
 	"algo-ex-mgr/app/srv"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -16,7 +15,11 @@ import (
 
 // tradeStrategies - list of all strategies to be executed. Read once from db at start of day
 const (
-	tradeOperatorSleepTime = time.Second * 10
+	tradeOperatorSleepTime = time.Second * 2
+)
+
+var (
+	TerminateTradeMgr bool = false
 )
 
 // Scan DB for all strategies with strategy_en = 1. Each funtion is executed in a separate thread and remains active till the trade is complete.
@@ -34,7 +37,7 @@ func StartTrader(daystart bool) {
 	tradeStrategies := db.ReadStrategiesFromDb()
 
 	// --------------------------------- Read if trades already in progress
-	trSig := db.ReadAllTradeSignalFromDb()
+	trSig := db.ReadAllTradeSignalFromDb("!=", "Completed")
 	for eachSymbol := range trSig {
 		for eachStrategy := range tradeStrategies {
 			if trSig[eachSymbol].Strategy == tradeStrategies[eachStrategy].Strategy {
@@ -64,8 +67,6 @@ func StartTrader(daystart bool) {
 	}
 	// --------------------------------- Await till all trades are completed
 	wgTrademgr.Wait()
-	os.Exit(0)
-
 }
 
 // to stop trademanager and exit all positions
@@ -80,7 +81,6 @@ func StopTrader() {
 func operateSymbol(tradeSymbol string, tradeStrategies appdata.Strategies, trId uint16, wgTrademgr sync.WaitGroup) {
 	defer wgTrademgr.Done()
 
-	var orderBookId uint16
 	var tr appdata.TradeSignal
 	var result bool
 
@@ -100,8 +100,8 @@ tradingloop:
 			tr.Strategy = tradeStrategies.Strategy
 			tr.Instr = tradeSymbol
 			tr.Status = "AwaitSignal"
-			tr.Order_trades_entry = "{}"
-			tr.Order_trades_exit = "{}"
+			tr.Order_trade_entry = "{}"
+			tr.Order_trade_exit = "{}"
 			tr.Order_simulation = "{}"
 			tr.Post_analysis = "{}"
 			tr.Status = "AwaitSignal"
@@ -109,7 +109,7 @@ tradingloop:
 
 		// ------------------------------------------------------------------------ Resume previously registered symbol
 		case "Resume":
-			loadValues(&tr, orderBookId)
+			loadValues(&tr)
 			db.StoreTradeSignalInDb(tr)
 
 		// ------------------------------------------------------------------------ trade entry check (Scan Signals)
@@ -155,7 +155,10 @@ tradingloop:
 		}
 
 		time.Sleep(tradeOperatorSleepTime)
-		loadValues(&tr, orderBookId)
+		loadValues(&tr)
+		if TerminateTradeMgr {
+			tr.Status = "Terminate"
+		}
 		// TODO: check if exit is requested
 	}
 }
@@ -176,16 +179,16 @@ func checkTriggerDays(tradeStrategies appdata.Strategies) bool {
 	return false
 }
 
-func loadValues(tr *appdata.TradeSignal, orderBookId uint16) {
-	status, trtemp := db.ReadTradeSignalFromDb(orderBookId)
+func loadValues(tr *appdata.TradeSignal) {
+	status, trtemp := db.ReadTradeSignalFromDb(tr.Id)
 	if status {
 		tr.Id = trtemp.Id
 		tr.Date = trtemp.Date
 		tr.Strategy = trtemp.Strategy
 		tr.Instr = trtemp.Instr
 		tr.Status = trtemp.Status
-		tr.Order_trades_entry = trtemp.Order_trades_entry
-		tr.Order_trades_exit = trtemp.Order_trades_exit
+		tr.Order_trade_entry = trtemp.Order_trade_entry
+		tr.Order_trade_exit = trtemp.Order_trade_exit
 		tr.Order_simulation = trtemp.Order_simulation
 		tr.Post_analysis = trtemp.Post_analysis
 	}

@@ -59,7 +59,7 @@ var DB_CREATE_TABLE_ORDER_BOOK = `CREATE TABLE $1 (
 									target DOUBLE PRECISION,
 									stoploss DOUBLE PRECISION,
 									order_id INTEGER,
-									order_trades_entry JSON,
+									order_trade_entry JSON,
 									order_trade_exit JSON,
 									order_simulation JSON,
 									exit_reason TEXT  DEFAULT 'NA',

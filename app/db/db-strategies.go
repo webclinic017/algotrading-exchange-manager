@@ -16,7 +16,10 @@ func ReadStrategiesFromDb() []appdata.Strategies {
 
 	var ts []appdata.Strategies
 
-	err := pgxscan.Select(ctx, dbPool, &ts, `SELECT * FROM user_strategies where enabled = 'true'`)
+	tblName := appdata.Env["DB_TBL_PREFIX_USER_ID"] + appdata.Env["DB_TBL_USER_STRATEGIES"] + appdata.Env["DB_TEST_PREFIX"]
+	sqlquery := "SELECT * FROM " + tblName + " WHERE enabled = 'true'"
+
+	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
 	if err != nil {
 		srv.ErrorLogger.Printf("user_strategies read error %v\n", err)

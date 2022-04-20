@@ -101,3 +101,15 @@ func DbInit() bool {
 func CloseDb() {
 	dbPool.Close()
 }
+
+func DbRawExec(query string) {
+	ctx := context.Background()
+	myCon, err := dbPool.Acquire(ctx)
+	defer myCon.Release()
+	if err != nil {
+		srv.ErrorLogger.Printf("Could not acquire Context, too many operations?: %v\n", err)
+		return
+	}
+
+	myCon.Exec(ctx, query)
+}

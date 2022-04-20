@@ -20,7 +20,11 @@ func ReadTradeSignalFromDb(orderBookId uint16) (status bool, tr *appdata.TradeSi
 
 	var ts []*appdata.TradeSignal
 
-	sqlquery := fmt.Sprintf("SELECT * FROM order_trades WHERE id = %d", orderBookId)
+	tblName := appdata.Env["DB_TBL_PREFIX_USER_ID"] +
+		appdata.Env["DB_TBL_ORDER_BOOK"] +
+		appdata.Env["DB_TEST_PREFIX"]
+
+	sqlquery := fmt.Sprintf("SELECT * FROM "+tblName+" WHERE id = %d", orderBookId)
 
 	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
@@ -39,7 +43,7 @@ func ReadTradeSignalFromDb(orderBookId uint16) (status bool, tr *appdata.TradeSi
 
 }
 
-func ReadAllTradeSignalFromDb() []*appdata.TradeSignal {
+func ReadAllActiveTradeSignalFromDb() []*appdata.TradeSignal {
 
 	lock.Lock()
 	defer lock.Unlock()
@@ -50,7 +54,44 @@ func ReadAllTradeSignalFromDb() []*appdata.TradeSignal {
 
 	var ts []*appdata.TradeSignal
 
-	sqlquery := fmt.Sprintf("SELECT * FROM order_trades WHERE status != '%s'", "TradeCompleted")
+	tblName := appdata.Env["DB_TBL_PREFIX_USER_ID"] +
+		appdata.Env["DB_TBL_ORDER_BOOK"] +
+		appdata.Env["DB_TEST_PREFIX"]
+	sqlquery := fmt.Sprintf("SELECT * FROM "+tblName+" WHERE status ! = %d", "TradeCompleted")
+
+	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
+
+	if err != nil {
+		srv.ErrorLogger.Printf("order_trades read error %v\n", err)
+		return nil
+
+	}
+
+	if len(ts) == 0 {
+		srv.ErrorLogger.Printf("order_trades read error %v\n", err)
+		return nil
+	}
+
+	return ts
+
+}
+
+func ReadAllTradeSignalFromDb(condition string, status string) []*appdata.TradeSignal {
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	ctx := context.Background()
+	myCon, _ := dbPool.Acquire(ctx)
+	defer myCon.Release()
+
+	var ts []*appdata.TradeSignal
+
+	tblName := appdata.Env["DB_TBL_PREFIX_USER_ID"] +
+		appdata.Env["DB_TBL_ORDER_BOOK"] +
+		appdata.Env["DB_TEST_PREFIX"]
+
+	sqlquery := fmt.Sprintf("SELECT * FROM " + tblName + " WHERE status " + condition + " '" + status + "'")
 
 	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
@@ -89,8 +130,12 @@ func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 	// 	tr.Stoploss = apiSignal[0].Stoploss
 	// }
 
+	tblName := appdata.Env["DB_TBL_PREFIX_USER_ID"] +
+		appdata.Env["DB_TBL_ORDER_BOOK"] +
+		appdata.Env["DB_TEST_PREFIX"]
+
 	var sqlquery string
-	sqlCreateTradeSig := `INSERT INTO order_trades (
+	sqlCreateTradeSig := `INSERT INTO ` + tblName + `(
 		date,
 		instr,
 		strategy,
@@ -101,7 +146,7 @@ func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 		target,
 		stoploss,
 		order_id,
-		order_trades_entry,
+		order_trade_entry,
 		order_trade_exit,
 		order_simulation,
 		exit_reason,
@@ -109,7 +154,7 @@ func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 		VALUES
 		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);`
 
-	sqlUpdateTradeSig := `INSERT INTO order_trades (
+	sqlUpdateTradeSig := `INSERT INTO ` + tblName + `(
 			date,
 			instr,
 			strategy,
@@ -120,7 +165,7 @@ func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 			target,
 			stoploss,
 			order_id,
-			order_trades_entry,
+			order_trade_entry,
 			order_trade_exit,
 			order_simulation,
 			exit_reason,
@@ -145,8 +190,8 @@ func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 		tr.Target,
 		tr.Stoploss,
 		tr.Order_id,
-		tr.Order_trades_entry,
-		tr.Order_trades_exit,
+		tr.Order_trade_entry,
+		tr.Order_trade_exit,
 		tr.Order_simulation,
 		tr.Exit_reason,
 		tr.Post_analysis,
@@ -156,15 +201,17 @@ func StoreTradeSignalInDb(tr appdata.TradeSignal) uint16 {
 		srv.ErrorLogger.Printf("Unable to insert strategy-symbol in DB: %v\n", err)
 	}
 
-	rows, err := myCon.Query(ctx, `
-		SELECT id 
-		FROM order_trades 
-		WHERE  (
-				instr = $1 
-			AND 
-				date = $2
-			AND 
-				strategy = $3)`,
+	sqquery := `
+SELECT id 
+FROM ` + tblName + ` 
+WHERE  (
+		instr = $1 
+	AND 
+		date = $2
+	AND 
+		strategy = $3)`
+
+	rows, err := myCon.Query(ctx, sqquery,
 		tr.Instr,
 		tr.Date,
 		tr.Strategy)

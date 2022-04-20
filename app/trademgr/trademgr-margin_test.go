@@ -16,10 +16,6 @@ import (
 )
 
 const (
-	InfoColorFloat = "\033[1;34m%.0f\033[0m\t"
-	InfoColorUint  = "\033[1;34m%d\033[0m\t"
-	InfoColor      = "\033[1;34m%20s\033[0m\t"
-	ErrorColor     = "\033[1;31m%s\033[0m"
 	WinningRatePer = 0
 	MaxBudgetPer   = 0
 	LimitAmount    = 0
@@ -136,17 +132,17 @@ func TestCalOrderMargin(t *testing.T) {
 		actual := getOrderMargin(order, ts, test.argDate)
 
 		if len(actual) == 0 {
-			t.Errorf(ErrorColor, "\nderiveFuturesName() No data fetched - check dates/levels/Server Auth code. This UT is live with server\n")
+			t.Errorf(appdata.ErrorColor, "\nderiveFuturesName() No data fetched - check dates/levels/Server Auth code. This UT is live with server\n")
 		} else if actual[0].Total == 0 {
-			t.Errorf(ErrorColor, "\nderiveFuturesName() No margin calculated - check dates/levels/Server Auth code. This UT is live with server\n")
+			t.Errorf(appdata.ErrorColor, "\nderiveFuturesName() No margin calculated - check dates/levels/Server Auth code. This UT is live with server\n")
 		} else {
 			// print result for manual check
 
 			fmt.Println()
-			fmt.Printf(InfoColor, order.Instr)
-			fmt.Printf(InfoColor, test.argOrderRoute)
-			fmt.Printf(InfoColor, actual[0].TradingSymbol)
-			fmt.Printf(InfoColorFloat, math.Round(actual[0].Total))
+			fmt.Printf(appdata.InfoColor, order.Instr)
+			fmt.Printf(appdata.InfoColor, test.argOrderRoute)
+			fmt.Printf(appdata.InfoColor, actual[0].TradingSymbol)
+			fmt.Printf(appdata.InfoColorFloat, math.Round(actual[0].Total))
 		}
 
 	}

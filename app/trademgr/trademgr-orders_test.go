@@ -64,7 +64,7 @@ func TestPlaceOrder(t *testing.T) {
 	var order appdata.TradeSignal
 	var ts appdata.Strategies
 
-	fmt.Printf(ErrorColor, warCheck)
+	fmt.Printf(appdata.ErrorColor, warCheck)
 	for _, test := range ExecuteOrderTestArray {
 
 		ts.Strategy = test.argStrategy
@@ -87,12 +87,12 @@ func TestPlaceOrder(t *testing.T) {
 		orderID := executeOrder(order, ts, time.Now(), 1)
 
 		if orderID == 0 && test.orderPlaced == true {
-			t.Errorf(ErrorColor, "\nderiveFuturesName() No data fetched - check dates and levels are correct. This UT is live with server\n")
+			t.Errorf(appdata.ErrorColor, "\nderiveFuturesName() No data fetched - check dates and levels are correct. This UT is live with server\n")
 		} else {
 			// print result for manual check
-			fmt.Printf(InfoColor, order.Instr)
-			fmt.Printf(InfoColor, test.argOrderRoute)
-			fmt.Printf(InfoColorUint, orderID)
+			fmt.Printf(appdata.InfoColor, order.Instr)
+			fmt.Printf(appdata.InfoColor, test.argOrderRoute)
+			fmt.Printf(appdata.InfoColorUint, orderID)
 			fmt.Println()
 		}
 
@@ -194,7 +194,7 @@ func TestEnterTrade(t *testing.T) {
 	var order appdata.TradeSignal
 	var ts appdata.Strategies
 
-	fmt.Printf(ErrorColor, warCheck)
+	fmt.Printf(appdata.ErrorColor, warCheck)
 	for _, test := range EnterTradeTestArray {
 
 		ts.Strategy = test.argStrategy
@@ -217,14 +217,14 @@ func TestEnterTrade(t *testing.T) {
 
 		// expected := test.expected
 
-		tradeEnter(order, ts)
+		// tradeEnter(order, ts)
 
 		// if orderID == 0 && test.orderPlaced == true {
 		// 	t.Errorf(ErrorColor, "\nderiveFuturesName() No data fetched - check dates and levels are correct. This UT is live with server\n")
 		// } else {
 		// print result for manual check
-		fmt.Printf(InfoColor, order.Instr)
-		fmt.Printf(InfoColor, test.argOrderRoute)
+		fmt.Printf(appdata.InfoColor, order.Instr)
+		fmt.Printf(appdata.InfoColor, test.argOrderRoute)
 		// fmt.Printf(InfoColorUint, orderID)
 		fmt.Println()
 		// }
