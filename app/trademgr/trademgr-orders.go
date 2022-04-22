@@ -21,12 +21,16 @@ func tradeEnter(order *appdata.TradeSignal, ts appdata.Strategies) bool {
 
 	tradeQty := determineOrderSize(userMargin, orderMargin[0].Total,
 		ts.CtrlParam.Percentages.WinningRate, ts.CtrlParam.Percentages.MaxBudget,
-		ts.CtrlParam.TradeSettings.LimitAmount)
+		ts.CtrlParam.Trade_Setting.LimitAmount)
 
 	orderId := executeOrder(*order, ts, entryTime, tradeQty)
 	TradesList := kite.FetchOrderTrades(orderId)
 
 	srv.TradesLogger.Print("Trade executed: ", TradesList)
+
+	order.Order_id = orderId
+
+	return orderId != 0
 
 	// println("Order Placed : ", orderId)
 
@@ -69,8 +73,8 @@ func executeOrder(order appdata.TradeSignal, ts appdata.Strategies, selDate time
 	var orderParam kiteconnect.OrderParams
 
 	orderParam.Tag = ts.Strategy
-	orderParam.Product = ts.CtrlParam.KiteSettings.Products
-	orderParam.Validity = ts.CtrlParam.KiteSettings.Validities
+	orderParam.Product = ts.CtrlParam.Kite_Setting.Products
+	orderParam.Validity = ts.CtrlParam.Kite_Setting.Validities
 
 	if strings.ToLower(order.Dir) == "bullish" {
 		orderParam.TransactionType = "BUY"
@@ -78,7 +82,7 @@ func executeOrder(order appdata.TradeSignal, ts appdata.Strategies, selDate time
 		orderParam.TransactionType = "SELL"
 	}
 
-	switch ts.CtrlParam.TradeSettings.OrderRoute {
+	switch ts.CtrlParam.Trade_Setting.OrderRoute {
 
 	default:
 		fallthrough
@@ -86,7 +90,7 @@ func executeOrder(order appdata.TradeSignal, ts appdata.Strategies, selDate time
 	case "equity":
 		orderParam.Price = order.Entry
 		orderParam.Exchange = kiteconnect.ExchangeNSE
-		orderParam.OrderType = ts.CtrlParam.KiteSettings.OrderType
+		orderParam.OrderType = ts.CtrlParam.Kite_Setting.OrderType
 
 	case "option-buy":
 		orderParam.TransactionType = "BUY"
@@ -101,14 +105,14 @@ func executeOrder(order appdata.TradeSignal, ts appdata.Strategies, selDate time
 	case "futures":
 		orderParam.Price = order.Entry
 		orderParam.Exchange = kiteconnect.ExchangeNFO
-		orderParam.OrderType = ts.CtrlParam.KiteSettings.OrderType
+		orderParam.OrderType = ts.CtrlParam.Kite_Setting.OrderType
 
 	}
 	var symbolMinQty float64
 	orderParam.Tradingsymbol, symbolMinQty = deriveInstrumentsName(order, ts, time.Now())
 	orderParam.Quantity = int(symbolMinQty) * qty
 
-	return kite.ExecOrder(orderParam, ts.CtrlParam.KiteSettings.Varieties)
+	return kite.ExecOrder(orderParam, ts.CtrlParam.Kite_Setting.Varieties)
 
 }
 

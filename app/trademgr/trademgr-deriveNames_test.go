@@ -78,11 +78,11 @@ func TestDeriveInstrumentsName(t *testing.T) {
 		order.Instr = test.argInstr
 		order.Entry = test.argStrikePrice
 		order.Dir = test.argDirection
-		ts.CtrlParam.TradeSettings.OptionLevel = test.argOptionLevel
-		ts.CtrlParam.TradeSettings.FuturesExpiryMonth = test.argMonthSel
-		ts.CtrlParam.TradeSettings.SkipExipryWeekFutures = test.argSkipExpWk
-		ts.CtrlParam.TradeSettings.OptionExpiryWeek = test.argWeekSel
-		ts.CtrlParam.TradeSettings.OrderRoute = test.argOrderRoute
+		ts.CtrlParam.Trade_Setting.OptionLevel = test.argOptionLevel
+		ts.CtrlParam.Trade_Setting.FuturesExpiryMonth = test.argMonthSel
+		ts.CtrlParam.Trade_Setting.SkipExipryWeekFutures = test.argSkipExpWk
+		ts.CtrlParam.Trade_Setting.OptionExpiryWeek = test.argWeekSel
+		ts.CtrlParam.Trade_Setting.OrderRoute = test.argOrderRoute
 		expected := test.expected
 
 		actual, _ := deriveInstrumentsName(order, ts, date)

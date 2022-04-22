@@ -1,6 +1,7 @@
 package db
 
 import (
+	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"context"
 	"strconv"
@@ -130,8 +131,12 @@ func FetchInstrData(instrument string, strikelevel uint64, opdepth int, instrtyp
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
+	tblName := appdata.Env["DB_TBL_PREFIX_USER_ID"] +
+		appdata.Env["DB_TBL_USER_SYMBOLS"] +
+		appdata.Env["DB_TEST_PREFIX"]
+
 	sqlQueryOptn := `SELECT tradingsymbol, lot_size
-					FROM user_symbols ts, tick_instr i
+					FROM ` + tblName + ` ts, ticks_instr i
 					WHERE 
 							i.exchange = 'NFO'
 						and
@@ -153,7 +158,7 @@ func FetchInstrData(instrument string, strikelevel uint64, opdepth int, instrtyp
 					LIMIT 10;`
 
 	sqlQueryEQ := `SELECT tradingsymbol, lot_size
-					FROM user_symbols ts, tick_instr i
+					FROM ` + tblName + ` ts, ticks_instr i
 					WHERE 
 						ts.symbol = i.tradingsymbol 
 					and 
@@ -165,7 +170,7 @@ func FetchInstrData(instrument string, strikelevel uint64, opdepth int, instrtyp
 					LIMIT 10;`
 
 	sqlQueryFUT := `SELECT tradingsymbol, lot_size
-					FROM user_symbols ts, tick_instr i
+					FROM ` + tblName + ` ts, ticks_instr i
 					WHERE 
 							ts.symbol = i.name 
 						and 

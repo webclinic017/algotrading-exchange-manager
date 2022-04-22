@@ -24,15 +24,15 @@ func getOrderMargin(order appdata.TradeSignal, ts appdata.Strategies, tm time.Ti
 	marginParam.OrderParams[0].Price = 0
 	marginParam.OrderParams[0].TriggerPrice = 0
 	// specific params
-	marginParam.OrderParams[0].Variety = ts.CtrlParam.KiteSettings.Varieties
-	marginParam.OrderParams[0].Product = ts.CtrlParam.KiteSettings.Products
+	marginParam.OrderParams[0].Variety = ts.CtrlParam.Kite_Setting.Varieties
+	marginParam.OrderParams[0].Product = ts.CtrlParam.Kite_Setting.Products
 	if strings.ToLower(order.Dir) == "bullish" {
 		marginParam.OrderParams[0].TransactionType = "BUY"
 	} else {
 		marginParam.OrderParams[0].TransactionType = "SELL"
 	}
 
-	switch ts.CtrlParam.TradeSettings.OrderRoute {
+	switch ts.CtrlParam.Trade_Setting.OrderRoute {
 
 	default:
 		fallthrough

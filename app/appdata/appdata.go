@@ -55,43 +55,43 @@ type TickData struct {
 	OpenInterest    uint32
 }
 
-type Percentage struct {
-	Target      float64 // "target": 1,
-	SL          float64 // "sl": 1,
-	DeepSL      float64 // "deepsl": 1
-	MaxBudget   float64 // "limit_budget": 50%,
-	WinningRate float64 // "winning_rate": 80%,
+type Percentage_S struct {
+	Target      float64 `json:"Target"`      // "target": 1,
+	SL          float64 `json:"SL"`          // "sl": 1,
+	DeepSL      float64 `json:"DeepSL"`      // "deepsl": 1
+	MaxBudget   float64 `json:"MaxBudget"`   // "limit_budget": 50%,
+	WinningRate float64 `json:"WinningRate"` // "winning_rate": 80%,
 }
 
-type TargetControls struct {
-	Trail_target_en         bool      // 	"trail_target_en": true,
-	Position_reversal_en    bool      // 	"position_reversal_en": true,
-	Delayed_stoploss_min    time.Time // 	"delayed_stoploss_min": "00:30:00",
-	Stall_detect_period_min time.Time // 	"stall_detect_period_min": "00:30:00"
+type TargetControls_S struct {
+	Trail_target_en         bool      `json:"Trail_target_en"`         // 	"trail_target_en": true,
+	Position_reversal_en    bool      `json:"Position_reversal_en"`    // 	"position_reversal_en": true,
+	Delayed_stoploss_min    time.Time `json:"Delayed_stoploss_min"`    // 	"delayed_stoploss_min": "00:30:00",
+	Stall_detect_period_min time.Time `json:"Stall_detect_period_min"` // 	"stall_detect_period_min": "00:30:00"
 }
 
-type Kite_Setting struct {
-	Products     string
-	Varieties    string
-	OrderType    string
-	Validities   string
-	PositionType string
+type Kite_Setting_S struct {
+	Products     string `json:"Products"`
+	Varieties    string `json:"Varieties"`
+	OrderType    string `json:"OrderType"`
+	Validities   string `json:"Validities"`
+	PositionType string `json:"PositionType"`
 }
 
-type Trade_setting struct {
-	OrderRoute            string
-	OptionLevel           int
-	OptionExpiryWeek      int
-	FuturesExpiryMonth    int
-	SkipExipryWeekFutures bool
-	LimitAmount           float64
+type Trade_setting_S struct {
+	OrderRoute            string  `json:"OrderRoute"`
+	OptionLevel           int     `json:"OptionLevel"`
+	OptionExpiryWeek      int     `json:"OptionExpiryWeek"`
+	FuturesExpiryMonth    int     `json:"FuturesExpiryMonth"`
+	SkipExipryWeekFutures bool    `json:"SkipExipryWeekFutures"`
+	LimitAmount           float64 `json:"LimitAmount"`
 }
 
 type ControlParams struct {
-	Percentages     Percentage
-	Target_Controls TargetControls
-	KiteSettings    Kite_Setting
-	TradeSettings   Trade_setting
+	Percentages     Percentage_S
+	Target_Controls TargetControls_S
+	Kite_Setting    Kite_Setting_S
+	Trade_Setting   Trade_setting_S
 }
 
 type Strategies struct {

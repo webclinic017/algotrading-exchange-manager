@@ -3,6 +3,7 @@ package trademgr
 import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/db"
+	"algo-ex-mgr/app/kite"
 	"algo-ex-mgr/app/srv"
 	"fmt"
 	"os"
@@ -16,13 +17,13 @@ var startTrader_TblOdrbook_deleteAll = `DELETE FROM public.paragvb_order_book_te
 var startTrader_TblStrategies_deleteAll = `DELETE FROM public.paragvb_strategies_test;`
 
 var startTrader_TblStrategies_setup = `INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time,trigger_days,cdl_size,instruments,controls) VALUES
-('S001-ORB-001',true,'IntraDay_DNP','00:00:00','Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',1,'CONTINOUS_TT','{
+('S001-ORB-001',true,'IntraDay_DNP','00:00:00','Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',1,'ASHOKLEY','{
 "percentages": {
-"target": 1,
-"sl": 2,
-"deepsl": 3,
-"maxBudget": 50,
-"winningRate":80
+"target": 11,
+"sl": 21,
+"deepsl": 31,
+"maxBudget": 51,
+"winningRate":81
 },
 "target_controls": {
 "trail_target_en": false,
@@ -38,7 +39,7 @@ var startTrader_TblStrategies_setup = `INSERT INTO public.paragvb_strategies_tes
 "PositionType": "day"
 },
 "trade_setting": {
-"OrderRoute": "option-buy",
+"OrderRoute": "equity",
 "OptionLevel":-1,
 "OptionExpiryWeek": 0,
 "FuturesExpiryMonth": 0,    
@@ -46,13 +47,13 @@ var startTrader_TblStrategies_setup = `INSERT INTO public.paragvb_strategies_tes
 "LimitAmount": 30000
 }
 }'),
-('S001-ORB-002',true,'IntraDay_DNP','$TRIGGERTIME$','Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',1,'TIMETRIG_TT','{
+('S001-ORB-002',true,'IntraDay_DNP','$TRIGGERTIME$','Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',1,'ASHOKLEY','{
 "percentages": {
-"target": 1,
-"sl": 2,
-"deepsl": 3,
-"maxBudget": 50,
-"winningRate":80
+"target": 12,
+"sl": 22,
+"deepsl": 32,
+"maxBudget": 52,
+"winningRate":82
 },
 "target_controls": {
 "trail_target_en": false,
@@ -68,7 +69,7 @@ var startTrader_TblStrategies_setup = `INSERT INTO public.paragvb_strategies_tes
 "PositionType": "day"
 },
 "trade_setting": {
-"OrderRoute": "option-buy",
+"OrderRoute": "equity",
 "OptionLevel":-1,
 "OptionExpiryWeek": 0,
 "FuturesExpiryMonth": 0,    
@@ -95,7 +96,7 @@ func TestStartTrader(t *testing.T) {
 	mydir, _ := os.Getwd()
 	srv.LoadEnvVariables(mydir + "/../../userSettings.env")
 	db.DbInit()
-	// kite.Init()
+	kite.Init()
 	t.Parallel()
 
 	test4(t, 4)
@@ -127,7 +128,7 @@ func test4(t *testing.T, testId int) {
 
 	go StartTrader(true)
 
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 10)
 	// check if trades are logged in order_book
 	trades := db.ReadAllTradeSignalFromDb("=", "PlaceOrders")
 	if len(trades) != 1 {
