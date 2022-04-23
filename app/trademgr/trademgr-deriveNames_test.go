@@ -68,8 +68,8 @@ func TestDeriveInstrumentsName(t *testing.T) {
 	srv.LoadEnvVariables(mydir + "/../../userSettings.env")
 	db.DbInit()
 
-	var order appdata.TradeSignal
-	var ts appdata.Strategies
+	var order appdata.OrderBook_S
+	var ts appdata.UserStrategies_S
 
 	for _, test := range DeriveInstrumentsNameTests {
 
@@ -78,11 +78,11 @@ func TestDeriveInstrumentsName(t *testing.T) {
 		order.Instr = test.argInstr
 		order.Entry = test.argStrikePrice
 		order.Dir = test.argDirection
-		ts.CtrlParam.Trade_Setting.OptionLevel = test.argOptionLevel
-		ts.CtrlParam.Trade_Setting.FuturesExpiryMonth = test.argMonthSel
-		ts.CtrlParam.Trade_Setting.SkipExipryWeekFutures = test.argSkipExpWk
-		ts.CtrlParam.Trade_Setting.OptionExpiryWeek = test.argWeekSel
-		ts.CtrlParam.Trade_Setting.OrderRoute = test.argOrderRoute
+		ts.CtrlData.Trade_Setting.OptionLevel = test.argOptionLevel
+		ts.CtrlData.Trade_Setting.FuturesExpiryMonth = test.argMonthSel
+		ts.CtrlData.Trade_Setting.SkipExipryWeekFutures = test.argSkipExpWk
+		ts.CtrlData.Trade_Setting.OptionExpiryWeek = test.argWeekSel
+		ts.CtrlData.Trade_Setting.OrderRoute = test.argOrderRoute
 		expected := test.expected
 
 		actual, _ := deriveInstrumentsName(order, ts, date)

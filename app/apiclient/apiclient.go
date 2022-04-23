@@ -11,7 +11,7 @@ import (
 )
 
 // todo: add multi symbol support in response? current hardcoded to first signal
-func SignalAnalyzer(tr *appdata.TradeSignal, mode string) bool {
+func SignalAnalyzer(tr *appdata.OrderBook_S, mode string) bool {
 
 	p := requests.Params{
 		"multisymbol": "false",
@@ -22,7 +22,7 @@ func SignalAnalyzer(tr *appdata.TradeSignal, mode string) bool {
 	resp, err := requests.Get(appdata.Env["ALGO_ANALYSIS_ADDRESS"]+"tradesignals/", p)
 
 	if err != nil {
-		srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", err.Error())
+		// srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", err.Error())
 		return false
 	}
 

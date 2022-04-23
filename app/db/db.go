@@ -5,6 +5,7 @@ import (
 	"algo-ex-mgr/app/srv"
 	"context"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -78,14 +79,14 @@ func DbInit() bool {
 		}
 
 		// 3. Check if 'ticker' table exists, if not CREATE it
-		if createTable(appdata.Env["DB_TBL_TICK_NSEFUT"]+appdata.Env["DB_TEST_PREFIX"], DB_CREATE_TABLE_TICKER) {
-			if createTable(appdata.Env["DB_TBL_TICK_NSESTK"]+appdata.Env["DB_TEST_PREFIX"], DB_CREATE_TABLE_TICKER) {
-				if createTable(appdata.Env["DB_TBL_PREFIX_USER_ID"]+appdata.Env["DB_TBL_USER_SYMBOLS"]+appdata.Env["DB_TEST_PREFIX"], DB_CREATE_TABLE_USER_SYMBOLS) {
-					if createTable(appdata.Env["DB_TBL_PREFIX_USER_ID"]+appdata.Env["DB_TBL_USER_SETTING"]+appdata.Env["DB_TEST_PREFIX"], DB_CREATE_TABLE_USER_SETTING) {
-						if createTable(appdata.Env["DB_TBL_PREFIX_USER_ID"]+appdata.Env["DB_TBL_USER_STRATEGIES"]+appdata.Env["DB_TEST_PREFIX"], DB_CREATE_TABLE_USER_STRATEGIES) {
-							if createTable(appdata.Env["DB_TBL_PREFIX_USER_ID"]+appdata.Env["DB_TBL_ORDER_BOOK"]+appdata.Env["DB_TEST_PREFIX"], DB_CREATE_TABLE_ORDER_BOOK) {
+		if createTable(appdata.Env["DB_TBL_TICK_NSEFUT"], DB_CREATE_TABLE_TICKER) {
+			if createTable(appdata.Env["DB_TBL_TICK_NSESTK"], DB_CREATE_TABLE_TICKER) {
+				if createTable(appdata.Env["DB_TBL_USER_SYMBOLS"], DB_CREATE_TABLE_USER_SYMBOLS) {
+					if createTable(appdata.Env["DB_TBL_USER_SETTING"], DB_CREATE_TABLE_USER_SETTING) {
+						if createTable(appdata.Env["DB_TBL_USER_STRATEGIES"], DB_CREATE_TABLE_USER_STRATEGIES) {
+							if createTable(appdata.Env["DB_TBL_ORDER_BOOK"], DB_CREATE_TABLE_ORDER_BOOK) {
 								// createViews()
-								setupDbCompression(appdata.Env["DB_TICK_TABLE_NSEFUT"] + appdata.Env["DB_TEST_PREFIX"])
+								setupDbCompression(appdata.Env["DB_TICK_TABLE_NSEFUT"])
 								srv.InfoLogger.Printf("DB checks completed\n")
 								return true
 							}
@@ -110,6 +111,29 @@ func DbRawExec(query string) {
 		srv.ErrorLogger.Printf("Could not acquire Context, too many operations?: %v\n", err)
 		return
 	}
-
 	myCon.Exec(ctx, query)
+}
+
+func createTable(tblName string, sqlquery string) bool {
+	ctx := context.Background()
+	myCon, _ := dbPool.Acquire(ctx)
+
+	var retVal string
+
+	query := "select table_name from information_schema.tables WHERE table_name = '" + tblName + "';"
+	myCon.QueryRow(ctx, query).Scan(&retVal)
+
+	if len(retVal) == 0 {
+		srv.InfoLogger.Printf("%s Does not exist, creating now!\n", tblName)
+		query := strings.ReplaceAll(sqlquery, "$1", tblName)
+
+		_, err := myCon.Exec(ctx, query)
+		if err != nil {
+			srv.WarningLogger.Printf("Failed to CREATE %s table : %v\n", tblName, err)
+			myCon.Release()
+			return false
+		}
+	}
+	myCon.Release()
+	return true
 }

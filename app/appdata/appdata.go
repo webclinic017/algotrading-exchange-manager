@@ -79,6 +79,7 @@ type Kite_Setting_S struct {
 }
 
 type Trade_setting_S struct {
+	TradeSimulate         bool    `json:"tradeSimulate"`
 	OrderRoute            string  `json:"OrderRoute"`
 	OptionLevel           int     `json:"OptionLevel"`
 	OptionExpiryWeek      int     `json:"OptionExpiryWeek"`
@@ -87,14 +88,22 @@ type Trade_setting_S struct {
 	LimitAmount           float64 `json:"LimitAmount"`
 }
 
-type ControlParams struct {
+type ControlData_S struct {
 	Percentages     Percentage_S
 	Target_Controls TargetControls_S
 	Kite_Setting    Kite_Setting_S
 	Trade_Setting   Trade_setting_S
 }
 
-type Strategies struct {
+type OrderData_S struct {
+	QtyReq            float64 `json:"qty_req"`
+	QtyFilled         float64 `json:"qty_filled"`
+	UserExitRequested bool    `json:"user_exit_requested"`
+	AvgPriceEnter     float64 `json:"avg_price"`
+	AvgPriceExit      float64 `json:"avg_price_exit"`
+}
+
+type UserStrategies_S struct {
 	Strategy     string    // 0
 	Enabled      bool      // 1
 	Engine       string    // 2
@@ -103,11 +112,31 @@ type Strategies struct {
 	Cdl_size     int       // 6
 	Instruments  string    // 7
 	Controls     string
-	CtrlParam    ControlParams
+	CtrlData     ControlData_S
+}
+
+type OrderBook_S struct {
+	Id                 uint16    // 1
+	Date               time.Time // 2
+	Instr              string    // 3
+	Strategy           string    // 4
+	Status             string    // 5
+	Instr_id           int       // 6
+	Dir                string    // 6
+	Entry              float64   //
+	Target             float64   //
+	Stoploss           float64   //
+	Order_id           uint64    //
+	Order_info         string
+	Order_trades_entry string
+	Order_trades_exit  string
+	Exit_reason        string
+	Post_analysis      string
+	OrderData          OrderData_S
 }
 
 type ApiSignal struct {
-	Status   string    `json:"status"`
+	Status   string    `json:"stat us"`
 	Id       uint16    `json:"id"`
 	Date     time.Time `json:"date"`
 	Instr    string    `json:"instr"`
@@ -116,25 +145,6 @@ type ApiSignal struct {
 	Entry    float64   `json:"entry"`
 	Target   float64   `json:"target"`
 	Stoploss float64   `json:"stoploss"`
-}
-
-type TradeSignal struct {
-	Id                uint16    // 1
-	Date              time.Time // 2
-	Instr             string    // 3
-	Strategy          string    // 4
-	Status            string    // 5
-	Instr_id          int       // 6
-	Dir               string    // 6
-	Entry             float64   //
-	Target            float64   //
-	Stoploss          float64   //
-	Order_id          uint64    //
-	Order_trade_entry string
-	Order_trade_exit  string
-	Order_simulation  string
-	Exit_reason       string
-	Post_analysis     string
 }
 
 // Env variables required

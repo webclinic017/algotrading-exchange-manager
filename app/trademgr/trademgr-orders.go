@@ -4,6 +4,7 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/kite"
 	"algo-ex-mgr/app/srv"
+	"encoding/json"
 	"math"
 	"strings"
 	"time"
@@ -11,7 +12,33 @@ import (
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
-func tradeEnter(order *appdata.TradeSignal, ts appdata.Strategies) bool {
+func pendingOrder(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
+
+	tradesList := kite.FetchOrderTrades(order.Order_id)
+	var qtyFilled float64
+
+	for each := range tradesList {
+		qtyFilled = qtyFilled + tradesList[each].Quantity
+	}
+	order.OrderData.QtyFilled = qtyFilled
+	od, err := json.Marshal(tradesList)
+	if err != nil {
+		srv.TradesLogger.Println("Error in marshalling trades list: ", err.Error())
+		return false
+	}
+	order.Order_trades_entry = string(od)
+
+	if order.OrderData.QtyReq > order.OrderData.QtyFilled {
+		// TODO: modify limit price if order is still pending
+		qt := kite.GetLatestQuote(order.Instr)
+
+		return true
+	} else {
+		return false
+	}
+}
+
+func tradeEnter(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 
 	entryTime := time.Now()
 
@@ -19,35 +46,24 @@ func tradeEnter(order *appdata.TradeSignal, ts appdata.Strategies) bool {
 
 	orderMargin := getOrderMargin(*order, ts, entryTime)
 
-	tradeQty := determineOrderSize(userMargin, orderMargin[0].Total,
-		ts.CtrlParam.Percentages.WinningRate, ts.CtrlParam.Percentages.MaxBudget,
-		ts.CtrlParam.Trade_Setting.LimitAmount)
+	order.OrderData.QtyReq = determineOrderSize(userMargin, orderMargin[0].Total,
+		ts.CtrlData.Percentages.WinningRate, ts.CtrlData.Percentages.MaxBudget,
+		ts.CtrlData.Trade_Setting.LimitAmount)
 
-	orderId := executeOrder(*order, ts, entryTime, tradeQty)
-	TradesList := kite.FetchOrderTrades(orderId)
+	orderId := executeOrder(*order, ts, entryTime, order.OrderData.QtyReq)
 
-	srv.TradesLogger.Print("Trade executed: ", TradesList)
-
-	order.Order_id = orderId
-
+	if orderId != 0 {
+		order.Order_id = orderId
+		srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
+	}
 	return orderId != 0
-
-	// println("Order Placed : ", orderId)
-
-	// [ ] update order id into order table
-	// [ ] return order id
-
-	// println(ts.CtrlParam.Trades.Base)
-
-	return true
-
 }
 
 // Fetch account balance
 // Calculate margin required
 // Check strategy winning percentage
 // Determine order size
-func determineOrderSize(userMargin float64, orderMargin float64, winningRate float64, maxBudget float64, limitAmount float64) int {
+func determineOrderSize(userMargin float64, orderMargin float64, winningRate float64, maxBudget float64, limitAmount float64) float64 {
 
 	maxBudget = (maxBudget / 100) * userMargin
 	budget := math.Min(maxBudget, limitAmount)
@@ -62,19 +78,19 @@ func determineOrderSize(userMargin float64, orderMargin float64, winningRate flo
 			if math.IsNaN(qty) {
 				return 0
 			} else {
-				return int(qty) // based on winning rate
+				return qty // based on winning rate
 			}
 		}
 	}
 }
 
-func executeOrder(order appdata.TradeSignal, ts appdata.Strategies, selDate time.Time, qty int) (orderID uint64) {
+func executeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDate time.Time, qty float64) (orderID uint64) {
 
 	var orderParam kiteconnect.OrderParams
 
 	orderParam.Tag = ts.Strategy
-	orderParam.Product = ts.CtrlParam.Kite_Setting.Products
-	orderParam.Validity = ts.CtrlParam.Kite_Setting.Validities
+	orderParam.Product = ts.CtrlData.Kite_Setting.Products
+	orderParam.Validity = ts.CtrlData.Kite_Setting.Validities
 
 	if strings.ToLower(order.Dir) == "bullish" {
 		orderParam.TransactionType = "BUY"
@@ -82,7 +98,7 @@ func executeOrder(order appdata.TradeSignal, ts appdata.Strategies, selDate time
 		orderParam.TransactionType = "SELL"
 	}
 
-	switch ts.CtrlParam.Trade_Setting.OrderRoute {
+	switch ts.CtrlData.Trade_Setting.OrderRoute {
 
 	default:
 		fallthrough
@@ -90,7 +106,7 @@ func executeOrder(order appdata.TradeSignal, ts appdata.Strategies, selDate time
 	case "equity":
 		orderParam.Price = order.Entry
 		orderParam.Exchange = kiteconnect.ExchangeNSE
-		orderParam.OrderType = ts.CtrlParam.Kite_Setting.OrderType
+		orderParam.OrderType = ts.CtrlData.Kite_Setting.OrderType
 
 	case "option-buy":
 		orderParam.TransactionType = "BUY"
@@ -105,14 +121,14 @@ func executeOrder(order appdata.TradeSignal, ts appdata.Strategies, selDate time
 	case "futures":
 		orderParam.Price = order.Entry
 		orderParam.Exchange = kiteconnect.ExchangeNFO
-		orderParam.OrderType = ts.CtrlParam.Kite_Setting.OrderType
+		orderParam.OrderType = ts.CtrlData.Kite_Setting.OrderType
 
 	}
 	var symbolMinQty float64
 	orderParam.Tradingsymbol, symbolMinQty = deriveInstrumentsName(order, ts, time.Now())
-	orderParam.Quantity = int(symbolMinQty) * qty
+	orderParam.Quantity = int(symbolMinQty * qty)
 
-	return kite.ExecOrder(orderParam, ts.CtrlParam.Kite_Setting.Varieties)
+	return kite.ExecOrder(orderParam, ts.CtrlData.Kite_Setting.Varieties)
 
 }
 

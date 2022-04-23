@@ -106,22 +106,22 @@ func TestCalOrderMargin(t *testing.T) {
 	kite.Init()
 	t.Parallel()
 
-	var order appdata.TradeSignal
-	var ts appdata.Strategies
+	var order appdata.OrderBook_S
+	var ts appdata.UserStrategies_S
 
 	for _, test := range CalOrderMarginTests {
 
 		// dateString := test.argDate
 		// date, _ := time.Parse("2006-01-02", dateString)
 
-		ts.CtrlParam.Kite_Setting.Varieties = test.argVarieties
-		ts.CtrlParam.Kite_Setting.Products = test.argProducts
+		ts.CtrlData.Kite_Setting.Varieties = test.argVarieties
+		ts.CtrlData.Kite_Setting.Products = test.argProducts
 
-		ts.CtrlParam.Trade_Setting.FuturesExpiryMonth = test.argMonthSel
-		ts.CtrlParam.Trade_Setting.SkipExipryWeekFutures = test.argSkipExpWk
-		ts.CtrlParam.Trade_Setting.OrderRoute = test.argOrderRoute
-		ts.CtrlParam.Trade_Setting.OptionExpiryWeek = test.argWeekSel
-		ts.CtrlParam.Trade_Setting.OptionLevel = test.argOptionLevel
+		ts.CtrlData.Trade_Setting.FuturesExpiryMonth = test.argMonthSel
+		ts.CtrlData.Trade_Setting.SkipExipryWeekFutures = test.argSkipExpWk
+		ts.CtrlData.Trade_Setting.OrderRoute = test.argOrderRoute
+		ts.CtrlData.Trade_Setting.OptionExpiryWeek = test.argWeekSel
+		ts.CtrlData.Trade_Setting.OptionLevel = test.argOptionLevel
 
 		order.Dir = test.argDirection
 		order.Instr = test.argInstr

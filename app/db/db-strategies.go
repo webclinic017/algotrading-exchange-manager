@@ -9,15 +9,14 @@ import (
 	"github.com/georgysavva/scany/pgxscan"
 )
 
-func ReadStrategiesFromDb() []appdata.Strategies {
+func ReadUserStrategiesFromDb() []appdata.UserStrategies_S {
 	ctx := context.Background()
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	var ts []appdata.Strategies
+	var ts []appdata.UserStrategies_S
 
-	tblName := appdata.Env["DB_TBL_PREFIX_USER_ID"] + appdata.Env["DB_TBL_USER_STRATEGIES"] + appdata.Env["DB_TEST_PREFIX"]
-	sqlquery := "SELECT * FROM " + tblName + " WHERE enabled = 'true'"
+	sqlquery := "SELECT * FROM " + appdata.Env["DB_TBL_USER_STRATEGIES"] + " WHERE enabled = 'true'"
 
 	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
@@ -27,7 +26,7 @@ func ReadStrategiesFromDb() []appdata.Strategies {
 	}
 
 	for each := range ts {
-		err = json.Unmarshal([]byte(ts[each].Controls), &ts[each].CtrlParam)
+		err = json.Unmarshal([]byte(ts[each].Controls), &ts[each].CtrlData)
 		if err != nil {
 			srv.ErrorLogger.Printf("user_strategies read error %v\n", err)
 		}

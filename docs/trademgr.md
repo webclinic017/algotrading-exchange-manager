@@ -22,8 +22,8 @@ database    TimeScaleDB    as tsdb #grey
 
 
 ?-> trademgr ++ : ""->""\n**start** trademgr
-trademgr -> tsdb : Fetch Enabled Strategies
-tsdb --> trademgr : Strategies
+trademgr -> tsdb : Fetch Enabled UserStrategies
+tsdb --> trademgr : UserStrategies
 |||
     loop per symbol
         trademgr -> tm.signals : start thread

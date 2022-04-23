@@ -14,9 +14,9 @@ import (
 
 var startTrader_TblOdrbook_deleteAll = `DELETE FROM public.paragvb_order_book_test;`
 
-var startTrader_TblStrategies_deleteAll = `DELETE FROM public.paragvb_strategies_test;`
+var startTrader_TblUserStrategies_deleteAll = `DELETE FROM public.paragvb_strategies_test;`
 
-var startTrader_TblStrategies_setup = `INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time,trigger_days,cdl_size,instruments,controls) VALUES
+var startTrader_TblUserStrategies_setup = `INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time,trigger_days,cdl_size,instruments,controls) VALUES
 ('S001-ORB-001',true,'IntraDay_DNP','00:00:00','Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',1,'ASHOKLEY','{
 "percentages": {
 "target": 11,
@@ -115,11 +115,11 @@ modify 2nd trade time for execution, wait for timetrigger, check the second is a
 func test4(t *testing.T, testId int) {
 	fmt.Print(appdata.ColorInfo, "\nTEST  : [case AwaitSignal] get response from api", string(appdata.ColorDimmed))
 
-	db.DbRawExec(startTrader_TblStrategies_deleteAll)
+	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
 	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
 
 	// add 10 seconds to timetriggered trade
-	sqlquery := strings.Replace(startTrader_TblStrategies_setup, "$TRIGGERTIME$",
+	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "$TRIGGERTIME$",
 		time.Now().Local().Add(time.Second*time.Duration(10)).Format("15:04:05"), -1)
 
 	sqlquery = strings.Replace(sqlquery, "S001-ORB", "S999-TEST", -1)
@@ -130,14 +130,14 @@ func test4(t *testing.T, testId int) {
 
 	time.Sleep(time.Second * 10)
 	// check if trades are logged in order_book
-	trades := db.ReadAllTradeSignalFromDb("=", "PlaceOrders")
+	trades := db.ReadAllOrderBookFromDb("=", "PlaceOrders")
 	if len(trades) != 1 {
 		t.Errorf("Expected 1 trades, got %d", len(trades))
 		fmt.Print((appdata.ColorError), "TEST  ", testId, ": FAILED\n", string(appdata.ColorReset))
 	} else {
 		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST ", testId, ": Trades found ", len(trades), string(appdata.ColorReset))
 	}
-	trades = db.ReadAllTradeSignalFromDb("=", "AwaitSignal")
+	trades = db.ReadAllOrderBookFromDb("=", "AwaitSignal")
 	if len(trades) != 1 {
 		t.Errorf("Expected 1 trades, got %d", len(trades))
 		fmt.Print((appdata.ColorError), "TEST  ", testId, ": FAILED\n", string(appdata.ColorReset))
@@ -145,7 +145,7 @@ func test4(t *testing.T, testId int) {
 		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST ", testId, ": Trades found ", len(trades), string(appdata.ColorReset))
 	}
 	time.Sleep(time.Second * 7)
-	trades = db.ReadAllTradeSignalFromDb("=", "PlaceOrders")
+	trades = db.ReadAllOrderBookFromDb("=", "PlaceOrders")
 	if len(trades) != 1 {
 		t.Errorf("Expected 1 trades, got %d", len(trades))
 		fmt.Print((appdata.ColorError))
@@ -162,16 +162,16 @@ func test3(t *testing.T, testId int) {
 	fmt.Print(appdata.ColorInfo, "\nTEST  ", testId, ": [case Resume] resume previous running trades")
 	fmt.Println(string(appdata.ColorWhite))
 
-	db.DbRawExec(startTrader_TblStrategies_deleteAll)
+	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
 	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
-	db.DbRawExec(startTrader_TblStrategies_setup)
+	db.DbRawExec(startTrader_TblUserStrategies_setup)
 	db.DbRawExec(test3_orderbook)
 	// start trader, do not spawn new trades
 	go StartTrader(false)
 
 	time.Sleep(time.Second * 5)
 	// check if trades are logged in order_book
-	trades := db.ReadAllTradeSignalFromDb("=", "TradeMonitoring")
+	trades := db.ReadAllOrderBookFromDb("=", "TradeMonitoring")
 	if len(trades) != 2 {
 		t.Errorf("Expected 2 trades, got %d", len(trades))
 		fmt.Print((appdata.ColorError), "TEST  ", testId, ": FAILED\n", string(appdata.ColorWhite))
@@ -187,18 +187,18 @@ func test3(t *testing.T, testId int) {
 func test1(t *testing.T, testId int) {
 
 	fmt.Print(appdata.ColorInfo, "\nTEST  ", testId, ": [case Initiate] Start two threads\n", string(appdata.ColorWhite))
-	// test if all strategies are spawned
+	// test if all UserStrategies are spawned
 	// setup Db entries
-	db.DbRawExec(startTrader_TblStrategies_deleteAll)
+	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
 	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
-	db.DbRawExec(startTrader_TblStrategies_setup)
+	db.DbRawExec(startTrader_TblUserStrategies_setup)
 
 	// start trader
 	go StartTrader(true)
 
 	time.Sleep(time.Second * 5)
 	// check if trades are logged in order_book
-	trades := db.ReadAllTradeSignalFromDb("=", "AwaitSignal")
+	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
 	if len(trades) != 2 {
 		t.Errorf("Expected 2 trades, got %d", len(trades))
 		fmt.Print((appdata.ColorError), "TEST  ", testId, ": FAILED\n", string(appdata.ColorWhite))
@@ -215,15 +215,15 @@ func test2(t *testing.T, testId int) {
 	fmt.Print(appdata.ColorInfo, "\nTEST  ", testId, ": [case Initiate] daystart false, nothing should start\n")
 	fmt.Println(string(appdata.ColorWhite))
 
-	db.DbRawExec(startTrader_TblStrategies_deleteAll)
+	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
 	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
-	db.DbRawExec(startTrader_TblStrategies_setup)
+	db.DbRawExec(startTrader_TblUserStrategies_setup)
 	// start trader
 	go StartTrader(false)
 
 	time.Sleep(time.Second * 5)
 	// check if trades are logged in order_book
-	trades := db.ReadAllTradeSignalFromDb("=", "AwaitSignal")
+	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
 	if len(trades) != 0 {
 		t.Errorf("Expected 0 trades, got %d", len(trades))
 		fmt.Print((appdata.ColorError), "TEST  ", testId, ": FAILED\n", string(appdata.ColorWhite))

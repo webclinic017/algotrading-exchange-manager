@@ -61,22 +61,22 @@ func TestPlaceOrder(t *testing.T) {
 	kite.Init()
 	t.Parallel()
 
-	var order appdata.TradeSignal
-	var ts appdata.Strategies
+	var order appdata.OrderBook_S
+	var ts appdata.UserStrategies_S
 
 	fmt.Printf(appdata.ErrorColor, warCheck)
 	for _, test := range ExecuteOrderTestArray {
 
 		ts.Strategy = test.argStrategy
-		ts.CtrlParam.Kite_Setting.Varieties = test.argVarieties
-		ts.CtrlParam.Kite_Setting.Products = test.argProducts
-		ts.CtrlParam.Kite_Setting.Validities = test.argValidities
-		ts.CtrlParam.Kite_Setting.OrderType = test.argOrderType
-		ts.CtrlParam.Trade_Setting.FuturesExpiryMonth = test.argMonthSel
-		ts.CtrlParam.Trade_Setting.SkipExipryWeekFutures = test.argSkipExpWk
-		ts.CtrlParam.Trade_Setting.OrderRoute = test.argOrderRoute
-		ts.CtrlParam.Trade_Setting.OptionExpiryWeek = test.argWeekSel
-		ts.CtrlParam.Trade_Setting.OptionLevel = test.argOptionLevel
+		ts.CtrlData.Kite_Setting.Varieties = test.argVarieties
+		ts.CtrlData.Kite_Setting.Products = test.argProducts
+		ts.CtrlData.Kite_Setting.Validities = test.argValidities
+		ts.CtrlData.Kite_Setting.OrderType = test.argOrderType
+		ts.CtrlData.Trade_Setting.FuturesExpiryMonth = test.argMonthSel
+		ts.CtrlData.Trade_Setting.SkipExipryWeekFutures = test.argSkipExpWk
+		ts.CtrlData.Trade_Setting.OrderRoute = test.argOrderRoute
+		ts.CtrlData.Trade_Setting.OptionExpiryWeek = test.argWeekSel
+		ts.CtrlData.Trade_Setting.OptionLevel = test.argOptionLevel
 
 		order.Dir = test.argDirection
 		order.Instr = test.argInstr
@@ -191,25 +191,25 @@ func TestEnterTrade(t *testing.T) {
 	kite.Init()
 	t.Parallel()
 
-	var order appdata.TradeSignal
-	var ts appdata.Strategies
+	var order appdata.OrderBook_S
+	var ts appdata.UserStrategies_S
 
 	fmt.Printf(appdata.ErrorColor, warCheck)
 	for _, test := range EnterTradeTestArray {
 
 		ts.Strategy = test.argStrategy
-		ts.CtrlParam.Kite_Setting.Varieties = test.argVarieties
-		ts.CtrlParam.Kite_Setting.Products = test.argProducts
-		ts.CtrlParam.Kite_Setting.Validities = test.argValidities
-		ts.CtrlParam.Kite_Setting.OrderType = test.argOrderType
-		ts.CtrlParam.Trade_Setting.FuturesExpiryMonth = test.argMonthSel
-		ts.CtrlParam.Trade_Setting.SkipExipryWeekFutures = test.argSkipExpWk
-		ts.CtrlParam.Trade_Setting.OrderRoute = test.argOrderRoute
-		ts.CtrlParam.Trade_Setting.OptionExpiryWeek = test.argWeekSel
-		ts.CtrlParam.Trade_Setting.OptionLevel = test.argOptionLevel
-		ts.CtrlParam.Percentages.MaxBudget = test.MaxBudget
-		ts.CtrlParam.Percentages.WinningRate = test.WinningRate
-		ts.CtrlParam.Trade_Setting.LimitAmount = test.LimitAmount
+		ts.CtrlData.Kite_Setting.Varieties = test.argVarieties
+		ts.CtrlData.Kite_Setting.Products = test.argProducts
+		ts.CtrlData.Kite_Setting.Validities = test.argValidities
+		ts.CtrlData.Kite_Setting.OrderType = test.argOrderType
+		ts.CtrlData.Trade_Setting.FuturesExpiryMonth = test.argMonthSel
+		ts.CtrlData.Trade_Setting.SkipExipryWeekFutures = test.argSkipExpWk
+		ts.CtrlData.Trade_Setting.OrderRoute = test.argOrderRoute
+		ts.CtrlData.Trade_Setting.OptionExpiryWeek = test.argWeekSel
+		ts.CtrlData.Trade_Setting.OptionLevel = test.argOptionLevel
+		ts.CtrlData.Percentages.MaxBudget = test.MaxBudget
+		ts.CtrlData.Percentages.WinningRate = test.WinningRate
+		ts.CtrlData.Trade_Setting.LimitAmount = test.LimitAmount
 
 		order.Dir = test.argDirection
 		order.Instr = test.argInstr

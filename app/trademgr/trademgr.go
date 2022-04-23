@@ -34,33 +34,33 @@ func StartTrader(daystart bool) {
 		"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 
 	// --------------------------------- Read trading strategies from dB
-	tradeStrategies := db.ReadStrategiesFromDb()
+	tradeUserStrategies := db.ReadUserStrategiesFromDb()
 
 	// --------------------------------- Read if trades already in progress
-	trSig := db.ReadAllTradeSignalFromDb("!=", "Completed")
+	trSig := db.ReadAllOrderBookFromDb("!=", "Completed")
 	for eachSymbol := range trSig {
-		for eachStrategy := range tradeStrategies {
-			if trSig[eachSymbol].Strategy == tradeStrategies[eachStrategy].Strategy {
+		for eachStrategy := range tradeUserStrategies {
+			if trSig[eachSymbol].Strategy == tradeUserStrategies[eachStrategy].Strategy {
 
 				wgTrademgr.Add(1)
-				go operateSymbol("nil", tradeStrategies[eachStrategy], trSig[eachSymbol].Id, wgTrademgr)
+				go operateSymbol("nil", tradeUserStrategies[eachStrategy], trSig[eachSymbol].Id, wgTrademgr)
 			}
 		}
 	}
 
 	// --------------------------------- Setup operators for each symbol in every strategy
 	if daystart {
-		for eachStrategy := range tradeStrategies {
+		for eachStrategy := range tradeUserStrategies {
 
-			if checkTriggerDays(tradeStrategies[eachStrategy]) {
+			if checkTriggerDays(tradeUserStrategies[eachStrategy]) {
 				// check if the current day is a trading day.
 
 				// Read symbols within each strategy
-				tradeSymbols := strings.Split(tradeStrategies[eachStrategy].Instruments, ",")
+				tradeSymbols := strings.Split(tradeUserStrategies[eachStrategy].Instruments, ",")
 
 				for eachSymbol := range tradeSymbols {
 					wgTrademgr.Add(1)
-					go operateSymbol(tradeSymbols[eachSymbol], tradeStrategies[eachStrategy], 0, wgTrademgr)
+					go operateSymbol(tradeSymbols[eachSymbol], tradeUserStrategies[eachStrategy], 0, wgTrademgr)
 				}
 			}
 		}
@@ -78,10 +78,10 @@ func StopTrader() {
 // TODO: master exit condition & EoD termniation
 
 // symbolTradeManager
-func operateSymbol(tradeSymbol string, tradeStrategies appdata.Strategies, trId uint16, wgTrademgr sync.WaitGroup) {
+func operateSymbol(tradeSymbol string, tradeUserStrategies appdata.UserStrategies_S, trId uint16, wgTrademgr sync.WaitGroup) {
 	defer wgTrademgr.Done()
 
-	var tr appdata.TradeSignal
+	var tr appdata.OrderBook_S
 	var result bool
 
 	if trId == 0 {
@@ -98,15 +98,12 @@ tradingloop:
 		// ------------------------------------------------------------------------ New symbol being registered for trade
 		case "Initiate":
 			tr.Date = time.Now()
-			tr.Strategy = tradeStrategies.Strategy
+			tr.Strategy = tradeUserStrategies.Strategy
 			tr.Instr = tradeSymbol
 			tr.Status = "AwaitSignal"
-			tr.Order_trade_entry = "{}"
-			tr.Order_trade_exit = "{}"
-			tr.Order_simulation = "{}"
+			tr.Order_info = "{}"
 			tr.Post_analysis = "{}"
-			tr.Status = "AwaitSignal"
-			tr.Id = db.StoreTradeSignalInDb(tr)
+			tr.Id = db.StoreOrderBookInDb(tr)
 
 		// ------------------------------------------------------------------------ Resume previously registered symbol
 		case "Resume":
@@ -114,43 +111,53 @@ tradingloop:
 
 		// ------------------------------------------------------------------------ trade entry check (Scan Signals)
 		case "AwaitSignal":
-			if tradeEnterSignalCheck(tradeSymbol, tradeStrategies, &tr) {
+			if tradeEnterSignalCheck(tradeSymbol, tradeUserStrategies, &tr) {
 				tr.Status = "PlaceOrders"
-				db.StoreTradeSignalInDb(tr)
+				db.StoreOrderBookInDb(tr)
 			}
 
 		// ------------------------------------------------------------------------ enter trade (order)
 		case "PlaceOrders":
 			if tr.Dir != "" { // on valid signal
-				result = tradeEnter(&tr, tradeStrategies)
-				tr.Status = "TradeMonitoring"
-				db.StoreTradeSignalInDb(tr)
+				if tradeEnter(&tr, tradeUserStrategies) {
+					tr.Status = "PlaceOrdersPending"
+					db.StoreOrderBookInDb(tr)
+				}
 			}
+
+			// ------------------------------------------------------------------------ enter trade (order)
+		case "PlaceOrdersPending":
+			if pendingOrder(&tr, tradeUserStrategies) {
+				tr.Status = "TradeMonitoring"
+			}
+			db.StoreOrderBookInDb(tr) // store orderbook, may be partially executed
+
+			// Todo: Add exit condition for retries
 
 		// ------------------------------------------------------------------------ monitor trade exits
 		case "TradeMonitoring":
 			if apiclient.SignalAnalyzer(&tr, "-exit") {
 				tr.Status = "ExitTrade"
-				db.StoreTradeSignalInDb(tr)
+				db.StoreOrderBookInDb(tr)
 			}
 
 		// ------------------------------------------------------------------------ squareoff trade
 		case "ExitTrade":
 			if result {
 				tr.Status = "TradeCompleted"
-				db.StoreTradeSignalInDb(tr)
+				db.StoreOrderBookInDb(tr)
 			}
 
 		// ------------------------------------------------------------------------ complete housekeeping
 		case "TradeCompleted":
 			if result {
-				db.StoreTradeSignalInDb(tr)
+				db.StoreOrderBookInDb(tr)
 				break tradingloop
 			}
 
 		// --------------------------------------------------------------- Terminate trade if any other status
 		default:
-			db.StoreTradeSignalInDb(tr)
+			db.StoreOrderBookInDb(tr)
 			break tradingloop
 		}
 
@@ -164,44 +171,44 @@ tradingloop:
 }
 
 // Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.
-func checkTriggerDays(tradeStrategies appdata.Strategies) bool {
+func checkTriggerDays(tradeUserStrategies appdata.UserStrategies_S) bool {
 
-	triggerdays := strings.Split(tradeStrategies.Trigger_days, ",")
+	triggerdays := strings.Split(tradeUserStrategies.Trigger_days, ",")
 	currentday := time.Now().Weekday().String()
 
 	for each := range triggerdays {
 		if triggerdays[each] == currentday {
-			srv.TradesLogger.Println(tradeStrategies.Strategy, " : Trade signal registered")
+			srv.TradesLogger.Println(tradeUserStrategies.Strategy, " : Trade signal registered")
 			return true
 		}
 	}
-	srv.TradesLogger.Println(tradeStrategies.Strategy, " : Trade signal skipped due to no valid day trigger present")
+	srv.TradesLogger.Println(tradeUserStrategies.Strategy, " : Trade signal skipped due to no valid day trigger present")
 	return false
 }
 
-func loadValues(tr *appdata.TradeSignal) {
-	status, trtemp := db.ReadTradeSignalFromDb(tr.Id)
+func loadValues(tr *appdata.OrderBook_S) {
+	status, trtemp := db.ReadOrderBookFromDb(tr.Id)
 	if status {
+		// TODO: check if all values are loaded
 		tr.Id = trtemp.Id
 		tr.Date = trtemp.Date
 		tr.Strategy = trtemp.Strategy
 		tr.Instr = trtemp.Instr
 		tr.Status = trtemp.Status
-		tr.Order_trade_entry = trtemp.Order_trade_entry
-		tr.Order_trade_exit = trtemp.Order_trade_exit
-		tr.Order_simulation = trtemp.Order_simulation
+		tr.Order_trades_entry = trtemp.Order_trades_entry
+		tr.Order_trades_exit = trtemp.Order_trades_exit
 		tr.Post_analysis = trtemp.Post_analysis
 	}
 
 }
 
-func tradeEnterSignalCheck(symbol string, tradeStrategies appdata.Strategies, tr *appdata.TradeSignal) bool {
+func tradeEnterSignalCheck(symbol string, tradeUserStrategies appdata.UserStrategies_S, tr *appdata.OrderBook_S) bool {
 
-	if tradeStrategies.Trigger_time.Hour() == 0 {
+	if tradeUserStrategies.Trigger_time.Hour() == 0 {
 		return apiclient.SignalAnalyzer(tr, "-entr")
 
-	} else if time.Now().Hour() == tradeStrategies.Trigger_time.Hour() {
-		if time.Now().Minute() == tradeStrategies.Trigger_time.Minute() { // trigger time reached
+	} else if time.Now().Hour() == tradeUserStrategies.Trigger_time.Hour() {
+		if time.Now().Minute() == tradeUserStrategies.Trigger_time.Minute() { // trigger time reached
 
 			return apiclient.SignalAnalyzer(tr, "-entr")
 		}

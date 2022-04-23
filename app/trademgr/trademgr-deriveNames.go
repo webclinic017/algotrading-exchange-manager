@@ -15,7 +15,7 @@ import (
 // BANKNIFTY2232435000CE - 24th Mar 2022
 // BANKNIFTY22MAR31000CE - 31st Mar 2022
 // Last week of Month - will be monthly expiry
-func deriveInstrumentsName(order appdata.TradeSignal, ts appdata.Strategies, selDate time.Time) (name string, qty float64) {
+func deriveInstrumentsName(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDate time.Time) (name string, qty float64) {
 
 	var (
 		instrumentType string
@@ -25,9 +25,9 @@ func deriveInstrumentsName(order appdata.TradeSignal, ts appdata.Strategies, sel
 	)
 
 	// ----------------------------------------------------------------------
-	if ts.CtrlParam.Trade_Setting.OrderRoute == "option-buy" {
-		selDate = selDate.AddDate(0, 0, (7 * ts.CtrlParam.Trade_Setting.OptionExpiryWeek))
-		enddate = selDate.AddDate(0, 0, 7+(7*ts.CtrlParam.Trade_Setting.OptionExpiryWeek))
+	if ts.CtrlData.Trade_Setting.OrderRoute == "option-buy" {
+		selDate = selDate.AddDate(0, 0, (7 * ts.CtrlData.Trade_Setting.OptionExpiryWeek))
+		enddate = selDate.AddDate(0, 0, 7+(7*ts.CtrlData.Trade_Setting.OptionExpiryWeek))
 		// ---------------------------------------------------------------------- Special case for expiry
 		// For individual securities expiry is monthly
 		if (strings.ToLower(order.Instr) != "nifty-fut") ||
@@ -41,9 +41,9 @@ func deriveInstrumentsName(order appdata.TradeSignal, ts appdata.Strategies, sel
 		} else {
 			instrumentType = "PE"
 		}
-	} else if ts.CtrlParam.Trade_Setting.OrderRoute == "option-sell" {
-		selDate = selDate.AddDate(0, 0, (7 * ts.CtrlParam.Trade_Setting.OptionExpiryWeek))
-		enddate = selDate.AddDate(0, 0, 7+(7*ts.CtrlParam.Trade_Setting.OptionExpiryWeek))
+	} else if ts.CtrlData.Trade_Setting.OrderRoute == "option-sell" {
+		selDate = selDate.AddDate(0, 0, (7 * ts.CtrlData.Trade_Setting.OptionExpiryWeek))
+		enddate = selDate.AddDate(0, 0, 7+(7*ts.CtrlData.Trade_Setting.OptionExpiryWeek))
 		// ---------------------------------------------------------------------- Special case for expiry
 		// For individual securities expiry is monthly
 		if (strings.ToLower(order.Instr) != "nifty-fut") ||
@@ -57,11 +57,11 @@ func deriveInstrumentsName(order appdata.TradeSignal, ts appdata.Strategies, sel
 		} else {
 			instrumentType = "CE"
 		}
-	} else if ts.CtrlParam.Trade_Setting.OrderRoute == "futures" {
-		selDate = selDate.AddDate(0, ts.CtrlParam.Trade_Setting.FuturesExpiryMonth, 0)
-		enddate = selDate.AddDate(0, 1+ts.CtrlParam.Trade_Setting.FuturesExpiryMonth, 0)
+	} else if ts.CtrlData.Trade_Setting.OrderRoute == "futures" {
+		selDate = selDate.AddDate(0, ts.CtrlData.Trade_Setting.FuturesExpiryMonth, 0)
+		enddate = selDate.AddDate(0, 1+ts.CtrlData.Trade_Setting.FuturesExpiryMonth, 0)
 		instrumentType = "FUT"
-	} else if ts.CtrlParam.Trade_Setting.OrderRoute == "equity" {
+	} else if ts.CtrlData.Trade_Setting.OrderRoute == "equity" {
 		enddate = selDate.AddDate(0, 0, 0)
 		instrumentType = "EQ"
 	}
@@ -72,7 +72,7 @@ func deriveInstrumentsName(order appdata.TradeSignal, ts appdata.Strategies, sel
 
 	symbolFutStr, qty := db.FetchInstrData(order.Instr,
 		uint64(order.Entry),
-		ts.CtrlParam.Trade_Setting.OptionLevel,
+		ts.CtrlData.Trade_Setting.OptionLevel,
 		instrumentType,
 		strStartDate,
 		strEndDate)

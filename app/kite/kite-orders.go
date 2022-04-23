@@ -3,6 +3,7 @@ package kite
 import (
 	"algo-ex-mgr/app/srv"
 	"strconv"
+	"strings"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
@@ -48,3 +49,21 @@ func ExecOrder(orderParams kiteconnect.OrderParams, variety string) uint64 {
 }
 
 // RULE "TOTP is mandatory to place orders on third-party apps.
+
+func GetLatestQuote(i string) kiteconnect.Quote {
+
+	var q string
+	if strings.Contains(i, "-FUT") {
+		q = "NFO:" + strings.Replace(i, "-FUT", "", -1)
+	} else {
+		q = "NSE:" + i
+	}
+
+	quote, err := kc.GetQuote(q) // 'exchange:Insturment'
+	println(quote["Depth"].Buy[5].Price)
+	if err != nil {
+		srv.TradesLogger.Println(err.Error())
+		return kiteconnect.Quote{}
+	}
+	return quote
+}

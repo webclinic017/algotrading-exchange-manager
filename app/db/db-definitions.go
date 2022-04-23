@@ -1,5 +1,7 @@
 package db
 
+//  ---------------------------------- CREATE TABLES  ----------------------------------
+
 var DB_EXISTS_QUERY = "SELECT datname FROM pg_catalog.pg_database  WHERE lower(datname) = lower('algotrading');"
 var DB_CREATE_QUERY = "CREATE DATABASE algotrading;"
 var DB_CREATE_TABLE_ID_DECODED = `CREATE TABLE token_id_decoded
@@ -59,12 +61,14 @@ var DB_CREATE_TABLE_ORDER_BOOK = `CREATE TABLE $1 (
 									target DOUBLE PRECISION,
 									stoploss DOUBLE PRECISION,
 									order_id INTEGER,
-									order_trade_entry JSON,
-									order_trade_exit JSON,
-									order_simulation JSON,
+									order_trades_entry string,
+									order_trade_exit string,
+									order_info JSON,
 									exit_reason TEXT  DEFAULT 'NA',
 									post_analysis JSON
 								);`
+
+//  ---------------------------------- COMPRESSION ----------------------------------
 
 var DB_NSEFUT_COMPRESSION_QUERY = `ALTER TABLE $1 SET 
 							(
@@ -73,6 +77,8 @@ var DB_NSEFUT_COMPRESSION_QUERY = `ALTER TABLE $1 SET
 							); 
 							SELECT add_compression_policy('$1 ', INTERVAL '30 days');
 						`
+
+//  ---------------------------------- VIEWS ----------------------------------
 
 var DB_VIEW_EXISTS = `
 					SELECT view_name 
@@ -96,3 +102,5 @@ var DB_VIEW_CREATE = `
 						symbol, candle
 					WITH NO DATA;
 					`
+
+//  ---------------------------------- QUERIES ----------------------------------
