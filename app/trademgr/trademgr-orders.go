@@ -5,6 +5,7 @@ import (
 	"algo-ex-mgr/app/kite"
 	"algo-ex-mgr/app/srv"
 	"encoding/json"
+	"fmt"
 	"math"
 	"strings"
 	"time"
@@ -30,7 +31,9 @@ func pendingOrder(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool 
 
 	if order.OrderData.QtyReq > order.OrderData.QtyFilled {
 		// TODO: modify limit price if order is still pending
-		qt := kite.GetLatestQuote(order.Instr)
+		qt, n := kite.GetLatestQuote(order.Instr)
+		// ToDO: fetch min values for the enter/exit trades
+		fmt.Print(qt[n].Depth.Buy[0].Price)
 
 		return true
 	} else {

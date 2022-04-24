@@ -50,7 +50,7 @@ func ExecOrder(orderParams kiteconnect.OrderParams, variety string) uint64 {
 
 // RULE "TOTP is mandatory to place orders on third-party apps.
 
-func GetLatestQuote(i string) kiteconnect.Quote {
+func GetLatestQuote(i string) (kiteconnect.Quote, string) {
 
 	var q string
 	if strings.Contains(i, "-FUT") {
@@ -60,10 +60,10 @@ func GetLatestQuote(i string) kiteconnect.Quote {
 	}
 
 	quote, err := kc.GetQuote(q) // 'exchange:Insturment'
-	println(quote["Depth"].Buy[5].Price)
+	println(quote)
 	if err != nil {
 		srv.TradesLogger.Println(err.Error())
-		return kiteconnect.Quote{}
+		return kiteconnect.Quote{}, q
 	}
-	return quote
+	return quote, q
 }
