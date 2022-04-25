@@ -199,7 +199,6 @@ func loadValues(tr *appdata.OrderBook_S) {
 		// tr.Order_trades_exit = trtemp.Order_trades_exit
 		tr.Post_analysis = trtemp.Post_analysis
 	}
-
 }
 
 func tradeEnterSignalCheck(symbol string, tradeUserStrategies appdata.UserStrategies_S, tr *appdata.OrderBook_S) bool {

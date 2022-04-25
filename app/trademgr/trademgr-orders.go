@@ -81,7 +81,7 @@ func determineOrderSize(userMargin float64, orderMargin float64, winningRate flo
 			if math.IsNaN(qty) {
 				return 0
 			} else {
-				return qty // based on winning rate
+				return math.Trunc(qty) // based on winning rate
 			}
 		}
 	}

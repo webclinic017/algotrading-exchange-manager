@@ -44,8 +44,6 @@ type CalOrderMarginTesting struct {
 	// expected          float64
 }
 
-// ** This is live testcase - update dates are per current symbols dates and levels.
-// ** Result needs to be verified manually!!!
 var CalOrderMarginTests = []CalOrderMarginTesting{
 
 	{time.Now(), "BANKNIFTY-FUT", 0 + WeekSel, 36000 + StrikePrice, 0 + OptionLevel,
@@ -97,6 +95,8 @@ var CalOrderMarginTests = []CalOrderMarginTesting{
 	// 	kiteconnect.VarietyRegular, kiteconnect.ProductCNC},
 }
 
+// ** This is live testcase - update dates are per current symbols dates and levels.
+// ** Result needs to be verified manually!!!
 func TestCalOrderMargin(t *testing.T) {
 
 	srv.Init()
