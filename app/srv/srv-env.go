@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func LoadEnvVariables(path string) bool {
+func LoadEnvVariables(path string, live bool) bool {
 
 	// Load .env file, if not in production
 	var parseEnv = true
@@ -25,6 +25,11 @@ func LoadEnvVariables(path string) bool {
 		}
 
 	}
+
+	if live {
+		appdata.Env["DB_TEST_PREFIX"] = ""
+	}
+
 	appdata.Env["DB_TBL_USER_SETTING"] = appdata.Env["DB_TBL_PREFIX_USER_ID"] + appdata.Env["DB_TBL_USER_SETTING"] + appdata.Env["DB_TEST_PREFIX"]
 	appdata.Env["DB_TBL_USER_SYMBOLS"] = appdata.Env["DB_TBL_PREFIX_USER_ID"] + appdata.Env["DB_TBL_USER_SYMBOLS"] + appdata.Env["DB_TEST_PREFIX"]
 	appdata.Env["DB_TBL_USER_STRATEGIES"] = appdata.Env["DB_TBL_PREFIX_USER_ID"] + appdata.Env["DB_TBL_USER_STRATEGIES"] + appdata.Env["DB_TEST_PREFIX"]

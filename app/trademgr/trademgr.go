@@ -101,7 +101,7 @@ tradingloop:
 			tr.Strategy = tradeUserStrategies.Strategy
 			tr.Instr = tradeSymbol
 			tr.Status = "AwaitSignal"
-			tr.Order_info = "{}"
+			// tr.Order_info = "{}"
 			tr.Post_analysis = "{}"
 			tr.Id = db.StoreOrderBookInDb(tr)
 
@@ -195,8 +195,8 @@ func loadValues(tr *appdata.OrderBook_S) {
 		tr.Strategy = trtemp.Strategy
 		tr.Instr = trtemp.Instr
 		tr.Status = trtemp.Status
-		tr.Order_trades_entry = trtemp.Order_trades_entry
-		tr.Order_trades_exit = trtemp.Order_trades_exit
+		// tr.Order_trades_entry = trtemp.Order_trades_entry
+		// tr.Order_trades_exit = trtemp.Order_trades_exit
 		tr.Post_analysis = trtemp.Post_analysis
 	}
 

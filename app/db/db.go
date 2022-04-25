@@ -86,7 +86,7 @@ func DbInit() bool {
 						if createTable(appdata.Env["DB_TBL_USER_STRATEGIES"], DB_CREATE_TABLE_USER_STRATEGIES) {
 							if createTable(appdata.Env["DB_TBL_ORDER_BOOK"], DB_CREATE_TABLE_ORDER_BOOK) {
 								// createViews()
-								setupDbCompression(appdata.Env["DB_TICK_TABLE_NSEFUT"])
+								// setupDbCompression(appdata.Env["DB_TICK_TABLE_NSEFUT"])
 								srv.InfoLogger.Printf("DB checks completed\n")
 								return true
 							}

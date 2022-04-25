@@ -33,7 +33,7 @@ func TestLoadEnvVariables(t *testing.T) {
 
 	for _, test := range LoadEnvVariablesTests {
 
-		actual := LoadEnvVariables(test.path)
+		actual := LoadEnvVariables(test.path, false)
 		if actual != test.expected {
 			fmt.Println(" FAIL -  ", test.path, test.expected)
 		}

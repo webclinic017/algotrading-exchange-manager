@@ -94,7 +94,7 @@ func TestStartTrader(t *testing.T) {
 	fmt.Print((appdata.ColorWhite))
 	srv.Init()
 	mydir, _ := os.Getwd()
-	srv.LoadEnvVariables(mydir + "/../../userSettings.env")
+	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
 	db.DbInit()
 	kite.Init()
 	t.Parallel()

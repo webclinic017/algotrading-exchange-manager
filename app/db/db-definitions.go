@@ -55,16 +55,12 @@ var DB_CREATE_TABLE_ORDER_BOOK = `CREATE TABLE $1 (
 									instr TEXT NOT NULL,
 									strategy  VARCHAR(100) NOT NULL,
 									status TEXT,
-									instr_id INTEGER,
 									dir VARCHAR(50),
-									entry DOUBLE PRECISION,
-									target DOUBLE PRECISION,
-									stoploss DOUBLE PRECISION,
-									order_id INTEGER,
-									order_trades_entry string,
-									order_trade_exit string,
-									order_info JSON,
 									exit_reason TEXT  DEFAULT 'NA',
+									info JSON,
+									targets JSON,
+									orders_entr JSON,
+									orders_exit JSON,
 									post_analysis JSON
 								);`
 

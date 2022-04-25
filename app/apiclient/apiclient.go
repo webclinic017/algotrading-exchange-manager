@@ -42,9 +42,9 @@ func SignalAnalyzer(tr *appdata.OrderBook_S, mode string) bool {
 			apiSig[0].Strategy == tr.Strategy { // register only if processed correctly
 
 			tr.Dir = apiSig[0].Dir
-			tr.Entry = apiSig[0].Entry
+			/*tr.Entry = apiSig[0].Entry
 			tr.Stoploss = apiSig[0].Stoploss
-			tr.Target = apiSig[0].Target
+			tr.Target = apiSig[0].Target*/
 			return true
 		} else {
 			srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", apiSig[0].Status)

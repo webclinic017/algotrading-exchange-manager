@@ -34,7 +34,7 @@ var FetchInstrDataTests = []FetchInstrDataTesting{
 func TestFetchInstrData(t *testing.T) {
 	srv.Init()
 	mydir, _ := os.Getwd()
-	srv.LoadEnvVariables(mydir + "/../../userSettings.env")
+	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
 	DbInit()
 
 	for _, test := range FetchInstrDataTests {
@@ -50,7 +50,7 @@ func TestFetchInstrData(t *testing.T) {
 func TestGetInstrumentsToken(t *testing.T) {
 	srv.Init()
 	mydir, _ := os.Getwd()
-	srv.LoadEnvVariables(mydir + "/../../userSettings.env")
+	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
 	DbInit()
 
 	actual := GetInstrumentsToken()

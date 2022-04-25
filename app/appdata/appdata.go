@@ -2,6 +2,8 @@ package appdata
 
 import (
 	"time"
+
+	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
 // Global variables
@@ -95,44 +97,49 @@ type ControlData_S struct {
 	Trade_Setting   Trade_setting_S
 }
 
-type OrderData_S struct {
-	QtyReq            float64 `json:"qty_req"`
-	QtyFilled         float64 `json:"qty_filled"`
-	UserExitRequested bool    `json:"user_exit_requested"`
-	AvgPriceEnter     float64 `json:"avg_price"`
-	AvgPriceExit      float64 `json:"avg_price_exit"`
-}
-
 type UserStrategies_S struct {
-	Strategy     string    // 0
-	Enabled      bool      // 1
-	Engine       string    // 2
-	Trigger_time time.Time // 3
-	Trigger_days string    // 4
-	Cdl_size     int       // 6
-	Instruments  string    // 7
+	Strategy     string
+	Enabled      bool
+	Engine       string
+	Trigger_time time.Time
+	Trigger_days string
+	Cdl_size     int
+	Instruments  string
 	Controls     string
 	CtrlData     ControlData_S
 }
 
+type Targets_S struct {
+	Entry    float64 `json:"entry"`
+	Target   float64 `json:"target"`
+	Stoploss float64 `json:"stoploss"`
+}
+
+type Info_S struct {
+	TradingSymbol     string  `json:"trading_symbol"`
+	Exchange          string  `json:"exchange"`
+	OrderIdEntr       uint64  `json:"order_id_entr"`
+	OrderIdExit       uint64  `json:"order_id_exit"`
+	QtyReq            float64 `json:"qty_req"`
+	QtyFilled         float64 `json:"qty_filled"`
+	UserExitRequested bool    `json:"user_exit_requested"`
+	AvgPriceEnter     float64 `json:"avg_price_entr"`
+	AvgPriceExit      float64 `json:"avg_price_exit"`
+}
+
 type OrderBook_S struct {
-	Id                 uint16    // 1
-	Date               time.Time // 2
-	Instr              string    // 3
-	Strategy           string    // 4
-	Status             string    // 5
-	Instr_id           int       // 6
-	Dir                string    // 6
-	Entry              float64   //
-	Target             float64   //
-	Stoploss           float64   //
-	Order_id           uint64    //
-	Order_info         string
-	Order_trades_entry string
-	Order_trades_exit  string
-	Exit_reason        string
-	Post_analysis      string
-	OrderData          OrderData_S
+	Id            uint16
+	Date          time.Time
+	Instr         string
+	Strategy      string
+	Status        string
+	Dir           string
+	Exit_reason   string
+	Info          Info_S
+	Targets       Targets_S
+	Orders_entr   []kiteconnect.Trade
+	Orders_exit   []kiteconnect.Trade
+	Post_analysis string
 }
 
 type ApiSignal struct {
