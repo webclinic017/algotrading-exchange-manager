@@ -4,7 +4,6 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"context"
-	"os"
 	"strings"
 	"sync"
 
@@ -18,10 +17,9 @@ var dbPool *pgxpool.Pool
 
 func connectDB() bool {
 	ctx := context.Background()
-	dbUrl := "postgres://" + os.Getenv("TIMESCALEDB_USERNAME") + ":" + os.Getenv("TIMESCALEDB_PASSWORD") + "@" + os.Getenv("TIMESCALEDB_ADDRESS") + ":" + os.Getenv("TIMESCALEDB_PORT") + "/postgres"
 
 	// Check if you can connect to DB server (accessing 'postgres' defualt DB)
-	dbPoolDefault, err := pgxpool.Connect(context.Background(), dbUrl)
+	dbPoolDefault, err := pgxpool.Connect(context.Background(), appdata.Env["DB_URL"]+"/postgres")
 	if err != nil {
 		srv.ErrorLogger.Println("Could not connect with 'postgres' DB\n", err)
 		return false
@@ -60,12 +58,11 @@ func DbInit() bool {
 		"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
 
 	ctx := context.Background()
-	dbUrl := "postgres://" + os.Getenv("TIMESCALEDB_USERNAME") + ":" + os.Getenv("TIMESCALEDB_PASSWORD") + "@" + os.Getenv("TIMESCALEDB_ADDRESS") + ":" + os.Getenv("TIMESCALEDB_PORT") + "/algotrading"
 
 	if connectDB() {
 		// 1. Connect with 'algotrading' DB
 		var err error
-		dbPool, err = pgxpool.Connect(ctx, dbUrl)
+		dbPool, err = pgxpool.Connect(ctx, appdata.Env["DB_URL"]+"/algotrading")
 		if err != nil {
 			srv.ErrorLogger.Printf("Unable to connect with 'algotrading db' %v\n", err)
 			return false

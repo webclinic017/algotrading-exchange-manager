@@ -37,5 +37,7 @@ func LoadEnvVariables(path string, live bool) bool {
 	appdata.Env["DB_TBL_TICK_NSEFUT"] = appdata.Env["DB_TBL_TICK_NSEFUT"] + appdata.Env["DB_TEST_PREFIX"]
 	appdata.Env["DB_TBL_TICK_NSESTK"] = appdata.Env["DB_TBL_TICK_NSESTK"] + appdata.Env["DB_TEST_PREFIX"]
 
+	appdata.Env["DB_URL"] = "postgres://" + appdata.Env["TIMESCALEDB_USERNAME"] + ":" + appdata.Env["TIMESCALEDB_PASSWORD"] + "@" + appdata.Env["TIMESCALEDB_ADDRESS"] + ":" + appdata.Env["TIMESCALEDB_PORT"]
+
 	return parseEnv
 }
