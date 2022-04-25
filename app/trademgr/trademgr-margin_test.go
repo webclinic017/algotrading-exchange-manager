@@ -114,18 +114,17 @@ func TestCalOrderMargin(t *testing.T) {
 		// dateString := test.argDate
 		// date, _ := time.Parse("2006-01-02", dateString)
 
-		ts.CtrlData.Kite_Setting.Varieties = test.argVarieties
-		ts.CtrlData.Kite_Setting.Products = test.argProducts
-
-		ts.CtrlData.Trade_Setting.FuturesExpiryMonth = test.argMonthSel
-		ts.CtrlData.Trade_Setting.SkipExipryWeekFutures = test.argSkipExpWk
-		ts.CtrlData.Trade_Setting.OrderRoute = test.argOrderRoute
-		ts.CtrlData.Trade_Setting.OptionExpiryWeek = test.argWeekSel
-		ts.CtrlData.Trade_Setting.OptionLevel = test.argOptionLevel
+		ts.Parameters.Kite_Setting.Varieties = test.argVarieties
+		ts.Parameters.Kite_Setting.Products = test.argProducts
+		ts.Parameters.Futures_Setting.FuturesExpiryMonth = test.argMonthSel
+		ts.Parameters.Futures_Setting.SkipExipryWeekFutures = test.argSkipExpWk
+		ts.Parameters.Option_setting.OrderRoute = test.argOrderRoute
+		ts.Parameters.Option_setting.OptionExpiryWeek = test.argWeekSel
+		ts.Parameters.Option_setting.OptionLevel = test.argOptionLevel
 
 		order.Dir = test.argDirection
 		order.Instr = test.argInstr
-		order.Entry = test.argStrikePrice
+		order.Targets.Entry = test.argStrikePrice
 
 		// expected := test.expected
 

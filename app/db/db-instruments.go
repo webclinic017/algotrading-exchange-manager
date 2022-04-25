@@ -199,7 +199,7 @@ func FetchInstrData(instrument string, strikelevel uint64, opdepth int, instrtyp
 	}
 
 	if err != nil {
-		srv.ErrorLogger.Printf("FetchOrderData error %v\n", err)
+		srv.ErrorLogger.Printf("FetchOrderData error %v\n", err.Error())
 		return "", 0
 	}
 

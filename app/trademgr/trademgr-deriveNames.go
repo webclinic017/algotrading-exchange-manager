@@ -25,43 +25,43 @@ func deriveInstrumentsName(order appdata.OrderBook_S, ts appdata.UserStrategies_
 	)
 
 	// ----------------------------------------------------------------------
-	if ts.CtrlData.Trade_Setting.OrderRoute == "option-buy" {
-		selDate = selDate.AddDate(0, 0, (7 * ts.CtrlData.Trade_Setting.OptionExpiryWeek))
-		enddate = selDate.AddDate(0, 0, 7+(7*ts.CtrlData.Trade_Setting.OptionExpiryWeek))
+	if ts.Parameters.Option_setting.OrderRoute == "option-buy" {
+		selDate = selDate.AddDate(0, 0, (7 * ts.Parameters.Option_setting.OptionExpiryWeek))
+		enddate = selDate.AddDate(0, 0, 7+(7*ts.Parameters.Option_setting.OptionExpiryWeek))
 		// ---------------------------------------------------------------------- Special case for expiry
 		// For individual securities expiry is monthly
 		if (strings.ToLower(order.Instr) != "nifty-fut") ||
 			(strings.ToLower(order.Instr) != "banknifty-fut") ||
 			(strings.ToLower(order.Instr) != "finnifty-fut") ||
 			(strings.ToLower(order.Instr) != "midcpnifty-fut") {
-			enddate = enddate.AddDate(0, 1, 0)
+			enddate = selDate.AddDate(0, 1, 0)
 		}
 		if strings.ToLower(order.Dir) == "bullish" {
 			instrumentType = "CE"
 		} else {
 			instrumentType = "PE"
 		}
-	} else if ts.CtrlData.Trade_Setting.OrderRoute == "option-sell" {
-		selDate = selDate.AddDate(0, 0, (7 * ts.CtrlData.Trade_Setting.OptionExpiryWeek))
-		enddate = selDate.AddDate(0, 0, 7+(7*ts.CtrlData.Trade_Setting.OptionExpiryWeek))
+	} else if ts.Parameters.Option_setting.OrderRoute == "option-sell" {
+		selDate = selDate.AddDate(0, 0, (7 * ts.Parameters.Option_setting.OptionExpiryWeek))
+		enddate = selDate.AddDate(0, 0, 7+(7*ts.Parameters.Option_setting.OptionExpiryWeek))
 		// ---------------------------------------------------------------------- Special case for expiry
 		// For individual securities expiry is monthly
 		if (strings.ToLower(order.Instr) != "nifty-fut") ||
 			(strings.ToLower(order.Instr) != "banknifty-fut") ||
 			(strings.ToLower(order.Instr) != "finnifty-fut") ||
 			(strings.ToLower(order.Instr) != "midcpnifty-fut") {
-			enddate = enddate.AddDate(0, 1, 0)
+			enddate = selDate.AddDate(0, 1, 0)
 		}
 		if strings.ToLower(order.Dir) == "bullish" {
 			instrumentType = "PE"
 		} else {
 			instrumentType = "CE"
 		}
-	} else if ts.CtrlData.Trade_Setting.OrderRoute == "futures" {
-		selDate = selDate.AddDate(0, ts.CtrlData.Trade_Setting.FuturesExpiryMonth, 0)
-		enddate = selDate.AddDate(0, 1+ts.CtrlData.Trade_Setting.FuturesExpiryMonth, 0)
+	} else if ts.Parameters.Option_setting.OrderRoute == "futures" {
+		selDate = selDate.AddDate(0, ts.Parameters.Futures_Setting.FuturesExpiryMonth, 0)
+		enddate = selDate.AddDate(0, 1+ts.Parameters.Futures_Setting.FuturesExpiryMonth, 0)
 		instrumentType = "FUT"
-	} else if ts.CtrlData.Trade_Setting.OrderRoute == "equity" {
+	} else if ts.Parameters.Option_setting.OrderRoute == "equity" {
 		enddate = selDate.AddDate(0, 0, 0)
 		instrumentType = "EQ"
 	}
@@ -72,7 +72,7 @@ func deriveInstrumentsName(order appdata.OrderBook_S, ts appdata.UserStrategies_
 
 	symbolFutStr, qty := db.FetchInstrData(order.Instr,
 		uint64(order.Targets.Entry),
-		ts.CtrlData.Trade_Setting.OptionLevel,
+		ts.Parameters.Option_setting.OptionLevel,
 		instrumentType,
 		strStartDate,
 		strEndDate)

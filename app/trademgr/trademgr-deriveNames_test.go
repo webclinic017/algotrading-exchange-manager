@@ -21,10 +21,11 @@ type DeriveInstrumentsNameTesting struct {
 	expected          string
 }
 
-// these unit testcase are sensitive to date in "instruments" table,
+// these unit testcase are sensitive to data in "instruments" table,
 // load the instruments_dbtest_data_24Mar22.csv data before running the test cases
 var DeriveInstrumentsNameTests = []DeriveInstrumentsNameTesting{
 	// option testing - individual securities
+
 	{"2022-04-03", "RELIANCE-FUT", 0, 0, 2400, 0, false, "bullish", "option-buy", "RELIANCE22APR2400CE"},
 	{"2022-04-12", "ASHOKLEY-FUT", 0, 0, 151.3, 0, false, "bullish", "option-buy", "ASHOKLEY22APR152.5CE"},
 	{"2022-03-22", "ASHOKLEY-FUT", 1, 0, 152, 0, false, "bullish", "option-buy", "ASHOKLEY22MAR152.5CE"},
@@ -76,13 +77,13 @@ func TestDeriveInstrumentsName(t *testing.T) {
 		dateString := test.argDate
 		date, _ := time.Parse("2006-01-02", dateString)
 		order.Instr = test.argInstr
-		order.Entry = test.argStrikePrice
+		order.Targets.Entry = test.argStrikePrice
 		order.Dir = test.argDirection
-		ts.CtrlData.Trade_Setting.OptionLevel = test.argOptionLevel
-		ts.CtrlData.Trade_Setting.FuturesExpiryMonth = test.argMonthSel
-		ts.CtrlData.Trade_Setting.SkipExipryWeekFutures = test.argSkipExpWk
-		ts.CtrlData.Trade_Setting.OptionExpiryWeek = test.argWeekSel
-		ts.CtrlData.Trade_Setting.OrderRoute = test.argOrderRoute
+		ts.Parameters.Option_setting.OptionLevel = test.argOptionLevel
+		ts.Parameters.Futures_Setting.FuturesExpiryMonth = test.argMonthSel
+		ts.Parameters.Futures_Setting.SkipExipryWeekFutures = test.argSkipExpWk
+		ts.Parameters.Option_setting.OptionExpiryWeek = test.argWeekSel
+		ts.Parameters.Option_setting.OrderRoute = test.argOrderRoute
 		expected := test.expected
 
 		actual, _ := deriveInstrumentsName(order, ts, date)
