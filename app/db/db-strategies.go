@@ -4,7 +4,6 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"context"
-	"encoding/json"
 
 	"github.com/georgysavva/scany/pgxscan"
 )
@@ -23,13 +22,6 @@ func ReadUserStrategiesFromDb() []appdata.UserStrategies_S {
 	if err != nil {
 		srv.ErrorLogger.Printf("user_strategies read error %v\n", err)
 		return nil
-	}
-
-	for each := range ts {
-		err = json.Unmarshal([]byte(ts[each].Controls), &ts[each].CtrlData)
-		if err != nil {
-			srv.ErrorLogger.Printf("user_strategies read error %v\n", err)
-		}
 	}
 
 	return ts

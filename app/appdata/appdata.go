@@ -41,6 +41,8 @@ const (
 // 	FgWhite
 // )
 
+// --------------------------------- TICK CHANNEL ---------------------------------
+
 var (
 	ChNseTicks chan TickData
 	ChStkTick  chan TickData
@@ -57,46 +59,7 @@ type TickData struct {
 	OpenInterest    uint32
 }
 
-type Percentage_S struct {
-	Target      float64 `json:"Target"`      // "target": 1,
-	SL          float64 `json:"SL"`          // "sl": 1,
-	DeepSL      float64 `json:"DeepSL"`      // "deepsl": 1
-	MaxBudget   float64 `json:"MaxBudget"`   // "limit_budget": 50%,
-	WinningRate float64 `json:"WinningRate"` // "winning_rate": 80%,
-}
-
-type TargetControls_S struct {
-	Trail_target_en         bool      `json:"Trail_target_en"`         // 	"trail_target_en": true,
-	Position_reversal_en    bool      `json:"Position_reversal_en"`    // 	"position_reversal_en": true,
-	Delayed_stoploss_min    time.Time `json:"Delayed_stoploss_min"`    // 	"delayed_stoploss_min": "00:30:00",
-	Stall_detect_period_min time.Time `json:"Stall_detect_period_min"` // 	"stall_detect_period_min": "00:30:00"
-}
-
-type Kite_Setting_S struct {
-	Products     string `json:"Products"`
-	Varieties    string `json:"Varieties"`
-	OrderType    string `json:"OrderType"`
-	Validities   string `json:"Validities"`
-	PositionType string `json:"PositionType"`
-}
-
-type Trade_setting_S struct {
-	TradeSimulate         bool    `json:"tradeSimulate"`
-	OrderRoute            string  `json:"OrderRoute"`
-	OptionLevel           int     `json:"OptionLevel"`
-	OptionExpiryWeek      int     `json:"OptionExpiryWeek"`
-	FuturesExpiryMonth    int     `json:"FuturesExpiryMonth"`
-	SkipExipryWeekFutures bool    `json:"SkipExipryWeekFutures"`
-	LimitAmount           float64 `json:"LimitAmount"`
-}
-
-type ControlData_S struct {
-	Percentages     Percentage_S
-	Target_Controls TargetControls_S
-	Kite_Setting    Kite_Setting_S
-	Trade_Setting   Trade_setting_S
-}
-
+// --------------------------------- USER STRATEGIES ---------------------------------
 type UserStrategies_S struct {
 	Strategy     string
 	Enabled      bool
@@ -105,8 +68,63 @@ type UserStrategies_S struct {
 	Trigger_days string
 	Cdl_size     int
 	Instruments  string
-	Controls     string
-	CtrlData     ControlData_S
+	Parameters   Parameters_S
+}
+
+type Parameters_S struct {
+	Kite_Setting    KiteSetting_S    `json:"kite_setting"`
+	Controls        Controls_S       `json:"controls"`
+	Option_setting  OptionsSetting_S `json:"options_setting"`
+	Futures_Setting FuturesSetting_S `json:"futures_setting"`
+}
+
+type KiteSetting_S struct {
+	Products     string `json:"products"`
+	Varieties    string `json:"varieties"`
+	OrderType    string `json:"order_type"`
+	Validities   string `json:"validities"`
+	PositionType string `json:"position_type"`
+}
+
+type Controls_S struct {
+	TradeSimulate    bool      `json:"trade_simulate"`
+	TargetPer        float64   `json:"target_per"`              // "target": 1,
+	SlPer            float64   `json:"stoploss_per"`            // "sl": 1,
+	DeepSlPer        float64   `json:"deep_stoploss_per"`       // "deepsl": 1
+	DelayedSlMin     time.Time `json:"delayed_stoploss_min"`    // 	"delayed_stoploss_min": "00:30:00",
+	StallDetectMin   time.Time `json:"stall_detect_period_min"` // 	"stall_detect_period_min": "00:30:00"
+	MaxBudget        float64   `json:"budget_max_per"`          // "limit_budget": 50%,
+	LimitAmount      float64   `json:"limit_amount"`
+	TrailTarget      bool      `json:"trail_target_en"`      // 	"trail_target_en": true,
+	PositionReversal bool      `json:"position_reversal_en"` // 	"position_reversal_en": true,
+	WinningRatio     float64   `json:"winning_ratio"`        // "winning_ratio": 80%,
+}
+
+type OptionsSetting_S struct {
+	OrderRoute       string `json:"order_route"`
+	OptionLevel      int    `json:"option_level"`
+	OptionExpiryWeek int    `json:"option_expiry_week"`
+}
+
+type FuturesSetting_S struct {
+	FuturesExpiryMonth    int  `json:"futures_expiry_month"`
+	SkipExipryWeekFutures bool `json:"skip_exipry_week"`
+}
+
+// --------------------------------- ORDER BOOK  ---------------------------------
+type OrderBook_S struct {
+	Id            uint16
+	Date          time.Time
+	Instr         string
+	Strategy      string
+	Status        string
+	Dir           string
+	Exit_reason   string
+	Info          Info_S
+	Targets       Targets_S
+	Orders_entr   []kiteconnect.Trade
+	Orders_exit   []kiteconnect.Trade
+	Post_analysis string
 }
 
 type Targets_S struct {
@@ -127,21 +145,7 @@ type Info_S struct {
 	AvgPriceExit      float64 `json:"avg_price_exit"`
 }
 
-type OrderBook_S struct {
-	Id            uint16
-	Date          time.Time
-	Instr         string
-	Strategy      string
-	Status        string
-	Dir           string
-	Exit_reason   string
-	Info          Info_S
-	Targets       Targets_S
-	Orders_entr   []kiteconnect.Trade
-	Orders_exit   []kiteconnect.Trade
-	Post_analysis string
-}
-
+// --------------------------------- API SIGNAL  ---------------------------------
 type ApiSignal struct {
 	Status   string    `json:"stat us"`
 	Id       uint16    `json:"id"`
@@ -154,7 +158,8 @@ type ApiSignal struct {
 	Stoploss float64   `json:"stoploss"`
 }
 
-// Env variables required
+// --------------------------------- ENV VARIABLES ---------------------------------
+
 var UserSettings = []string{
 	"APP_LIVE_TRADING_MODE",
 	"ZERODHA_USER_ID",
