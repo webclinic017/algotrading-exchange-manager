@@ -20,7 +20,6 @@ var (
 
 func main() {
 
-	srv.Init()
 	now := time.Now()
 	if (now.Hour() >= 9) && (now.Hour() < 16) &&
 		(now.Weekday() > 0) && (now.Weekday() < 6) {
@@ -44,6 +43,7 @@ func main() {
 
 func startMainSession() {
 
+	srv.Init()
 	srv.InfoLogger.Print(
 		"\n\n\t-------------- START ---------------",
 		"\n\t------------------------------------\n\n")
@@ -81,6 +81,7 @@ func stopMainSession() {
 }
 
 func checkAPIs() {
+	srv.Init()
 	srv.InfoLogger.Print(
 		"\n\n\t-----------------------------",
 		"------------------------------------ Check API's --- MARKET OFF-TIME\n\n")

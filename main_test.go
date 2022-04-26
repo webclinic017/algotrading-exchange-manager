@@ -21,6 +21,14 @@ func TestPostTradeOps(t *testing.T) {
 
 }
 
+func TestStartMainSession(t *testing.T) {
+
+	startMainSession()
+	time.Sleep(time.Second * 30)
+	stopMainSession()
+	time.Sleep(time.Second * 2)
+}
+
 func TestDbFunction(t *testing.T) {
 
 	// appdata.ChTick = make(chan appdata.TickData, 1000)

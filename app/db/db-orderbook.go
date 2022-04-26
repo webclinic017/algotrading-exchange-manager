@@ -20,7 +20,7 @@ func ReadOrderBookFromDb(orderBookId uint16) (status bool, tr *appdata.OrderBook
 
 	var ts []*appdata.OrderBook_S
 
-	sqlquery := fmt.Sprintf("SELECT * FROM "+appdata.Env["DB_TBL_ORDER_BOOK"]+" WHERE id = %d", orderBookId)
+	sqlquery := fmt.Sprintf(sqlqueryOrderBookId, orderBookId)
 
 	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
@@ -50,7 +50,7 @@ func ReadAllActiveOrderBookFromDb() []*appdata.OrderBook_S {
 
 	var ts []*appdata.OrderBook_S
 
-	sqlquery := fmt.Sprintf("SELECT * FROM "+appdata.Env["DB_TBL_ORDER_BOOK"]+" WHERE status ! = %d", "TradeCompleted")
+	sqlquery := fmt.Sprintf(sqlQueryAllActiveOrderBook, "TradeCompleted")
 
 	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
@@ -80,7 +80,7 @@ func ReadAllOrderBookFromDb(condition string, status string) []*appdata.OrderBoo
 
 	var ts []*appdata.OrderBook_S
 
-	sqlquery := fmt.Sprintf("SELECT * FROM " + appdata.Env["DB_TBL_ORDER_BOOK"] + " WHERE status " + condition + " '" + status + "'")
+	sqlquery := fmt.Sprintf(sqlqueryAllOrderBookCondition, condition, status)
 
 	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
@@ -253,7 +253,7 @@ func FetchOrderData(orderBookId uint16) []*appdata.OrderBook_S {
 
 	var ts []*appdata.OrderBook_S
 
-	sqlquery := fmt.Sprintf("SELECT * FROM signals_trading WHERE id = %d", orderBookId)
+	sqlquery := fmt.Sprintf(sqlqueryOrderData, orderBookId)
 
 	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 

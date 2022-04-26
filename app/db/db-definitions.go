@@ -1,5 +1,10 @@
 package db
 
+import (
+	"algo-ex-mgr/app/appdata"
+	"strings"
+)
+
 //  ---------------------------------- CREATE TABLES  ----------------------------------
 
 var DB_EXISTS_QUERY = "SELECT datname FROM pg_catalog.pg_database  WHERE lower(datname) = lower('algotrading');"
@@ -99,4 +104,86 @@ var DB_VIEW_CREATE = `
 					WITH NO DATA;
 					`
 
-//  ---------------------------------- QUERIES ----------------------------------
+// ---------------------------------- db-instruments ----------------------------------
+
+var sqlQueryFutures = `SELECT i.instrument_token, ts.mysymbol
+						FROM ` + appdata.Env["DB_TBL_USER_SYMBOLS"] + ` ts, ` + appdata.Env["DB_TBL_INSTRUMENTS"] + ` i
+						WHERE 
+								ts.symbol = i.name
+							and 
+								ts.segment = i.instrument_type 
+							and 
+								ts.exchange = i.exchange
+							and 
+								EXTRACT(MONTH FROM TO_DATE(i.expiry,'YYYY-MM-DD')) = EXTRACT(MONTH FROM current_date);`
+
+var sqlInstrDataQueryOptn = `SELECT tradingsymbol, lot_size
+								FROM DB_TBL_USER_SYMBOLS ts, DB_TBL_INSTRUMENTS i
+								WHERE 
+										i.exchange = 'NFO'
+									and
+										ts.symbol = i.name 
+									and 
+										mysymbol= $1 
+									and
+										strike >= ($2 + ($3*ts.strikestep) )
+									and
+										strike < ($2 + ts.strikestep + ($3*ts.strikestep) )
+									and
+										instrument_type = $4
+									and
+										expiry > $5
+									and
+										expiry < $6				
+								ORDER BY 
+									expiry asc
+								LIMIT 10;`
+
+var sqlInstrDataQueryEQ = `SELECT tradingsymbol, lot_size
+							FROM DB_TBL_USER_SYMBOLS ts, DB_TBL_INSTRUMENTS i
+							WHERE 
+								ts.symbol = i.tradingsymbol 
+							and 
+								ts.mysymbol = $1 
+							and
+								i.segment = 'NSE'
+							and 
+								instrument_type = 'EQ'  
+							LIMIT 10;`
+
+var sqlInstrDataQueryFUT = `SELECT tradingsymbol, lot_size
+							FROM DB_TBL_USER_SYMBOLS ts, DB_TBL_INSTRUMENTS i
+							WHERE 
+									ts.symbol = i.name 
+								and 
+									mysymbol= $1
+								and 
+									expiry > $2
+								and 
+									expiry < $3
+								and 
+									instrument_type = 'FUT'
+							LIMIT 10;`
+
+var sqlQueryNseEqTokens = `SELECT i.instrument_token, ts.mysymbol
+							FROM DB_TBL_USER_SYMBOLS ts, DB_TBL_INSTRUMENTS i
+							WHERE 
+									ts.symbol = i.tradingsymbol
+								and 
+									i.instrument_type = 'EQ'
+								and 
+									ts.exchange = i.exchange;`
+
+// ---------------------------------- db-orderbook ----------------------------------
+
+var sqlqueryOrderBookId = "SELECT * FROM " + appdata.Env["DB_TBL_ORDER_BOOK"] + " WHERE id = %d"
+
+var sqlQueryAllActiveOrderBook = "SELECT * FROM " + appdata.Env["DB_TBL_ORDER_BOOK"] + " WHERE status ! = %d"
+
+var sqlqueryAllOrderBookCondition = "SELECT * FROM " + appdata.Env["DB_TBL_ORDER_BOOK"] + " WHERE status %s '%s'"
+
+var sqlqueryOrderData = "SELECT * FROM signals_trading WHERE id = %d"
+
+func DbQueryNameUpdate(name string, val string, query string) string {
+	return strings.Replace(query, name, val, -1)
+}
