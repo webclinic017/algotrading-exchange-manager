@@ -4,9 +4,15 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"context"
+	"encoding/csv"
+	"fmt"
+	"log"
+	"os"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -147,4 +153,90 @@ func setupDbCompression(tblName string) {
 	if err != nil {
 		srv.WarningLogger.Printf("Error setting up DB Compression: %v\n", err)
 	}
+}
+
+func DbSaveInstrCsv1(filePath string) {
+
+	fmt.Println("saving csv file into DB")
+	ctx := context.Background()
+	myCon, _ := dbPool.Acquire(ctx)
+	defer myCon.Release()
+
+	f, err := os.Open(filePath)
+	defer f.Close()
+
+	if err != nil {
+		return
+	}
+
+	csvReader := csv.NewReader(f)
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		log.Fatal("Unable to parse file as CSV for "+filePath, err)
+	}
+
+	myCon.Exec(ctx, dbSqlQuery(DB_CREATE_TBL_INSTRUMENTS))
+	len := 0
+
+	for _, record := range records {
+
+		len++
+		_, err1 := myCon.Exec(ctx, dbSqlQuery(sqlSaveCSV), record[0], record[1], record[2], record[3],
+			record[4], record[5], record[6], record[7],
+			record[8], record[9], record[10], record[11])
+
+		if err1 != nil {
+			srv.ErrorLogger.Printf("Unable to insert csv into intruments table: %v\n", err.Error())
+		}
+
+	}
+}
+
+func DbSaveInstrCsv(filePath string) {
+
+	defer func() {
+		if err := recover(); err != nil {
+			srv.WarningLogger.Print("DB Not intialised: ", err)
+		}
+	}()
+
+	f, err := os.Open(filePath)
+	defer f.Close()
+
+	if err != nil {
+		return
+	}
+
+	csvReader := csv.NewReader(f)
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		log.Fatal("Unable to parse file as CSV for "+filePath, err)
+	}
+
+	batch := &pgx.Batch{}
+
+	for _, record := range records {
+
+		batch.Queue(dbSqlQuery(sqlSaveCSV), record[0], record[1], record[2], record[3],
+			record[4], record[5], record[6], record[7],
+			record[8], record[9], record[10], record[11])
+	}
+
+	ctx := context.Background()
+
+	myCon, _ := dbPool.Acquire(ctx)
+	defer myCon.Release()
+
+	myCon.Exec(ctx, dbSqlQuery(DB_CREATE_TBL_INSTRUMENTS))
+
+	br := myCon.SendBatch(ctx, batch)
+	_, err = br.Exec()
+
+	// fmt.Println("Inserted ", ct, " rows")
+	if err != nil {
+		ErrCnt++
+		srv.WarningLogger.Printf("Unable to execute statement in batch queue %v\n", err)
+	}
+
+	time.Sleep(time.Second * 5)
 }

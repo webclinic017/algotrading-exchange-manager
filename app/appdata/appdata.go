@@ -20,7 +20,7 @@ const (
 	ColorInfo    = "\033[37m"
 	ColorDimmed  = "\033[37m"
 	ColorReset   = "\033[0m"
-	ColorError   = "\033[31m"
+	ColorError   = "\033[31m\033[41m"
 	ColorGreen   = "\033[32m"
 	ColorWarning = "\033[33m"
 	ColorBlue    = "\033[34m"

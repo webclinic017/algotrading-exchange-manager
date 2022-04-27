@@ -1,7 +1,9 @@
 package db
 
 import (
+	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -35,32 +37,48 @@ var FetchInstrDataTests = []FetchInstrDataTesting{
 }
 
 func TestFetchInstrData(t *testing.T) {
+	fmt.Println(appdata.ColorInfo, "\nTestFetchInstrData()")
+	fmt.Println(appdata.ColorWhite)
 	srv.Init()
 	mydir, _ := os.Getwd()
 	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
 	DbInit()
+	// fmt.Println("timeout: " + flag.Lookup("test.timeout").Value.String())
+
+	DbSaveInstrCsv(mydir + "/../zfiles/Unittest-Support-Files/instruments_dbtest_data_24Mar22.csv")
 
 	for _, test := range FetchInstrDataTests {
 
 		actual, _ := FetchInstrData(test.instrument, test.strikelevel, test.opdepth, test.optype, test.startdate, test.enddate)
 
 		if actual != test.expected {
-			t.Errorf("\nderiveFuturesName() \nexpected:%q \n  actual:%q", test.expected, actual)
+			t.Error(appdata.ColorError, "\nderiveFuturesName() \nexpected:%q \n  actual:%q", test.expected, actual)
+		} else {
+			fmt.Println(appdata.ColorSuccess, "TestFetchInstrData() actual: ", len(actual))
+
 		}
 	}
+	fmt.Println(appdata.ColorInfo)
 }
 
 func TestGetInstrumentsToken(t *testing.T) {
+	fmt.Println(appdata.ColorInfo, "\nTestGetInstrumentsToken()")
+	fmt.Println(appdata.ColorWhite)
 	srv.Init()
 	mydir, _ := os.Getwd()
 	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
 	DbInit()
+	DbSaveInstrCsv(mydir + "/../zfiles/Unittest-Support-Files/instruments_dbtest_data_24Mar22.csv")
 
 	actual := GetInstrumentsToken()
 
-	if len(actual) == 0 {
-		t.Errorf("\nGetInstrumentsToken() \nexpected:%q \n  actual:%q", 2, len(actual))
+	if len(actual) == 124 {
+		fmt.Println(appdata.ColorSuccess, "\nGetInstrumentsToken() expected: 124 actual: ", len(actual))
+		fmt.Println(appdata.ColorInfo)
 	} else {
-		println("\nGetInstrumentsToken() \nexpected:%q \n  actual:%q", 2, len(actual))
+		t.Error(appdata.ColorError, "\nGetInstrumentsToken() expected: 124 actual: ", len(actual))
+		t.Error(appdata.ColorInfo)
 	}
+	fmt.Println(actual)
+
 }

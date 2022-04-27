@@ -1,7 +1,6 @@
 package db
 
 import (
-	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"context"
 	"strconv"
@@ -31,7 +30,7 @@ func getFuturesTokens() map[string]string {
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	rows, err := myCon.Query(ctx, sqlQueryFutures)
+	rows, err := myCon.Query(ctx, dbSqlQuery(sqlQueryFutures))
 
 	if err != nil {
 		srv.ErrorLogger.Printf("Cannot read list of tokens for ticker %v\n", err)
@@ -59,6 +58,7 @@ func getFuturesTokens() map[string]string {
 	defer rows.Close()
 
 	return tokensMap
+
 }
 
 // TODO: Check for MCX, BSE and other symbols
@@ -70,7 +70,7 @@ func getNseEqTokens() map[string]string {
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	rows, err := myCon.Query(ctx, sqlQueryNseEqTokens)
+	rows, err := myCon.Query(ctx, dbSqlQuery(sqlQueryNseEqTokens))
 
 	if err != nil {
 		srv.ErrorLogger.Printf("Cannot read list of tokens for ticker %v\n", err)
@@ -114,25 +114,17 @@ func FetchInstrData(instrument string, strikelevel uint64, opdepth int, instrtyp
 	var err error
 	if instrtype == "EQ" {
 
-		sqlquery := DbQueryNameUpdate("DB_TBL_USER_SYMBOLS", appdata.Env["DB_TBL_USER_SYMBOLS"], sqlInstrDataQueryEQ)
-		sqlquery = DbQueryNameUpdate("DB_TBL_INSTRUMENTS", appdata.Env["DB_TBL_INSTRUMENTS"], sqlquery)
-		err = myCon.QueryRow(ctx, sqlquery,
+		err = myCon.QueryRow(ctx, dbSqlQuery(sqlInstrDataQueryEQ),
 			instrument).Scan(&name, &size)
 
 	} else if instrtype == "FUT" {
 
-		sqlquery := DbQueryNameUpdate("DB_TBL_USER_SYMBOLS", appdata.Env["DB_TBL_USER_SYMBOLS"], sqlInstrDataQueryFUT)
-		sqlquery = DbQueryNameUpdate("DB_TBL_INSTRUMENTS", appdata.Env["DB_TBL_INSTRUMENTS"], sqlquery)
-
-		err = myCon.QueryRow(ctx, sqlquery, instrument,
-			startdate, enddate).Scan(&name, &size)
+		err = myCon.QueryRow(ctx, dbSqlQuery(sqlInstrDataQueryFUT),
+			instrument, startdate, enddate).Scan(&name, &size)
 
 	} else {
 
-		sqlquery := DbQueryNameUpdate("DB_TBL_USER_SYMBOLS", appdata.Env["DB_TBL_USER_SYMBOLS"], sqlInstrDataQueryOptn)
-		sqlquery = DbQueryNameUpdate("DB_TBL_INSTRUMENTS", appdata.Env["DB_TBL_INSTRUMENTS"], sqlquery)
-
-		err = myCon.QueryRow(ctx, sqlquery,
+		err = myCon.QueryRow(ctx, dbSqlQuery(sqlInstrDataQueryOptn),
 			instrument, strikelevel,
 			opdepth, instrtype,
 			startdate, enddate).Scan(&name, &size)

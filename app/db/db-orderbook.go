@@ -20,7 +20,7 @@ func ReadOrderBookFromDb(orderBookId uint16) (status bool, tr *appdata.OrderBook
 
 	var ts []*appdata.OrderBook_S
 
-	sqlquery := fmt.Sprintf(sqlqueryOrderBookId, orderBookId)
+	sqlquery := fmt.Sprintf(dbSqlQuery(sqlqueryOrderBookId), orderBookId)
 
 	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
@@ -253,7 +253,7 @@ func FetchOrderData(orderBookId uint16) []*appdata.OrderBook_S {
 
 	var ts []*appdata.OrderBook_S
 
-	sqlquery := fmt.Sprintf(sqlqueryOrderData, orderBookId)
+	sqlquery := fmt.Sprintf(dbSqlQuery(sqlqueryOrderBookId), orderBookId)
 
 	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 

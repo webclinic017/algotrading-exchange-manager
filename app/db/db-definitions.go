@@ -16,6 +16,22 @@ var DB_CREATE_TABLE_ID_DECODED = `CREATE TABLE token_id_decoded
 									mcx_symbol VARCHAR(30)
 								);
 						`
+var DB_CREATE_TBL_INSTRUMENTS = `DROP TABLE IF EXISTS %DB_TBL_INSTRUMENTS;
+
+								CREATE TABLE %DB_TBL_INSTRUMENTS (
+										instrument_token int8 NULL,
+										exchange_token int8 NULL,
+										tradingsymbol text NULL,
+										"name" text NULL,
+										last_price int8 NULL,
+										expiry text NULL,
+										strike float8 NULL,
+										tick_size float8 NULL,
+										lot_size int8 NULL,
+										instrument_type text NULL,
+										segment text NULL,
+										exchange text NULL
+									);`
 
 var DB_CREATE_TABLE_TICKER = `CREATE TABLE $1
 							 		(
@@ -107,7 +123,7 @@ var DB_VIEW_CREATE = `
 // ---------------------------------- db-instruments ----------------------------------
 
 var sqlQueryFutures = `SELECT i.instrument_token, ts.mysymbol
-						FROM ` + appdata.Env["DB_TBL_USER_SYMBOLS"] + ` ts, ` + appdata.Env["DB_TBL_INSTRUMENTS"] + ` i
+						FROM %DB_TBL_USER_SYMBOLS ts, %DB_TBL_INSTRUMENTS i
 						WHERE 
 								ts.symbol = i.name
 							and 
@@ -118,7 +134,7 @@ var sqlQueryFutures = `SELECT i.instrument_token, ts.mysymbol
 								EXTRACT(MONTH FROM TO_DATE(i.expiry,'YYYY-MM-DD')) = EXTRACT(MONTH FROM current_date);`
 
 var sqlInstrDataQueryOptn = `SELECT tradingsymbol, lot_size
-								FROM DB_TBL_USER_SYMBOLS ts, DB_TBL_INSTRUMENTS i
+								FROM %DB_TBL_USER_SYMBOLS ts, %DB_TBL_INSTRUMENTS i
 								WHERE 
 										i.exchange = 'NFO'
 									and
@@ -140,7 +156,7 @@ var sqlInstrDataQueryOptn = `SELECT tradingsymbol, lot_size
 								LIMIT 10;`
 
 var sqlInstrDataQueryEQ = `SELECT tradingsymbol, lot_size
-							FROM DB_TBL_USER_SYMBOLS ts, DB_TBL_INSTRUMENTS i
+							FROM %DB_TBL_USER_SYMBOLS ts, %DB_TBL_INSTRUMENTS i
 							WHERE 
 								ts.symbol = i.tradingsymbol 
 							and 
@@ -152,7 +168,7 @@ var sqlInstrDataQueryEQ = `SELECT tradingsymbol, lot_size
 							LIMIT 10;`
 
 var sqlInstrDataQueryFUT = `SELECT tradingsymbol, lot_size
-							FROM DB_TBL_USER_SYMBOLS ts, DB_TBL_INSTRUMENTS i
+							FROM %DB_TBL_USER_SYMBOLS ts, %DB_TBL_INSTRUMENTS i
 							WHERE 
 									ts.symbol = i.name 
 								and 
@@ -166,7 +182,7 @@ var sqlInstrDataQueryFUT = `SELECT tradingsymbol, lot_size
 							LIMIT 10;`
 
 var sqlQueryNseEqTokens = `SELECT i.instrument_token, ts.mysymbol
-							FROM DB_TBL_USER_SYMBOLS ts, DB_TBL_INSTRUMENTS i
+							FROM %DB_TBL_USER_SYMBOLS ts, %DB_TBL_INSTRUMENTS i
 							WHERE 
 									ts.symbol = i.tradingsymbol
 								and 
@@ -176,14 +192,35 @@ var sqlQueryNseEqTokens = `SELECT i.instrument_token, ts.mysymbol
 
 // ---------------------------------- db-orderbook ----------------------------------
 
-var sqlqueryOrderBookId = "SELECT * FROM " + appdata.Env["DB_TBL_ORDER_BOOK"] + " WHERE id = %d"
+var sqlqueryOrderBookId = "SELECT * FROM %DB_TBL_ORDER_BOOK WHERE id = %d"
 
-var sqlQueryAllActiveOrderBook = "SELECT * FROM " + appdata.Env["DB_TBL_ORDER_BOOK"] + " WHERE status ! = %d"
+var sqlQueryAllActiveOrderBook = "SELECT * FROM %DB_TBL_ORDER_BOOK WHERE status ! = %d"
+var sqlqueryAllOrderBookCondition = "SELECT * FROM %DB_TBL_ORDER_BOOK WHERE status %s '%s'"
 
-var sqlqueryAllOrderBookCondition = "SELECT * FROM " + appdata.Env["DB_TBL_ORDER_BOOK"] + " WHERE status %s '%s'"
+// ---------------------------------- query-resolver  ----------------------------------
 
-var sqlqueryOrderData = "SELECT * FROM signals_trading WHERE id = %d"
+func dbSqlQuery(query string) string {
 
-func DbQueryNameUpdate(name string, val string, query string) string {
-	return strings.Replace(query, name, val, -1)
+	for key, val := range appdata.Env {
+		query = strings.Replace(query, "%"+key, val, -1)
+	}
+
+	return query
 }
+
+// ---------------------------------- db.go ----------------------------------
+var sqlSaveCSV = `INSERT INTO %DB_TBL_INSTRUMENTS (
+	instrument_token,
+	exchange_token,
+	tradingsymbol,
+	"name",
+	last_price,
+	expiry,
+	strike,
+	tick_size,
+	lot_size,
+	instrument_type,
+	segment,
+	exchange)
+	VALUES
+	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);`
