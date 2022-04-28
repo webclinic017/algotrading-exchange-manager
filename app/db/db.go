@@ -5,7 +5,6 @@ import (
 	"algo-ex-mgr/app/srv"
 	"context"
 	"encoding/csv"
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -155,44 +154,7 @@ func setupDbCompression(tblName string) {
 	}
 }
 
-func DbSaveInstrCsv1(filePath string) {
-
-	fmt.Println("saving csv file into DB")
-	ctx := context.Background()
-	myCon, _ := dbPool.Acquire(ctx)
-	defer myCon.Release()
-
-	f, err := os.Open(filePath)
-	defer f.Close()
-
-	if err != nil {
-		return
-	}
-
-	csvReader := csv.NewReader(f)
-	records, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal("Unable to parse file as CSV for "+filePath, err)
-	}
-
-	myCon.Exec(ctx, dbSqlQuery(DB_CREATE_TBL_INSTRUMENTS))
-	len := 0
-
-	for _, record := range records {
-
-		len++
-		_, err1 := myCon.Exec(ctx, dbSqlQuery(sqlSaveCSV), record[0], record[1], record[2], record[3],
-			record[4], record[5], record[6], record[7],
-			record[8], record[9], record[10], record[11])
-
-		if err1 != nil {
-			srv.ErrorLogger.Printf("Unable to insert csv into intruments table: %v\n", err.Error())
-		}
-
-	}
-}
-
-func DbSaveInstrCsv(filePath string) {
+func DbSaveInstrCsv(table string, filePath string) {
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -217,9 +179,15 @@ func DbSaveInstrCsv(filePath string) {
 
 	for _, record := range records {
 
-		batch.Queue(dbSqlQuery(sqlSaveCSV), record[0], record[1], record[2], record[3],
-			record[4], record[5], record[6], record[7],
-			record[8], record[9], record[10], record[11])
+		if table == "instruments" {
+			batch.Queue(dbSqlQuery(sqlSaveInstruments), record[0], record[1], record[2], record[3],
+				record[4], record[5], record[6], record[7],
+				record[8], record[9], record[10], record[11])
+		} else if table == "user_symbols" {
+			batch.Queue(dbSqlQuery(sqlSaveUserSymbols),
+				record[0], record[1], record[2],
+				record[3], record[4], record[5])
+		}
 	}
 
 	ctx := context.Background()
@@ -227,7 +195,11 @@ func DbSaveInstrCsv(filePath string) {
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	myCon.Exec(ctx, dbSqlQuery(DB_CREATE_TBL_INSTRUMENTS))
+	if table == "instruments" {
+		myCon.Exec(ctx, dbSqlQuery(DB_CREATE_TBL_INSTRUMENTS))
+	} else if table == "user_symbols" {
+		myCon.Exec(ctx, dbSqlQuery(DB_CREATE_TABLE_USER_SYMBOLSwDel))
+	}
 
 	br := myCon.SendBatch(ctx, batch)
 	_, err = br.Exec()
@@ -238,5 +210,7 @@ func DbSaveInstrCsv(filePath string) {
 		srv.WarningLogger.Printf("Unable to execute statement in batch queue %v\n", err)
 	}
 
-	time.Sleep(time.Second * 5)
+	if table == "instruments" {
+		time.Sleep(time.Second * 5)
+	}
 }

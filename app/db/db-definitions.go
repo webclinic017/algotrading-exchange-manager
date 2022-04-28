@@ -14,8 +14,8 @@ var DB_CREATE_TABLE_ID_DECODED = `CREATE TABLE token_id_decoded
 									time TIMESTAMP NOT NULL,
 									nse_symbol VARCHAR(30),
 									mcx_symbol VARCHAR(30)
-								);
-						`
+								);`
+
 var DB_CREATE_TBL_INSTRUMENTS = `DROP TABLE IF EXISTS %DB_TBL_INSTRUMENTS;
 
 								CREATE TABLE %DB_TBL_INSTRUMENTS (
@@ -46,7 +46,10 @@ var DB_CREATE_TABLE_TICKER = `CREATE TABLE $1
 								SELECT create_hypertable('$1', 'time');
 								SELECT set_chunk_time_interval('$1', INTERVAL '7 days');`
 
-var DB_CREATE_TABLE_USER_SYMBOLS = `CREATE TABLE $1 (
+var DB_CREATE_TABLE_USER_SYMBOLSwDel = `DROP TABLE IF EXISTS %DB_TBL_USER_SYMBOLS;
+										` + DB_CREATE_TABLE_USER_SYMBOLS
+
+var DB_CREATE_TABLE_USER_SYMBOLS = `CREATE TABLE %DB_TBL_USER_SYMBOLS (
 									symbol varchar NOT NULL,
 									track bool NULL DEFAULT false,
 									segment varchar NOT NULL,
@@ -54,6 +57,7 @@ var DB_CREATE_TABLE_USER_SYMBOLS = `CREATE TABLE $1 (
 									strikestep float4 NULL DEFAULT 0,
 									exchange varchar NULL
 								);`
+
 var DB_CREATE_TABLE_USER_SETTING = `CREATE TABLE $1 (
 									name varchar NOT NULL,
 									controls JSON NOT NULL
@@ -209,7 +213,7 @@ func dbSqlQuery(query string) string {
 }
 
 // ---------------------------------- db.go ----------------------------------
-var sqlSaveCSV = `INSERT INTO %DB_TBL_INSTRUMENTS (
+var sqlSaveInstruments = `INSERT INTO %DB_TBL_INSTRUMENTS (
 	instrument_token,
 	exchange_token,
 	tradingsymbol,
@@ -224,3 +228,17 @@ var sqlSaveCSV = `INSERT INTO %DB_TBL_INSTRUMENTS (
 	exchange)
 	VALUES
 	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);`
+
+var sqlSaveUserSymbols = `INSERT INTO %DB_TBL_USER_SYMBOLS
+	(
+		symbol,
+		track,
+		segment,
+		mysymbol,
+		strikestep,
+		exchange
+	)
+	VALUES
+	(
+		$1, $2, $3, $4, $5, $6
+	);`

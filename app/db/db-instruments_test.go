@@ -43,16 +43,15 @@ func TestFetchInstrData(t *testing.T) {
 	mydir, _ := os.Getwd()
 	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
 	DbInit()
-	// fmt.Println("timeout: " + flag.Lookup("test.timeout").Value.String())
-
-	DbSaveInstrCsv(mydir + "/../zfiles/Unittest-Support-Files/instruments_dbtest_data_24Mar22.csv")
+	DbSaveInstrCsv("user_symbols", mydir+"/../zfiles/Unittest-Support-Files/paragvb_symbols_202204282107.csv")
+	DbSaveInstrCsv("instruments", mydir+"/../zfiles/Unittest-Support-Files/instruments_dbtest_data_24Mar22.csv")
 
 	for _, test := range FetchInstrDataTests {
 
 		actual, _ := FetchInstrData(test.instrument, test.strikelevel, test.opdepth, test.optype, test.startdate, test.enddate)
 
 		if actual != test.expected {
-			t.Error(appdata.ColorError, "\nderiveFuturesName() \nexpected:%q \n  actual:%q", test.expected, actual)
+			t.Error(appdata.ColorError, "\nderiveFuturesName() \nexpected:", test.expected, "\n  actual:", actual)
 		} else {
 			fmt.Println(appdata.ColorSuccess, "TestFetchInstrData() actual: ", len(actual))
 
@@ -68,7 +67,7 @@ func TestGetInstrumentsToken(t *testing.T) {
 	mydir, _ := os.Getwd()
 	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
 	DbInit()
-	DbSaveInstrCsv(mydir + "/../zfiles/Unittest-Support-Files/instruments_dbtest_data_24Mar22.csv")
+	DbSaveInstrCsv("instruments", mydir+"/../zfiles/Unittest-Support-Files/instruments_dbtest_data_24Mar22.csv")
 
 	actual := GetInstrumentsToken()
 
