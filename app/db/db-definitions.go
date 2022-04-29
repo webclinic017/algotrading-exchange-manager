@@ -9,12 +9,6 @@ import (
 
 var DB_EXISTS_QUERY = "SELECT datname FROM pg_catalog.pg_database  WHERE lower(datname) = lower('algotrading');"
 var DB_CREATE_QUERY = "CREATE DATABASE algotrading;"
-var DB_CREATE_TABLE_ID_DECODED = `CREATE TABLE token_id_decoded
-								(
-									time TIMESTAMP NOT NULL,
-									nse_symbol VARCHAR(30),
-									mcx_symbol VARCHAR(30)
-								);`
 
 var DB_CREATE_TBL_INSTRUMENTS = `DROP TABLE IF EXISTS %DB_TBL_INSTRUMENTS;
 
@@ -33,7 +27,7 @@ var DB_CREATE_TBL_INSTRUMENTS = `DROP TABLE IF EXISTS %DB_TBL_INSTRUMENTS;
 										exchange text NULL
 									);`
 
-var DB_CREATE_TABLE_TICKER = `CREATE TABLE $1
+var DB_CREATE_TABLE_TICKER_NSEFUT = `CREATE TABLE %DB_TBL_TICK_NSEFUT
 							 		(
 										time TIMESTAMP NOT NULL,
 										symbol VARCHAR(30) NOT NULL,
@@ -43,8 +37,21 @@ var DB_CREATE_TABLE_TICKER = `CREATE TABLE $1
 										trades_till_now bigint NOT NULL DEFAULT 0,
 										open_interest bigint NOT NULL DEFAULT 0
 									);
-								SELECT create_hypertable('$1', 'time');
-								SELECT set_chunk_time_interval('$1', INTERVAL '7 days');`
+								SELECT create_hypertable('%DB_TBL_TICK_NSEFUT', 'time');
+								SELECT set_chunk_time_interval('%DB_TBL_TICK_NSEFUT', INTERVAL '7 days');`
+
+var DB_CREATE_TABLE_TICKER_NSESTK = `CREATE TABLE %DB_TBL_TICK_NSESTK
+									(
+									   time TIMESTAMP NOT NULL,
+									   symbol VARCHAR(30) NOT NULL,
+									   last_traded_price double precision NOT NULL DEFAULT 0,
+									   buy_demand bigint NOT NULL DEFAULT 0,
+									   sell_demand bigint NOT NULL DEFAULT 0,
+									   trades_till_now bigint NOT NULL DEFAULT 0,
+									   open_interest bigint NOT NULL DEFAULT 0
+								   );
+							   SELECT create_hypertable('%DB_TBL_TICK_NSESTK', 'time');
+							   SELECT set_chunk_time_interval('%DB_TBL_TICK_NSESTK', INTERVAL '7 days');`
 
 var DB_CREATE_TABLE_USER_SYMBOLSwDel = `DROP TABLE IF EXISTS %DB_TBL_USER_SYMBOLS;
 										` + DB_CREATE_TABLE_USER_SYMBOLS
@@ -58,12 +65,12 @@ var DB_CREATE_TABLE_USER_SYMBOLS = `CREATE TABLE %DB_TBL_USER_SYMBOLS (
 									exchange varchar NULL
 								);`
 
-var DB_CREATE_TABLE_USER_SETTING = `CREATE TABLE $1 (
+var DB_CREATE_TABLE_USER_SETTING = `CREATE TABLE %DB_TBL_USER_SETTING (
 									name varchar NOT NULL,
 									controls JSON NOT NULL
 								);`
 
-var DB_CREATE_TABLE_USER_STRATEGIES = `CREATE TABLE $1 (
+var DB_CREATE_TABLE_USER_STRATEGIES = `CREATE TABLE %DB_TBL_USER_STRATEGIES (
 										strategy VARCHAR(100) UNIQUE NOT NULL,
 										enabled BOOLEAN NOT NULL DEFAULT 'false',
 										engine  VARCHAR(50) NOT NULL,
@@ -74,7 +81,7 @@ var DB_CREATE_TABLE_USER_STRATEGIES = `CREATE TABLE $1 (
 										controls JSON
 									);`
 
-var DB_CREATE_TABLE_ORDER_BOOK = `CREATE TABLE $1 (
+var DB_CREATE_TABLE_ORDER_BOOK = `CREATE TABLE %DB_TBL_ORDER_BOOK (
 									id SERIAL PRIMARY KEY NOT NULL,
 									date DATE NOT NULL,
 									instr TEXT NOT NULL,
@@ -135,7 +142,9 @@ var sqlQueryFutures = `SELECT i.instrument_token, ts.mysymbol
 							and 
 								ts.exchange = i.exchange
 							and 
-								EXTRACT(MONTH FROM TO_DATE(i.expiry,'YYYY-MM-DD')) = EXTRACT(MONTH FROM current_date);`
+								EXTRACT(MONTH FROM TO_DATE(i.expiry,'YYYY-MM-DD')) = EXTRACT(MONTH FROM current_date)+1;`
+
+// RULE: FUT COntracts for next month, query return null when somedays are left in current month but contract expires. eg. 29Apr2022
 
 var sqlInstrDataQueryOptn = `SELECT tradingsymbol, lot_size
 								FROM %DB_TBL_USER_SYMBOLS ts, %DB_TBL_INSTRUMENTS i

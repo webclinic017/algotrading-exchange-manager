@@ -81,22 +81,22 @@ func DbInit() bool {
 		}
 
 		// 3. Check if 'ticker' table exists, if not CREATE it
-		if createTable(appdata.Env["DB_TBL_TICK_NSEFUT"], DB_CREATE_TABLE_TICKER) {
-			if createTable(appdata.Env["DB_TBL_TICK_NSESTK"], DB_CREATE_TABLE_TICKER) {
-				if createTable(appdata.Env["DB_TBL_USER_SYMBOLS"], DB_CREATE_TABLE_USER_SYMBOLS) {
-					if createTable(appdata.Env["DB_TBL_USER_SETTING"], DB_CREATE_TABLE_USER_SETTING) {
-						if createTable(appdata.Env["DB_TBL_USER_STRATEGIES"], DB_CREATE_TABLE_USER_STRATEGIES) {
-							if createTable(appdata.Env["DB_TBL_ORDER_BOOK"], DB_CREATE_TABLE_ORDER_BOOK) {
-								// createViews()
-								// setupDbCompression(appdata.Env["DB_TICK_TABLE_NSEFUT"])
-								srv.InfoLogger.Printf("DB checks completed\n")
-								return true
-							}
-						}
-					}
-				}
-			}
+		var s bool
+
+		s = createTable("DB_TBL_TICK_NSEFUT", DB_CREATE_TABLE_TICKER_NSEFUT)
+		s = s && createTable("DB_TBL_TICK_NSESTK", DB_CREATE_TABLE_TICKER_NSESTK)
+		s = s && createTable("DB_TBL_USER_SYMBOLS", DB_CREATE_TABLE_USER_SYMBOLS)
+		s = s && createTable("DB_TBL_USER_SETTING", DB_CREATE_TABLE_USER_SETTING)
+		s = s && createTable("DB_TBL_USER_STRATEGIES", DB_CREATE_TABLE_USER_STRATEGIES)
+		s = s && createTable("DB_TBL_ORDER_BOOK", DB_CREATE_TABLE_ORDER_BOOK)
+
+		if s {
+			// createViews()
+			// setupDbCompression(appdata.Env["DB_TICK_TABLE_NSEFUT"])
+			srv.InfoLogger.Printf("DB checks completed\n")
+			return true
 		}
+
 	}
 	return false
 }
@@ -122,16 +122,15 @@ func createTable(tblName string, sqlquery string) bool {
 
 	var retVal string
 
-	query := "select table_name from information_schema.tables WHERE table_name = '" + tblName + "';"
+	query := "select table_name from information_schema.tables WHERE table_name = '" + appdata.Env[tblName] + "';"
 	myCon.QueryRow(ctx, query).Scan(&retVal)
 
 	if len(retVal) == 0 {
-		srv.InfoLogger.Printf("%s Does not exist, creating now!\n", tblName)
-		query := strings.ReplaceAll(sqlquery, "$1", tblName)
+		srv.InfoLogger.Printf("%s{%s} Does not exist, creating now!\n", tblName, appdata.Env[tblName])
 
-		_, err := myCon.Exec(ctx, query)
+		_, err := myCon.Exec(ctx, dbSqlQuery(sqlquery))
 		if err != nil {
-			srv.WarningLogger.Printf("Failed to CREATE %s table : %v\n", tblName, err)
+			srv.WarningLogger.Printf("Failed to CREATE %s table : %v\n", tblName, err.Error())
 			myCon.Release()
 			return false
 		}
@@ -163,11 +162,10 @@ func DbSaveInstrCsv(table string, filePath string) {
 	}()
 
 	f, err := os.Open(filePath)
-	defer f.Close()
-
 	if err != nil {
 		return
 	}
+	defer f.Close()
 
 	csvReader := csv.NewReader(f)
 	records, err := csvReader.ReadAll()

@@ -22,12 +22,12 @@ func StoreNseIdxFutsInDb() {
 		dbTick = append(dbTick, v)
 		if len(dbTick) > 100 {
 			dBwg.Add(1)
-			go executeBatch(dbTick, "ticks_nsefut")
+			go executeBatch(dbTick, appdata.Env["DB_TBL_TICK_NSEFUT"])
 			dbTick = nil
 		}
 	}
 	dBwg.Add(1)
-	go executeBatch(dbTick, "ticks_nsefut")
+	go executeBatch(dbTick, appdata.Env["DB_TBL_TICK_NSEFUT"])
 	dbTick = nil
 
 	// wait for all executeBatch() to finish
@@ -43,12 +43,12 @@ func StoreTicksInDb() {
 		dbTick = append(dbTick, v)
 		if len(dbTick) > 100 {
 			dBwg.Add(1)
-			go executeBatch(dbTick, "ticks_stk")
+			go executeBatch(dbTick, appdata.Env["DB_TBL_TICK_NSESTK"])
 			dbTick = nil
 		}
 	}
 	dBwg.Add(1)
-	go executeBatch(dbTick, "ticks_stk")
+	go executeBatch(dbTick, appdata.Env["DB_TBL_TICK_NSESTK"])
 	dbTick = nil
 
 	// wait for all executeBatch() to finish
