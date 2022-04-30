@@ -12,54 +12,91 @@ import (
 )
 
 func pendingOrder(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
-	/*
-		tradesList := kite.FetchOrderTrades(order.Order_id)
-		var qtyFilled float64
 
-		for each := range tradesList {
-			qtyFilled = qtyFilled + tradesList[each].Quantity
-		}
-		order.OrderData.QtyFilled = qtyFilled
-		od, err := json.Marshal(tradesList)
-		if err != nil {
-			srv.TradesLogger.Println("Error in marshalling trades list: ", err.Error())
-			return false
-		}
-		order.Order_trades_entry = string(od)
+	if !ts.Parameters.Controls.TradeSimulate {
+		return true
+	} else {
 
-		if order.OrderData.QtyReq > order.OrderData.QtyFilled {
-			// TODO: modify limit price if order is still pending
-			qt, n := kite.GetLatestQuote(order.Instr)
-			// ToDO: fetch min values for the enter/exit trades
-			fmt.Print(qt[n].Depth.Buy[0].Price)
+		/*
+			tradesList := kite.FetchOrderTrades(order.Order_id)
+			var qtyFilled float64
 
-			return true
-		} else {
-			return false
-		}
-	*/
-	return false
+			for each := range tradesList {
+				qtyFilled = qtyFilled + tradesList[each].Quantity
+			}
+			order.OrderData.QtyFilled = qtyFilled
+			od, err := json.Marshal(tradesList)
+			if err != nil {
+				srv.TradesLogger.Println("Error in marshalling trades list: ", err.Error())
+				return false
+			}
+			order.Order_trades_entry = string(od)
+
+			if order.OrderData.QtyReq > order.OrderData.QtyFilled {
+				// TODO: modify limit price if order is still pending
+				qt, n := kite.GetLatestQuote(order.Instr)
+				// ToDO: fetch min values for the enter/exit trades
+				fmt.Print(qt[n].Depth.Buy[0].Price)
+
+				return true
+			} else {
+				return false
+			}
+		*/
+		return false
+	}
 }
 
 func tradeEnter(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 
-	entryTime := time.Now()
+	if !ts.Parameters.Controls.TradeSimulate {
 
-	userMargin := kite.GetUserMargin()
+		entryTime := time.Now()
 
-	orderMargin := getOrderMargin(*order, ts, entryTime)
+		userMargin := kite.GetUserMargin()
 
-	order.Info.QtyReq = determineOrderSize(userMargin, orderMargin[0].Total,
-		ts.Parameters.Controls.WinningRatio, ts.Parameters.Controls.MaxBudget,
-		ts.Parameters.Controls.LimitAmount)
+		orderMargin := getOrderMargin(*order, ts, entryTime)
 
-	orderId := executeOrder(*order, ts, entryTime, order.Info.QtyReq)
+		order.Info.QtyReq = determineOrderSize(userMargin, orderMargin[0].Total,
+			ts.Parameters.Controls.WinningRatio, ts.Parameters.Controls.MaxBudget,
+			ts.Parameters.Controls.LimitAmount)
 
-	if orderId != 0 {
-		order.Info.OrderIdEntr = orderId
-		srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
+		orderId := executeOrder(*order, ts, entryTime, order.Info.QtyReq)
+
+		if orderId != 0 {
+			order.Info.OrderIdEntr = orderId
+			srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
+		}
+		return orderId != 0
+	} else {
+		return true
 	}
-	return orderId != 0
+}
+
+func tradeExit(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
+
+	if !ts.Parameters.Controls.TradeSimulate {
+
+		entryTime := time.Now()
+
+		userMargin := kite.GetUserMargin()
+
+		orderMargin := getOrderMargin(*order, ts, entryTime)
+
+		order.Info.QtyReq = determineOrderSize(userMargin, orderMargin[0].Total,
+			ts.Parameters.Controls.WinningRatio, ts.Parameters.Controls.MaxBudget,
+			ts.Parameters.Controls.LimitAmount)
+
+		orderId := executeOrder(*order, ts, entryTime, order.Info.QtyReq)
+
+		if orderId != 0 {
+			order.Info.OrderIdEntr = orderId
+			srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
+		}
+		return orderId != 0
+	} else {
+		return true
+	}
 }
 
 // Fetch account balance

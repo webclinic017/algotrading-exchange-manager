@@ -80,9 +80,7 @@ func DbInit() bool {
 			return false
 		}
 
-		// 3. Check if 'ticker' table exists, if not CREATE it
 		var s bool
-
 		s = createTable("DB_TBL_TICK_NSEFUT", DB_CREATE_TABLE_TICKER_NSEFUT)
 		s = s && createTable("DB_TBL_TICK_NSESTK", DB_CREATE_TABLE_TICKER_NSESTK)
 		s = s && createTable("DB_TBL_USER_SYMBOLS", DB_CREATE_TABLE_USER_SYMBOLS)

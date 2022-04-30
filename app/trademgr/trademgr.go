@@ -36,7 +36,7 @@ func StartTrader(daystart bool) {
 	// --------------------------------- Read trading strategies from dB
 	tradeUserStrategies := db.ReadUserStrategiesFromDb()
 
-	// --------------------------------- Read if trades already in progress
+	// --------------------------------- Resume operations on restart or new day start
 	trSig := db.ReadAllOrderBookFromDb("!=", "Completed")
 	for eachSymbol := range trSig {
 		for eachStrategy := range tradeUserStrategies {
@@ -71,6 +71,7 @@ func StartTrader(daystart bool) {
 
 // to stop trademanager and exit all positions
 func StopTrader() {
+	TerminateTradeMgr = true
 	srv.TradesLogger.Println("(Terminating Trader) - Signal received")
 
 }
@@ -143,10 +144,19 @@ tradingloop:
 
 		// ------------------------------------------------------------------------ squareoff trade
 		case "ExitTrade":
-			if result {
-				tr.Status = "TradeCompleted"
+			if tradeExit(&tr, tradeUserStrategies) {
+				tr.Status = "ExitOrdersPending"
 				db.StoreOrderBookInDb(tr)
 			}
+
+			// ------------------------------------------------------------------------ enter trade (order)
+		case "ExitOrdersPending":
+			if pendingOrder(&tr, tradeUserStrategies) {
+				tr.Status = "TradeCompleted"
+			}
+			db.StoreOrderBookInDb(tr) // store orderbook, may be partially executed
+
+			// Todo: Add exit condition for retries
 
 		// ------------------------------------------------------------------------ complete housekeeping
 		case "TradeCompleted":
