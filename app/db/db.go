@@ -111,7 +111,11 @@ func DbRawExec(query string) {
 		srv.ErrorLogger.Printf("Could not acquire Context, too many operations?: %v\n", err)
 		return
 	}
-	myCon.Exec(ctx, query)
+	_, err = myCon.Exec(ctx, query)
+	if err != nil {
+		srv.ErrorLogger.Printf("Error executing query: %v\n", err.Error())
+	}
+
 }
 
 func createTable(tblName string, sqlquery string) bool {

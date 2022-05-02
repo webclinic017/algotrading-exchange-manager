@@ -79,108 +79,109 @@ func StopTrader() {
 // TODO: master exit condition & EoD termniation
 
 // symbolTradeManager
-func operateSymbol(tradeSymbol string, tradeUserStrategies appdata.UserStrategies_S, trId uint16, wgTrademgr sync.WaitGroup) {
+func operateSymbol(tradeSymbol string, tradeUserStrategies appdata.UserStrategies_S, orderId uint16, wgTrademgr sync.WaitGroup) {
 	defer wgTrademgr.Done()
 
-	var tr appdata.OrderBook_S
+	var order appdata.OrderBook_S
 	var result bool
 
-	if trId == 0 {
-		tr.Status = "Initiate"
+	if orderId == 0 {
+		order.Status = "Initiate"
 	} else {
-		tr.Id = trId
-		tr.Status = "Resume"
+		order.Id = orderId
+		order.Status = "Resume"
 	}
 
 tradingloop:
 	for {
-		switch tr.Status {
+		switch order.Status {
 
 		// ------------------------------------------------------------------------ New symbol being registered for trade
 		case "Initiate":
-			tr.Date = time.Now()
-			tr.Strategy = tradeUserStrategies.Strategy
-			tr.Instr = tradeSymbol
-			tr.Status = "AwaitSignal"
+			order.Date = time.Now()
+			order.Strategy = tradeUserStrategies.Strategy
+			order.Instr = tradeSymbol
+			order.Status = "AwaitSignal"
+			order.Info.Order_simulation = tradeUserStrategies.Parameters.Controls.TradeSimulate
 			// tr.Order_info = "{}"
-			tr.Post_analysis = "{}"
-			tr.Id = db.StoreOrderBookInDb(tr)
+			order.Post_analysis = "{}"
+			order.Id = db.StoreOrderBookInDb(order)
 
 		// ------------------------------------------------------------------------ Resume previously registered symbol
 		case "Resume":
-			loadValues(&tr)
+			loadValues(&order)
 
 		// ------------------------------------------------------------------------ trade entry check (Scan Signals)
 		case "AwaitSignal":
-			if tradeEnterSignalCheck(tradeSymbol, tradeUserStrategies, &tr) {
-				tr.Status = "PlaceOrders"
-				db.StoreOrderBookInDb(tr)
+			if tradeEnterSignalCheck(tradeSymbol, tradeUserStrategies, &order) {
+				order.Status = "PlaceOrders"
+				db.StoreOrderBookInDb(order)
 			}
 
 		// ------------------------------------------------------------------------ enter trade (order)
 		case "PlaceOrders":
-			if tr.Dir != "" { // on valid signal
-				if tradeEnter(&tr, tradeUserStrategies) {
-					tr.Status = "PlaceOrdersPending"
-					db.StoreOrderBookInDb(tr)
+			if order.Dir != "" { // on valid signal
+				if tradeEnter(&order, tradeUserStrategies) {
+					order.Status = "PlaceOrdersPending"
+					db.StoreOrderBookInDb(order)
 				}
 			}
 
 			// ------------------------------------------------------------------------ enter trade (order)
 		case "PlaceOrdersPending":
-			if pendingOrder(&tr, tradeUserStrategies) {
-				tr.Status = "TradeMonitoring"
+			if pendingOrder(&order, tradeUserStrategies) {
+				order.Status = "TradeMonitoring"
 			}
-			db.StoreOrderBookInDb(tr) // store orderbook, may be partially executed
+			db.StoreOrderBookInDb(order) // store orderbook, may be partially executed
 
 			// Todo: Add exit condition for retries
 
 		// ------------------------------------------------------------------------ monitor trade exits
 		case "TradeMonitoring":
-			if apiclient.SignalAnalyzer(&tr, "-exit") {
-				tr.Status = "ExitTrade"
-				db.StoreOrderBookInDb(tr)
+			if apiclient.SignalAnalyzer(&order, "-exit") {
+				order.Status = "ExitTrade"
+				db.StoreOrderBookInDb(order)
 			}
 
 		// ------------------------------------------------------------------------ squareoff trade
 		case "ExitTrade":
-			if tradeExit(&tr, tradeUserStrategies) {
-				tr.Status = "ExitOrdersPending"
-				db.StoreOrderBookInDb(tr)
+			if tradeExit(&order, tradeUserStrategies) {
+				order.Status = "ExitOrdersPending"
+				db.StoreOrderBookInDb(order)
 			}
 
 			// ------------------------------------------------------------------------ enter trade (order)
 		case "ExitOrdersPending":
-			if pendingOrder(&tr, tradeUserStrategies) {
-				tr.Status = "TradeCompleted"
+			if pendingOrder(&order, tradeUserStrategies) {
+				order.Status = "TradeCompleted"
 			}
-			db.StoreOrderBookInDb(tr) // store orderbook, may be partially executed
+			db.StoreOrderBookInDb(order) // store orderbook, may be partially executed
 
 			// Todo: Add exit condition for retries
 
 		// ------------------------------------------------------------------------ complete housekeeping
 		case "TradeCompleted":
 			if result {
-				db.StoreOrderBookInDb(tr)
+				db.StoreOrderBookInDb(order)
 				break tradingloop
 			}
 
 		// --------------------------------------------------------------- Terminate trade if any other status
 		default:
-			db.StoreOrderBookInDb(tr)
+			db.StoreOrderBookInDb(order)
 			break tradingloop
 		}
 
 		time.Sleep(tradeOperatorSleepTime)
-		loadValues(&tr)
+		loadValues(&order)
 		if TerminateTradeMgr {
-			tr.Status = "Terminate"
+			order.Status = "Terminate"
 		}
 		// TODO: check if exit is requested
 	}
 }
 
-// Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.
+// RULE: Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.
 func checkTriggerDays(tradeUserStrategies appdata.UserStrategies_S) bool {
 
 	triggerdays := strings.Split(tradeUserStrategies.Trigger_days, ",")
@@ -196,18 +197,23 @@ func checkTriggerDays(tradeUserStrategies appdata.UserStrategies_S) bool {
 	return false
 }
 
-func loadValues(tr *appdata.OrderBook_S) {
-	status, trtemp := db.ReadOrderBookFromDb(tr.Id)
+func loadValues(or *appdata.OrderBook_S) {
+	status, trtemp := db.ReadOrderBookFromDb(or.Id)
 	if status {
-		// TODO: check if all values are loaded
-		tr.Id = trtemp.Id
-		tr.Date = trtemp.Date
-		tr.Strategy = trtemp.Strategy
-		tr.Instr = trtemp.Instr
-		tr.Status = trtemp.Status
-		// tr.Order_trades_entry = trtemp.Order_trades_entry
-		// tr.Order_trades_exit = trtemp.Order_trades_exit
-		tr.Post_analysis = trtemp.Post_analysis
+		or.Id = trtemp.Id
+		or.Date = trtemp.Date
+		or.Instr = trtemp.Instr
+		or.Strategy = trtemp.Strategy
+		or.Status = trtemp.Status
+		or.Dir = trtemp.Dir
+		or.Exit_reason = trtemp.Exit_reason
+		or.Info = trtemp.Info
+		or.Targets = trtemp.Targets
+		or.Orders_entr = trtemp.Orders_entr
+		or.Orders_exit = trtemp.Orders_exit
+		or.Post_analysis = trtemp.Post_analysis
+	} else {
+		or.Info.ErrorCount++
 	}
 }
 

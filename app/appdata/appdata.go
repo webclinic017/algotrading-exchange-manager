@@ -15,12 +15,12 @@ const (
 	ErrorColor     = "\033[1;31m%s\033[0m"
 	DebugColor     = "\033[1;35m%s\033[0m"
 
-	ColorSuccess = "\033[37m\033[42m"
+	ColorSuccess = "\033[32m"
 	ColorBanner  = "\033[34;4m"
 	ColorInfo    = "\033[37m"
 	ColorDimmed  = "\033[37m"
 	ColorReset   = "\033[0m"
-	ColorError   = "\033[31m\033[41m"
+	ColorError   = "\033[31m"
 	ColorGreen   = "\033[32m"
 	ColorWarning = "\033[33m"
 	ColorBlue    = "\033[34m"
@@ -32,13 +32,13 @@ const (
 // Foreground text colors
 // const (
 // 	FgBlack Attribute = iota + 30
-// 	FgRed
-// 	FgGreen
-// 	FgYellow
-// 	FgBlue
-// 	FgMagenta
-// 	FgCyan
-// 	FgWhite
+// 	FgRed 31
+// 	FgGreen 32
+// 	FgYellow 33
+// 	FgBlue 34
+// 	FgMagenta 35
+// 	FgCyan 36
+// 	FgWhite 37
 // )
 
 // --------------------------------- TICK CHANNEL ---------------------------------
@@ -135,6 +135,7 @@ type Targets_S struct {
 
 type Info_S struct {
 	TradingSymbol     string  `json:"trading_symbol"`
+	Order_simulation  bool    `json:"order_simulation"`
 	Exchange          string  `json:"exchange"`
 	OrderIdEntr       uint64  `json:"order_id_entr"`
 	OrderIdExit       uint64  `json:"order_id_exit"`
@@ -143,6 +144,7 @@ type Info_S struct {
 	UserExitRequested bool    `json:"user_exit_requested"`
 	AvgPriceEnter     float64 `json:"avg_price_entr"`
 	AvgPriceExit      float64 `json:"avg_price_exit"`
+	ErrorCount        uint64  `json:"error_count"`
 }
 
 // --------------------------------- API SIGNAL  ---------------------------------

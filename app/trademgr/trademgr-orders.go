@@ -13,7 +13,7 @@ import (
 
 func pendingOrder(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 
-	if !ts.Parameters.Controls.TradeSimulate {
+	if !order.Info.Order_simulation {
 		return true
 	} else {
 

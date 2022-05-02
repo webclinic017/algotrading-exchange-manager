@@ -210,6 +210,52 @@ var sqlqueryOrderBookId = "SELECT * FROM %DB_TBL_ORDER_BOOK WHERE id = %d"
 var sqlQueryAllActiveOrderBook = "SELECT * FROM %DB_TBL_ORDER_BOOK WHERE status ! = %d"
 var sqlqueryAllOrderBookCondition = "SELECT * FROM %DB_TBL_ORDER_BOOK WHERE status %s '%s'"
 
+var sqlCreateOrder = `INSERT INTO  %DB_TBL_ORDER_BOOK (
+	date,
+	instr,
+	strategy,
+	status,
+	dir,
+	exit_reason,
+	info,
+	targets,
+	orders_entr,
+	orders_exit,
+	post_analysis)
+	VALUES
+	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);`
+
+var sqlUpdateOrder = ` UPDATE %DB_TBL_ORDER_BOOK SET
+	date = $1,
+	instr = $2,
+	strategy = $3,
+	status = $4,
+	dir = $5,
+	exit_reason = $6,
+	info = $7,
+	targets = $8,
+	orders_entr = $9,
+	orders_exit = $10,
+	post_analysis = $11
+	;`
+
+var sqlOrderCount = `SELECT COUNT(*) FROM %DB_TBL_ORDER_BOOK
+						WHERE  (
+							instr = $1
+						AND
+							date = $2
+						AND
+							strategy = $3)`
+
+var sqlOrderId = `
+	   SELECT id FROM %DB_TBL_ORDER_BOOK
+	   WHERE  (
+	   		instr = $1
+	   	AND
+	   		date = $2
+	   	AND
+	   		strategy = $3)`
+
 // ---------------------------------- query-resolver  ----------------------------------
 
 func dbSqlQuery(query string) string {
