@@ -38,13 +38,21 @@ func StartTrader(daystart bool) {
 
 	// --------------------------------- Resume operations on restart or new day start
 	trSig := db.ReadAllOrderBookFromDb("!=", "Completed")
+	var s bool = false
 	for eachSymbol := range trSig {
+		s = false
 		for eachStrategy := range tradeUserStrategies {
 			if trSig[eachSymbol].Strategy == tradeUserStrategies[eachStrategy].Strategy {
 
 				wgTrademgr.Add(1)
+				srv.TradesLogger.Println(appdata.ColorSuccess, "\n\nStrategy being resumed\n", trSig[eachSymbol])
 				go operateSymbol("nil", tradeUserStrategies[eachStrategy], trSig[eachSymbol].Id, wgTrademgr)
+				s = true
+				break
 			}
+		}
+		if !s {
+			srv.TradesLogger.Println(appdata.ColorError, "\n\nStrategy could not be resumed\n", trSig[eachSymbol])
 		}
 	}
 
@@ -87,9 +95,9 @@ func operateSymbol(tradeSymbol string, tradeUserStrategies appdata.UserStrategie
 
 	if orderId == 0 {
 		order.Status = "Initiate"
-	} else {
+	} else { // Resume previously registered symbol
 		order.Id = orderId
-		order.Status = "Resume"
+		loadValues(&order)
 	}
 
 tradingloop:
@@ -106,10 +114,6 @@ tradingloop:
 			// tr.Order_info = "{}"
 			order.Post_analysis = "{}"
 			order.Id = db.StoreOrderBookInDb(order)
-
-		// ------------------------------------------------------------------------ Resume previously registered symbol
-		case "Resume":
-			loadValues(&order)
 
 		// ------------------------------------------------------------------------ trade entry check (Scan Signals)
 		case "AwaitSignal":

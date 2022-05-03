@@ -31,7 +31,7 @@ func TestStartTrader(t *testing.T) {
 
 	test1(t, 1, "[case Initiate] Start two threads\n")
 	test2(t, 2, "[case Initiate] daystart false, nothing should start\n")
-	// test3(t, 3, "[case Resume] resume previous running trades\n")         //
+	test3(t, 3, "[case Resume] resume previous running trades. 1 with correct strategy set. 1 should resume\n") //
 	// test4(t, 4, "[case AwaitSignal] get response from api\n")             // trigger time test
 
 }
@@ -92,17 +92,21 @@ func test3(t *testing.T, testId int, testDesc string) {
 
 	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
 	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
-	db.DbRawExec(startTrader_TblUserStrategies_setup)
+
+	// make continour trigerred trades
+	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
+	db.DbRawExec(sqlquery)
 	db.DbRawExec(Test3_orderbook)
 	// start trader, do not spawn new trades
 	go StartTrader(false)
 
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 4)
 	// check if trades are logged in order_book
-	trades := db.ReadAllOrderBookFromDb("=", "TradeMonitoring")
-	if len(trades) != 2 {
+	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
+	if len(trades) != 1 { // 1 should remain in AwaitSignal, other should be processed
 		t.Errorf("Expected 2 trades, got %d", len(trades))
-		fmt.Print((appdata.ColorError), "TEST  ", testId, ": FAILED\n")
+		fmt.Print((appdata.ColorError), "TEST_", testId, ": FAILED\n", "Check if API Server is running")
+
 	} else {
 		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST_", testId, ": Trades found ", len(trades))
 	}

@@ -237,6 +237,7 @@ var sqlUpdateOrder = ` UPDATE %DB_TBL_ORDER_BOOK SET
 	orders_entr = $9,
 	orders_exit = $10,
 	post_analysis = $11
+	WHERE id = $12
 	;`
 
 var sqlOrderCount = `SELECT COUNT(*) FROM %DB_TBL_ORDER_BOOK

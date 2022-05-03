@@ -25,7 +25,7 @@ func ReadOrderBookFromDb(orderBookId uint16) (status bool, tr *appdata.OrderBook
 	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
 	if err != nil {
-		srv.ErrorLogger.Printf("order_trades read error %v\n", err)
+		srv.ErrorLogger.Printf("order_trades read error %v\n", err.Error())
 		return false, nil
 
 	}
@@ -78,24 +78,24 @@ func ReadAllOrderBookFromDb(condition string, status string) []*appdata.OrderBoo
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	var ts []*appdata.OrderBook_S
+	var order []*appdata.OrderBook_S
 
 	sqlquery := fmt.Sprintf(dbSqlQuery(sqlqueryAllOrderBookCondition), condition, status)
 
-	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
+	err := pgxscan.Select(ctx, dbPool, &order, sqlquery)
 
 	if err != nil {
-		srv.ErrorLogger.Printf("order_trades read error %v\n", err)
+		srv.ErrorLogger.Printf("order_trades read error %v\n", err.Error())
 		return nil
 
 	}
 
-	if len(ts) == 0 {
+	if len(order) == 0 {
 		srv.InfoLogger.Printf("order_trades 0 %v\n", err)
 		return nil
 	}
 
-	return ts
+	return order
 
 }
 
@@ -139,6 +139,7 @@ func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {
 			tr.Orders_entr,
 			tr.Orders_exit,
 			tr.Post_analysis,
+			tr.Id,
 		)
 		if err != nil {
 			srv.ErrorLogger.Printf("Unable to update Order for strategy-symbol in DB: %v\n", err)

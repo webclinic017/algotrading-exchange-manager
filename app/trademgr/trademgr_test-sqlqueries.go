@@ -69,6 +69,8 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
 }');
 `
 
-var Test3_orderbook = `INSERT INTO public.paragvb_order_book_test ("date",instr,strategy,status,instr_id,dir,entry,target,stoploss,order_id,order_trade_entry,order_trade_exit,order_simulation,exit_reason,post_analysis) VALUES
-('2022-04-20','CONTINOUS_test1','S001-ORB-001','TradeMonitoring',0,'',0.0,0.0,0.0,0,'{}','{}','{}','','{}'),
-('2022-04-20','TIMETRIG_test2','S001-ORB-002','TradeMonitoring',0,'',0.0,0.0,0.0,0,'{}','{}','{}','','{}');`
+var Test3_orderbook = `INSERT INTO public.paragvb_order_book_test 
+("date",        instr,              strategy,       status,             dir,    exit_reason,    info,targets, orders_entr,orders_exit,post_analysis) VALUES
+('2022-04-20',  'CONTINOUS_test1',  'S99-TEST-002', 'AwaitSignal',  '',     '',             '{}','{}','[{}]','[{}]','{}'),
+('2022-04-20',  'TIMETRIG_test2',   'S999-TEST-002', 'AwaitSignal',  '',     '',             '{}','{}','[{}]','[{}]','{}')
+;`
