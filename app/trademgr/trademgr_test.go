@@ -19,7 +19,7 @@ type StartTraderT struct {
 // ** Result needs to be verified manually!!!
 var StartTraderTestArray = []StartTraderT{}
 
-func TestStartTrader(t *testing.T) {
+func TestStartTrader1(t *testing.T) {
 
 	fmt.Print((appdata.ColorWhite))
 	srv.Init()
@@ -32,8 +32,73 @@ func TestStartTrader(t *testing.T) {
 	test1(t, 1, "[case Initiate] Start two threads\n")
 	test2(t, 2, "[case Initiate] daystart false, nothing should start\n")
 	test3(t, 3, "[case Resume] resume previous running trades. 1 with correct strategy set. 1 should resume\n") //
-	// test4(t, 4, "[case AwaitSignal] get response from api\n")             // trigger time test
 
+}
+
+func TestStartTrader2(t *testing.T) {
+
+	fmt.Print((appdata.ColorWhite))
+	srv.Init()
+	mydir, _ := os.Getwd()
+	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
+	db.DbInit()
+	kite.Init()
+	t.Parallel()
+
+	// test4(t, 4, "[case AwaitSignal] get response from api\n")
+	test5(t, 5, "[case Real EQ Simulation] Simulate real equity signal and check values\n")
+	// test5(t, 5, "[case UserExitReq] Trade shall exit position\n")
+
+}
+
+/* start trades,
+use active apicall
+1st trade in PlaceOrders
+modify 2nd trade time for execution, wait for timetrigger, check the second is also in PlaceOrders
+*/
+func test5(t *testing.T, testId int, testDesc string) {
+	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
+
+	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
+	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
+
+	// add 10 seconds to timetriggered trade
+	sqlquery := strings.Replace(startTrader_TblUserStrategies_EqRelianceREAL, "%TRIGGERTIME",
+		time.Now().Local().Add(time.Second*time.Duration(2)).Format("15:04:05"), -1)
+
+	db.DbRawExec(sqlquery)
+
+	go StartTrader(true)
+
+	time.Sleep(time.Second * 200)
+	// check if trades are logged in order_book
+	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
+	if len(trades) != 2 {
+		t.Errorf("Expected 1 trades, got %d", len(trades))
+		fmt.Print((appdata.ColorError), "TEST  ", testId, ": FAILED\n", string(appdata.ColorReset))
+	} else {
+		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST ", testId, ": Trades found in AwaitSignal", len(trades), string(appdata.ColorReset))
+	}
+	time.Sleep(time.Second * 9)
+	trades = db.ReadAllOrderBookFromDb("=", "PlaceOrdersPending")
+	if len(trades) != 1 {
+		t.Errorf("Expected 1 trades, got %d", len(trades))
+		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
+	} else {
+		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in PlaceOrdersPending", len(trades))
+	}
+
+	// terminate trademgr
+	TerminateTradeMgr = true
+	time.Sleep(time.Second * 3)
+
+	trades = db.ReadAllOrderBookFromDb("=", "Terminate")
+	if len(trades) != 2 {
+		t.Errorf("Expected 2 trades, got %d", len(trades))
+		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
+	} else {
+		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in Terminate", len(trades))
+	}
 }
 
 /* start trades,
@@ -48,10 +113,8 @@ func test4(t *testing.T, testId int, testDesc string) {
 	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
 
 	// add 10 seconds to timetriggered trade
-	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "$TRIGGERTIME$",
-		time.Now().Local().Add(time.Second*time.Duration(10)).Format("15:04:05"), -1)
-
-	sqlquery = strings.Replace(sqlquery, "S001-ORB", "S999-TEST", -1)
+	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME",
+		time.Now().Local().Add(time.Second*time.Duration(2)).Format("15:04:05"), -1)
 
 	db.DbRawExec(sqlquery)
 
@@ -59,33 +122,33 @@ func test4(t *testing.T, testId int, testDesc string) {
 
 	time.Sleep(time.Second * 2)
 	// check if trades are logged in order_book
-	trades := db.ReadAllOrderBookFromDb("=", "PlaceOrders")
-	if len(trades) != 1 {
+	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
+	if len(trades) != 2 {
 		t.Errorf("Expected 1 trades, got %d", len(trades))
 		fmt.Print((appdata.ColorError), "TEST  ", testId, ": FAILED\n", string(appdata.ColorReset))
 	} else {
-		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST ", testId, ": Trades found ", len(trades), string(appdata.ColorReset))
+		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST ", testId, ": Trades found in AwaitSignal", len(trades), string(appdata.ColorReset))
 	}
-	trades = db.ReadAllOrderBookFromDb("=", "AwaitSignal")
+	time.Sleep(time.Second * 9)
+	trades = db.ReadAllOrderBookFromDb("=", "PlaceOrdersPending")
 	if len(trades) != 1 {
 		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print((appdata.ColorError), "TEST  ", testId, ": FAILED\n", string(appdata.ColorReset))
+		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
 	} else {
-		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST ", testId, ": Trades found ", len(trades), string(appdata.ColorReset))
+		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in PlaceOrdersPending", len(trades))
 	}
-	time.Sleep(time.Second * 7)
-	trades = db.ReadAllOrderBookFromDb("=", "PlaceOrders")
-	if len(trades) != 1 {
-		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print((appdata.ColorError))
-		fmt.Print("TEST  ", testId, ": FAILED\n")
-	} else {
-		fmt.Print(string(appdata.ColorSuccess))
-		fmt.Print("PASSED: TEST_", testId, ": Trades found ", len(trades))
-	}
+
 	// terminate trademgr
-	// TerminateTradeMgr = true
+	TerminateTradeMgr = true
 	time.Sleep(time.Second * 3)
+
+	trades = db.ReadAllOrderBookFromDb("=", "Terminate")
+	if len(trades) != 2 {
+		t.Errorf("Expected 2 trades, got %d", len(trades))
+		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
+	} else {
+		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in Terminate", len(trades))
+	}
 }
 func test3(t *testing.T, testId int, testDesc string) {
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
@@ -115,7 +178,6 @@ func test3(t *testing.T, testId int, testDesc string) {
 	TerminateTradeMgr = true
 	time.Sleep(time.Second * 3)
 }
-
 func test1(t *testing.T, testId int, testDesc string) {
 
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
@@ -145,7 +207,6 @@ func test1(t *testing.T, testId int, testDesc string) {
 	TerminateTradeMgr = true
 	time.Sleep(time.Second * 1)
 }
-
 func test2(t *testing.T, testId int, testDesc string) {
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
 

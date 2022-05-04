@@ -53,7 +53,7 @@ func TestFetchInstrData(t *testing.T) {
 		if actual != test.expected {
 			t.Error(appdata.ColorError, "\nderiveFuturesName() \nexpected:", test.expected, "\n  actual:", actual)
 		} else {
-			fmt.Println(appdata.ColorSuccess, "TestFetchInstrData() actual: ", len(actual))
+			fmt.Println(appdata.ColorSuccess, "TestFetchInstrData() actual: ", actual)
 
 		}
 	}

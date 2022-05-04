@@ -47,28 +47,41 @@ func pendingOrder(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool 
 	}
 }
 
-func tradeEnter(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
+func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool {
 
-	if !ts.Parameters.Controls.TradeSimulate {
+	if !order.Info.Order_simulation { // real trade
 
 		entryTime := time.Now()
 
 		userMargin := kite.GetUserMargin()
 
-		orderMargin := getOrderMargin(*order, ts, entryTime)
+		orderMargin := getOrderMargin(*order, us, entryTime)
 
 		order.Info.QtyReq = determineOrderSize(userMargin, orderMargin[0].Total,
-			ts.Parameters.Controls.WinningRatio, ts.Parameters.Controls.MaxBudget,
-			ts.Parameters.Controls.LimitAmount)
+			us.Parameters.Controls.WinningRatio, us.Parameters.Controls.MaxBudget,
+			us.Parameters.Controls.LimitAmount)
 
-		orderId := executeOrder(*order, ts, entryTime, order.Info.QtyReq)
+		orderId := executeOrder(*order, us, entryTime, order.Info.QtyReq)
 
 		if orderId != 0 {
 			order.Info.OrderIdEntr = orderId
 			srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
 		}
 		return orderId != 0
-	} else {
+	} else { // simulation
+
+		order.Info.TradingSymbol = order.Instr
+		if strings.Contains(order.Instr, "-FUT") { // RULE: only for futures and equity supported
+			order.Info.Exchange = kiteconnect.ExchangeNFO
+		} else {
+			order.Info.Exchange = kiteconnect.ExchangeNSE
+		}
+		order.Info.OrderIdEntr = 0
+		order.Info.OrderIdExit = 0
+		order.Info.QtyReq = 0
+		order.Info.QtyFilled = 0
+		val, n := kite.GetLatestQuote(order.Instr) // TODO: Add logic to loop through lowest values and return only the price. Add for buy sell
+		order.Info.AvgPriceEnter = val[n].Depth.Buy[4].Price
 		return true
 	}
 }

@@ -15,7 +15,8 @@ import (
 
 // tradeStrategies - list of all strategies to be executed. Read once from db at start of day
 const (
-	tradeOperatorSleepTime = time.Second * 2
+	awaitSignalSleep = time.Second * 2
+	placeOrderSleep  = time.Millisecond * 100
 )
 
 var (
@@ -121,6 +122,7 @@ tradingloop:
 				order.Status = "PlaceOrders"
 				db.StoreOrderBookInDb(order)
 			}
+			time.Sleep(awaitSignalSleep)
 
 		// ------------------------------------------------------------------------ enter trade (order)
 		case "PlaceOrders":
@@ -130,6 +132,7 @@ tradingloop:
 					db.StoreOrderBookInDb(order)
 				}
 			}
+			time.Sleep(placeOrderSleep)
 
 			// ------------------------------------------------------------------------ enter trade (order)
 		case "PlaceOrdersPending":
@@ -137,7 +140,7 @@ tradingloop:
 				order.Status = "TradeMonitoring"
 			}
 			db.StoreOrderBookInDb(order) // store orderbook, may be partially executed
-
+			time.Sleep(placeOrderSleep)
 			// Todo: Add exit condition for retries
 
 		// ------------------------------------------------------------------------ monitor trade exits
@@ -146,6 +149,7 @@ tradingloop:
 				order.Status = "ExitTrade"
 				db.StoreOrderBookInDb(order)
 			}
+			time.Sleep(awaitSignalSleep)
 
 		// ------------------------------------------------------------------------ squareoff trade
 		case "ExitTrade":
@@ -153,6 +157,7 @@ tradingloop:
 				order.Status = "ExitOrdersPending"
 				db.StoreOrderBookInDb(order)
 			}
+			time.Sleep(placeOrderSleep)
 
 			// ------------------------------------------------------------------------ enter trade (order)
 		case "ExitOrdersPending":
@@ -160,6 +165,7 @@ tradingloop:
 				order.Status = "TradeCompleted"
 			}
 			db.StoreOrderBookInDb(order) // store orderbook, may be partially executed
+			time.Sleep(awaitSignalSleep)
 
 			// Todo: Add exit condition for retries
 
@@ -169,6 +175,7 @@ tradingloop:
 				db.StoreOrderBookInDb(order)
 				break tradingloop
 			}
+			time.Sleep(awaitSignalSleep)
 
 		// --------------------------------------------------------------- Terminate trade if any other status
 		default:
@@ -176,12 +183,12 @@ tradingloop:
 			break tradingloop
 		}
 
-		time.Sleep(tradeOperatorSleepTime)
 		loadValues(&order)
 		if TerminateTradeMgr {
 			order.Status = "Terminate"
+		} else if order.Info.UserExitRequested {
+			order.Status = "ExitTrade"
 		}
-		// TODO: check if exit is requested
 	}
 }
 

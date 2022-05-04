@@ -1,6 +1,7 @@
 package kite
 
 import (
+	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"encoding/json"
 	"fmt"
@@ -26,7 +27,7 @@ func TestGetLatestQuote(t *testing.T) {
 
 	val, n = GetLatestQuote("BANKNIFTY-FUT")
 
-	fmt.Print(val[n])
+	fmt.Print(appdata.ColorBlue, val[n])
 
 	// appdata.ChTick = make(chan appdata.TickData, 1000)
 
@@ -51,7 +52,7 @@ func TestFetchOrders(t *testing.T) {
 	fmt.Println(tradesList)
 	b, err := json.Marshal(tradesList)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
+		fmt.Printf("Error: %s", err.Error())
 		return
 	}
 	fmt.Println(string(b))
