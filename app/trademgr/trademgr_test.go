@@ -46,7 +46,7 @@ func TestStartTrader2(t *testing.T) {
 	t.Parallel()
 
 	// test4(t, 4, "[case AwaitSignal] get response from api\n")
-	test5(t, 5, "[case Real EQ Simulation] Simulate real equity signal and check values\n")
+	test5(t, 5, "[case Real EQ Simulation] Simulate real equity signal and check values\n") // only at market time
 	// test5(t, 5, "[case UserExitReq] Trade shall exit position\n")
 
 }
@@ -70,10 +70,10 @@ func test5(t *testing.T, testId int, testDesc string) {
 
 	go StartTrader(true)
 
-	time.Sleep(time.Second * 200)
+	time.Sleep(time.Second * 500)
 	// check if trades are logged in order_book
 	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
-	if len(trades) != 2 {
+	if len(trades) != 1 {
 		t.Errorf("Expected 1 trades, got %d", len(trades))
 		fmt.Print((appdata.ColorError), "TEST  ", testId, ": FAILED\n", string(appdata.ColorReset))
 	} else {

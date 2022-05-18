@@ -25,7 +25,7 @@ func deriveInstrumentsName(order appdata.OrderBook_S, ts appdata.UserStrategies_
 	)
 
 	// ----------------------------------------------------------------------
-	if ts.Parameters.Option_setting.OrderRoute == "option-buy" {
+	if ts.Parameters.Kite_Setting.OrderRoute == "option-buy" {
 		selDate = selDate.AddDate(0, 0, (7 * ts.Parameters.Option_setting.OptionExpiryWeek))
 		enddate = selDate.AddDate(0, 0, 7+(7*ts.Parameters.Option_setting.OptionExpiryWeek))
 		// ---------------------------------------------------------------------- Special case for expiry
@@ -41,7 +41,7 @@ func deriveInstrumentsName(order appdata.OrderBook_S, ts appdata.UserStrategies_
 		} else {
 			instrumentType = "PE"
 		}
-	} else if ts.Parameters.Option_setting.OrderRoute == "option-sell" {
+	} else if ts.Parameters.Kite_Setting.OrderRoute == "option-sell" {
 		selDate = selDate.AddDate(0, 0, (7 * ts.Parameters.Option_setting.OptionExpiryWeek))
 		enddate = selDate.AddDate(0, 0, 7+(7*ts.Parameters.Option_setting.OptionExpiryWeek))
 		// ---------------------------------------------------------------------- Special case for expiry
@@ -57,11 +57,11 @@ func deriveInstrumentsName(order appdata.OrderBook_S, ts appdata.UserStrategies_
 		} else {
 			instrumentType = "CE"
 		}
-	} else if ts.Parameters.Option_setting.OrderRoute == "futures" {
+	} else if ts.Parameters.Kite_Setting.OrderRoute == "futures" {
 		selDate = selDate.AddDate(0, ts.Parameters.Futures_Setting.FuturesExpiryMonth, 0)
 		enddate = selDate.AddDate(0, 1+ts.Parameters.Futures_Setting.FuturesExpiryMonth, 0)
 		instrumentType = "FUT"
-	} else if ts.Parameters.Option_setting.OrderRoute == "equity" {
+	} else if ts.Parameters.Kite_Setting.OrderRoute == "equity" {
 		enddate = selDate.AddDate(0, 0, 0)
 		instrumentType = "EQ"
 	}

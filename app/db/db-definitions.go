@@ -169,16 +169,17 @@ var sqlInstrDataQueryOptn = `SELECT tradingsymbol, lot_size
 								LIMIT 10;`
 
 var sqlInstrDataQueryEQ = `SELECT tradingsymbol, lot_size
-							FROM %DB_TBL_USER_SYMBOLS ts, %DB_TBL_INSTRUMENTS i
-							WHERE 
-								ts.symbol = i.tradingsymbol 
-							and 
-								ts.mysymbol = $1 
-							and
-								i.segment = 'NSE'
-							and 
-								instrument_type = 'EQ'  
-							LIMIT 10;`
+								FROM %DB_TBL_USER_SYMBOLS ts, %DB_TBL_INSTRUMENTS i
+								WHERE 
+									ts.symbol = i.tradingsymbol 
+								and
+									ts.exchange = i.exchange 
+								and 
+									ts.segment = 'EQ'
+								and 
+									ts.symbol = $1 
+								LIMIT 1;
+								`
 
 var sqlInstrDataQueryFUT = `SELECT tradingsymbol, lot_size
 							FROM %DB_TBL_USER_SYMBOLS ts, %DB_TBL_INSTRUMENTS i

@@ -83,7 +83,7 @@ func TestDeriveInstrumentsName(t *testing.T) {
 		ts.Parameters.Futures_Setting.FuturesExpiryMonth = test.argMonthSel
 		ts.Parameters.Futures_Setting.SkipExipryWeekFutures = test.argSkipExpWk
 		ts.Parameters.Option_setting.OptionExpiryWeek = test.argWeekSel
-		ts.Parameters.Option_setting.OrderRoute = test.argOrderRoute
+		ts.Parameters.Kite_Setting.OrderRoute = test.argOrderRoute
 		expected := test.expected
 
 		actual, _ := deriveInstrumentsName(order, ts, date)

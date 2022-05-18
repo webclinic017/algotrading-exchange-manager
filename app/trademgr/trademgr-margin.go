@@ -32,7 +32,7 @@ func getOrderMargin(order appdata.OrderBook_S, ts appdata.UserStrategies_S, tm t
 		marginParam.OrderParams[0].TransactionType = "SELL"
 	}
 
-	switch ts.Parameters.Option_setting.OrderRoute {
+	switch ts.Parameters.Kite_Setting.OrderRoute {
 
 	default:
 		fallthrough

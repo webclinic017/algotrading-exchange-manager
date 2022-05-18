@@ -151,7 +151,7 @@ func executeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDat
 		orderParam.TransactionType = "SELL"
 	}
 
-	switch ts.Parameters.Option_setting.OrderRoute {
+	switch ts.Parameters.Kite_Setting.OrderRoute {
 
 	default:
 		fallthrough

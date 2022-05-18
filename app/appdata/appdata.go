@@ -77,6 +77,7 @@ type Parameters_S struct {
 }
 
 type KiteSetting_S struct {
+	OrderRoute   string `json:"order_route"`
 	Products     string `json:"products"`
 	Varieties    string `json:"varieties"`
 	OrderType    string `json:"order_type"`
@@ -99,9 +100,8 @@ type Controls_S struct {
 }
 
 type OptionsSetting_S struct {
-	OrderRoute       string `json:"order_route"`
-	OptionLevel      int    `json:"option_level"`
-	OptionExpiryWeek int    `json:"option_expiry_week"`
+	OptionLevel      int `json:"option_level"`
+	OptionExpiryWeek int `json:"option_expiry_week"`
 }
 
 type FuturesSetting_S struct {

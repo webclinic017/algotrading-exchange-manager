@@ -11,7 +11,8 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
         "varieties": "regular",
         "order_type": "MARKET",
         "validities": "IOC",
-        "position_type": "day"
+        "position_type": "day",
+        "order_route": "option-buy"
     },
     "controls": {
         "trade_simulate": true,
@@ -27,7 +28,6 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
         "winning_ratio": 81
     },
     "options_setting": {
-        "order_route": "option-buy",
         "option_level": -1,
         "option_expiry_week": 0
     },
@@ -42,7 +42,8 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
         "varieties": "regular",
         "order_type": "MARKET",
         "validities": "IOC",
-        "position_type": "day"
+        "position_type": "day",
+        "order_route": "option-buy"
     },
     "controls": {
         "trade_simulate": true,
@@ -58,7 +59,6 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
         "winning_ratio": 82
     },
     "options_setting": {
-        "order_route": "option-buy",
         "option_level": -1,
         "option_expiry_week": 0
     },
@@ -77,10 +77,11 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
         "varieties": "regular",
         "order_type": "MARKET",
         "validities": "IOC",
-        "position_type": "day"
+        "position_type": "day",
+        "order_route": "equity"
     },
     "controls": {
-        "trade_simulate": true,
+        "trade_simulate": false,
         "target_per": 12,
         "stoploss_per": 22,
         "deep_stoploss_per": 32,
@@ -93,7 +94,6 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
         "winning_ratio": 82
     },
     "options_setting": {
-        "order_route": "option-buy",
         "option_level": -1,
         "option_expiry_week": 0
     },

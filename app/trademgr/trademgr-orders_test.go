@@ -74,7 +74,7 @@ func TestPlaceOrder(t *testing.T) {
 		ts.Parameters.Kite_Setting.OrderType = test.argOrderType
 		ts.Parameters.Futures_Setting.FuturesExpiryMonth = test.argMonthSel
 		ts.Parameters.Futures_Setting.SkipExipryWeekFutures = test.argSkipExpWk
-		ts.Parameters.Option_setting.OrderRoute = test.argOrderRoute
+		ts.Parameters.Kite_Setting.OrderRoute = test.argOrderRoute
 		ts.Parameters.Option_setting.OptionExpiryWeek = test.argWeekSel
 		ts.Parameters.Option_setting.OptionLevel = test.argOptionLevel
 
@@ -204,7 +204,7 @@ func TestEnterTrade(t *testing.T) {
 		ts.Parameters.Kite_Setting.OrderType = test.argOrderType
 		ts.Parameters.Futures_Setting.FuturesExpiryMonth = test.argMonthSel
 		ts.Parameters.Futures_Setting.SkipExipryWeekFutures = test.argSkipExpWk
-		ts.Parameters.Option_setting.OrderRoute = test.argOrderRoute
+		ts.Parameters.Kite_Setting.OrderRoute = test.argOrderRoute
 		ts.Parameters.Option_setting.OptionExpiryWeek = test.argWeekSel
 		ts.Parameters.Option_setting.OptionLevel = test.argOptionLevel
 		ts.Parameters.Controls.MaxBudget = test.MaxBudget
