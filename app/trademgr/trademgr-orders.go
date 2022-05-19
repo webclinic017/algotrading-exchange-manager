@@ -4,6 +4,7 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/kite"
 	"algo-ex-mgr/app/srv"
+	"fmt"
 	"math"
 	"strings"
 	"time"
@@ -13,37 +14,40 @@ import (
 
 func pendingOrder(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 
-	if !order.Info.Order_simulation {
+	if order.Info.Order_simulation {
 		return true
 	} else {
 
-		/*
-			tradesList := kite.FetchOrderTrades(order.Order_id)
-			var qtyFilled float64
+		tradesList := kite.FetchOrderTrades(uint64(order.Info.OrderIdEntr))
+		var qtyFilled float64
 
-			for each := range tradesList {
-				qtyFilled = qtyFilled + tradesList[each].Quantity
-			}
-			order.OrderData.QtyFilled = qtyFilled
-			od, err := json.Marshal(tradesList)
-			if err != nil {
-				srv.TradesLogger.Println("Error in marshalling trades list: ", err.Error())
-				return false
-			}
-			order.Order_trades_entry = string(od)
+		for each := range tradesList {
+			qtyFilled = qtyFilled + tradesList[each].Quantity
+		}
+		order.Info.QtyFilled = qtyFilled
+		// od, err := json.Marshal(tradesList)
+		// if err != nil {
+		// 	srv.TradesLogger.Println("Error in marshalling trades list: ", err.Error())
+		// 	print(od)
+		// 	return false
+		// }
+		// memcpy(inodetable.inodes+0, &rootinode, sizeof rootinode)
 
-			if order.OrderData.QtyReq > order.OrderData.QtyFilled {
-				// TODO: modify limit price if order is still pending
-				qt, n := kite.GetLatestQuote(order.Instr)
-				// ToDO: fetch min values for the enter/exit trades
-				fmt.Print(qt[n].Depth.Buy[0].Price)
+		order.Orders_entr = make([]kiteconnect.Trade, len(tradesList))
+		print(copy(order.Orders_entr, tradesList))
+		// order.Orders_entr = tradesList
 
-				return true
-			} else {
-				return false
-			}
-		*/
-		return false
+		if order.Info.QtyReq > order.Info.QtyFilled {
+			// TODO: modify limit price if order is still pending
+			qt, n := kite.GetLatestQuote(order.Instr)
+			// ToDO: fetch min values for the enter/exit trades
+			fmt.Print(qt[n].Depth.Buy[0].Price)
+
+			return false
+		} else {
+			return true
+		}
+
 	}
 }
 
@@ -88,15 +92,17 @@ func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool {
 
 func tradeExit(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 
-	if !ts.Parameters.Controls.TradeSimulate {
+	if ts.Parameters.Controls.TradeSimulate {
+		return true
+	} else {
 
 		entryTime := time.Now()
 
 		userMargin := kite.GetUserMargin()
 
-		orderMargin := getOrderMargin(*order, ts, entryTime)
+		orderMargin := 0.0 // no margin required for existing an holding position #getOrderMargin(*order, ts, entryTime)
 
-		order.Info.QtyReq = determineOrderSize(userMargin, orderMargin[0].Total,
+		order.Info.QtyReq = determineOrderSize(userMargin, orderMargin,
 			ts.Parameters.Controls.WinningRatio, ts.Parameters.Controls.MaxBudget,
 			ts.Parameters.Controls.LimitAmount)
 
@@ -107,8 +113,6 @@ func tradeExit(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 			srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
 		}
 		return orderId != 0
-	} else {
-		return true
 	}
 }
 

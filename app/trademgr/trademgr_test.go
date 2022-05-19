@@ -60,17 +60,17 @@ func test5(t *testing.T, testId int, testDesc string) {
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
 
 	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
-	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
+	// db.DbRawExec(startTrader_TblOdrbook_deleteAll)
 
 	// add 10 seconds to timetriggered trade
-	sqlquery := strings.Replace(startTrader_TblUserStrategies_EqRelianceREAL, "%TRIGGERTIME",
+	sqlquery := strings.Replace(startTrader_TblUserStrategies_EqASHOKLEY_REAL, "%TRIGGERTIME",
 		time.Now().Local().Add(time.Second*time.Duration(2)).Format("15:04:05"), -1)
 
 	db.DbRawExec(sqlquery)
 
-	go StartTrader(true)
+	go StartTrader(false)
 
-	time.Sleep(time.Second * 500)
+	time.Sleep(time.Second * 50000)
 	// check if trades are logged in order_book
 	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
 	if len(trades) != 1 {

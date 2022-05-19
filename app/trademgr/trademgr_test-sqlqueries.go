@@ -69,14 +69,14 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
 }');
 `
 
-var startTrader_TblUserStrategies_EqRelianceREAL = `
+var startTrader_TblUserStrategies_EqASHOKLEY_REAL = `
 INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time,trigger_days,cdl_size,instruments,parameters) VALUES
-	('S999-TEST-002',true,'IntraDay_DNP','%TRIGGERTIME','Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',1,'RELIANCE','{
+	('S999-TEST-002',true,'IntraDay_DNP','%TRIGGERTIME','Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',1,'ASHOKLEY','{
     "kite_setting": {
         "products": "MIS",
         "varieties": "regular",
         "order_type": "MARKET",
-        "validities": "IOC",
+        "validities": "DAY",
         "position_type": "day",
         "order_route": "equity"
     },
@@ -88,7 +88,7 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
         "delayed_stoploss_min": "2018-09-22T23:23:23Z",
         "stall_detect_period_min": "2018-09-22T22:22:22Z",
         "budget_max_per": 52,
-        "limit_amount": 30002,
+        "limit_amount": 200,
         "trail_target_en": false,
         "position_reversal_en": false,
         "winning_ratio": 82

@@ -2,6 +2,8 @@ package appdata
 
 import (
 	"time"
+
+	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
 // Global variables
@@ -120,26 +122,26 @@ type OrderBook_S struct {
 	Exit_reason   string
 	Info          Info_S
 	Targets       Targets_S
-	Orders_entr   []Trade
-	Orders_exit   []Trade
+	Orders_entr   []kiteconnect.Trade
+	Orders_exit   []kiteconnect.Trade
 	Post_analysis string
 }
 
-// Trade represents an individual trade response.
-type Trade struct {
-	AveragePrice      float64 `json:"average_price"`
-	Quantity          float64 `json:"quantity"`
-	TradeID           string  `json:"trade_id"`
-	Product           string  `json:"product"`
-	FillTimestamp     string  `json:"fill_timestamp"`
-	ExchangeTimestamp string  `json:"exchange_timestamp"`
-	ExchangeOrderID   string  `json:"exchange_order_id"`
-	OrderID           string  `json:"order_id"`
-	TransactionType   string  `json:"transaction_type"`
-	TradingSymbol     string  `json:"tradingsymbol"`
-	Exchange          string  `json:"exchange"`
-	InstrumentToken   uint32  `json:"instrument_token"`
-}
+// // Trade represents an individual trade response.
+// type Trade struct {
+// 	AveragePrice      float64 `json:"average_price"`
+// 	Quantity          float64 `json:"quantity"`
+// 	TradeID           string  `json:"trade_id"`
+// 	Product           string  `json:"product"`
+// 	FillTimestamp     string  `json:"fill_timestamp"`
+// 	ExchangeTimestamp string  `json:"exchange_timestamp"`
+// 	ExchangeOrderID   string  `json:"exchange_order_id"`
+// 	OrderID           string  `json:"order_id"`
+// 	TransactionType   string  `json:"transaction_type"`
+// 	TradingSymbol     string  `json:"tradingsymbol"`
+// 	Exchange          string  `json:"exchange"`
+// 	InstrumentToken   uint32  `json:"instrument_token"`
+// }
 
 type Targets_S struct {
 	Entry    float64 `json:"entry"`
