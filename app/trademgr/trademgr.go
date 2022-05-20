@@ -91,8 +91,9 @@ func StopTrader() {
 func operateSymbol(tradeSymbol string, tradeUserStrategies appdata.UserStrategies_S, orderId uint16, wgTrademgr sync.WaitGroup) {
 	defer wgTrademgr.Done()
 
+	start := time.Now()
+
 	var order appdata.OrderBook_S
-	var result bool
 
 	if orderId == 0 {
 		order.Status = "Initiate"
@@ -136,7 +137,7 @@ tradingloop:
 
 			// ------------------------------------------------------------------------ enter trade (order)
 		case "PlaceOrdersPending":
-			if pendingOrder(&order, tradeUserStrategies) {
+			if pendingOrderEntr(&order, tradeUserStrategies) {
 				order.Status = "TradeMonitoring"
 			}
 			db.StoreOrderBookInDb(order) // store orderbook, may be partially executed
@@ -161,7 +162,7 @@ tradingloop:
 
 			// ------------------------------------------------------------------------ enter trade (order)
 		case "ExitOrdersPending":
-			if pendingOrder(&order, tradeUserStrategies) {
+			if pendingOrderExit(&order, tradeUserStrategies) {
 				order.Status = "TradeCompleted"
 			}
 			db.StoreOrderBookInDb(order) // store orderbook, may be partially executed
@@ -171,15 +172,10 @@ tradingloop:
 
 		// ------------------------------------------------------------------------ complete housekeeping
 		case "TradeCompleted":
-			if result {
-				db.StoreOrderBookInDb(order)
-				break tradingloop
-			}
-			time.Sleep(awaitSignalSleep)
+			break tradingloop
 
 		// --------------------------------------------------------------- Terminate trade if any other status
 		default:
-			db.StoreOrderBookInDb(order)
 			break tradingloop
 		}
 
@@ -190,6 +186,7 @@ tradingloop:
 			order.Status = "ExitTrade"
 		}
 	}
+	srv.TradesLogger.Println("Trade Exectuion time (fine tune delays)", time.Since(start))
 }
 
 // RULE: Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.

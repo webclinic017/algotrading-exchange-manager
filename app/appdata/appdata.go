@@ -156,7 +156,8 @@ type Info_S struct {
 	OrderIdEntr       uint64  `json:"order_id_entr"`
 	OrderIdExit       uint64  `json:"order_id_exit"`
 	QtyReq            float64 `json:"qty_req"`
-	QtyFilled         float64 `json:"qty_filled"`
+	QtyFilledEntr     float64 `json:"qty_filled_entr"`
+	QtyFilledExit     float64 `json:"qty_filled_exit"`
 	UserExitRequested bool    `json:"user_exit_requested"`
 	AvgPriceEnter     float64 `json:"avg_price_entr"`
 	AvgPriceExit      float64 `json:"avg_price_exit"`
@@ -165,15 +166,16 @@ type Info_S struct {
 
 // --------------------------------- API SIGNAL  ---------------------------------
 type ApiSignal struct {
-	Status   string    `json:"status"`
-	Id       uint16    `json:"id"`
-	Date     time.Time `json:"date"`
-	Instr    string    `json:"instr"`
-	Strategy string    `json:"strategy"`
-	Dir      string    `json:"dir"`
-	Entry    float64   `json:"entry"`
-	Target   float64   `json:"target"`
-	Stoploss float64   `json:"stoploss"`
+	Status     string    `json:"status"`
+	Id         uint16    `json:"id"`
+	Date       time.Time `json:"date"`
+	Instr      string    `json:"instr"`
+	Strategy   string    `json:"strategy"`
+	Dir        string    `json:"dir"`
+	Entry      float64   `json:"entry"`
+	Target     float64   `json:"target"`
+	Stoploss   float64   `json:"stoploss"`
+	ExitReason string    `json:"exit_reason"`
 }
 
 // --------------------------------- ENV VARIABLES ---------------------------------

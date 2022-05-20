@@ -88,7 +88,7 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
         "delayed_stoploss_min": "2018-09-22T23:23:23Z",
         "stall_detect_period_min": "2018-09-22T22:22:22Z",
         "budget_max_per": 52,
-        "limit_amount": 200,
+        "limit_amount": 50,
         "trail_target_en": false,
         "position_reversal_en": false,
         "winning_ratio": 82

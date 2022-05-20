@@ -84,7 +84,7 @@ func TestPlaceOrder(t *testing.T) {
 
 		// expected := test.expected
 
-		orderID := executeOrder(order, ts, time.Now(), 1)
+		orderID := finalizeOrder(order, ts, time.Now(), 1, true)
 
 		if orderID == 0 && test.orderPlaced == true {
 			t.Errorf(appdata.ErrorColor, "\nderiveFuturesName() No data fetched - check dates and levels are correct. This UT is live with server\n")

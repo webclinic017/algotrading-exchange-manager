@@ -32,6 +32,22 @@ func FetchOrderTrades(orderId uint64) []kiteconnect.Trade {
 	return order
 }
 
+func ModifyOrder(orderId uint64, variety string, orderParams kiteconnect.OrderParams) uint64 {
+	// TODO; testing pending
+	odr := strconv.FormatUint(orderId, 10)
+	orderResponse, err := kc.ModifyOrder(variety, odr, orderParams)
+	if err != nil {
+		srv.TradesLogger.Println("ModifyOrder: ", err.Error())
+		return 0
+	}
+	s, err := strconv.ParseUint(orderResponse.OrderID, 10, 64)
+	if err == nil {
+		srv.TradesLogger.Printf("%T, %v\n", s, s)
+	}
+	return s
+
+}
+
 func ExecOrder(orderParams kiteconnect.OrderParams, variety string) uint64 {
 
 	orderResponse, poerr := kc.PlaceOrder(variety, orderParams)
