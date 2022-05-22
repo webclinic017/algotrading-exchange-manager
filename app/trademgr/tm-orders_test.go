@@ -133,7 +133,6 @@ func TestDetermineOrderSize(t *testing.T) {
 		if test.expResult != qty {
 			t.Errorf("determineOrderSize() usermargin:%v expected:%v  actual:%v", test.userMargin, test.expResult, qty)
 		}
-
 	}
 	fmt.Println()
 }
@@ -172,17 +171,17 @@ var EnterTradeTestArray = []EnterTradeT{
 		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
 		kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, true},
 
-	// {"SRB-001", "ICICIPRULI", 50 + MaxBudgetPer, 100 + WinningRatePer, 1000 + LimitAmount, 0 + WeekSel, 540 + StrikePrice, 0 + OptionLevel,
-	// 	"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
-	// 	kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, true},
+	{"SRB-001", "ICICIPRULI", 50 + MaxBudgetPer, 100 + WinningRatePer, 1000 + LimitAmount, 0 + WeekSel, 540 + StrikePrice, 0 + OptionLevel,
+		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
+		kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, true},
 
 	// // This order shall not get placed, since strikeprice is 0 (outside of circuit limit)
-	// {"SRB-001", "ICICIPRULI", 50 + MaxBudgetPer, 100 + WinningRatePer, 1000 + LimitAmount, 0 + WeekSel, 10 + StrikePrice, 0 + OptionLevel,
-	// 	"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
-	// 	kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, false},
+	{"SRB-001", "ICICIPRULI", 50 + MaxBudgetPer, 100 + WinningRatePer, 1000 + LimitAmount, 0 + WeekSel, 10 + StrikePrice, 0 + OptionLevel,
+		"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
+		kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, false},
 }
 
-func TestEnterTrade(t *testing.T) {
+func TestEnterTrade_LIVE(t *testing.T) {
 
 	srv.Init()
 	mydir, _ := os.Getwd()
@@ -190,6 +189,11 @@ func TestEnterTrade(t *testing.T) {
 	db.DbInit()
 	kite.Init()
 	t.Parallel()
+
+	if appdata.Env["ZERODHA_LIVE_TEST"] != "TRUE" {
+		t.Errorf(appdata.ErrorColor, "\n\nLive testing is disabled. Set ZERODHA_LIVE_TEST to TRUE in userSettings.env")
+		return
+	}
 
 	var order appdata.OrderBook_S
 	var ts appdata.UserStrategies_S
@@ -218,7 +222,7 @@ func TestEnterTrade(t *testing.T) {
 		// expected := test.expected
 
 		// tradeEnter(order, ts)
-
+		t.Errorf(appdata.ErrorColor, "ut() broken - update testcase")
 		// if orderID == 0 && test.orderPlaced == true {
 		// 	t.Errorf(ErrorColor, "\nderiveFuturesName() No data fetched - check dates and levels are correct. This UT is live with server\n")
 		// } else {

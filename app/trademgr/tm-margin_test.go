@@ -143,7 +143,6 @@ func TestCalOrderMargin(t *testing.T) {
 			fmt.Printf(appdata.InfoColor, actual[0].TradingSymbol)
 			fmt.Printf(appdata.InfoColorFloat, math.Round(actual[0].Total))
 		}
-
 	}
 	fmt.Println()
 }

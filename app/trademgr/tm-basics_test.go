@@ -12,14 +12,7 @@ import (
 	"time"
 )
 
-type StartTraderT struct {
-}
-
-// ** This is live testcase - update dates are per current symbols dates and levels.
-// ** Result needs to be verified manually!!!
-var StartTraderTestArray = []StartTraderT{}
-
-func TestStartTrader1(t *testing.T) {
+func TestStartTrader_BasicTesting(t *testing.T) {
 
 	fmt.Print((appdata.ColorWhite))
 	srv.Init()
@@ -32,10 +25,11 @@ func TestStartTrader1(t *testing.T) {
 	test1(t, 1, "[case Initiate] Start two threads\n")
 	test2(t, 2, "[case Initiate] daystart false, nothing should start\n")
 	test3(t, 3, "[case Resume] resume previous running trades. 1 with correct strategy set. 1 should resume\n") //
+	test4(t, 3, "[case Resume] resume previous running trades. 1 with correct strategy set. 1 should resume\n") //??
 
 }
 
-func TestStartTrader2(t *testing.T) {
+func TestStartTrader_LiveTesting(t *testing.T) {
 
 	fmt.Print((appdata.ColorWhite))
 	srv.Init()
