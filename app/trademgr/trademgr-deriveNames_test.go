@@ -57,9 +57,9 @@ var DeriveInstrumentsNameTests = []DeriveInstrumentsNameTesting{
 	{"2022-04-15", "RELIANCE-FUT", 0, 1, 0, 0, false, "bullish", "futures", "RELIANCE22MAYFUT"},
 	{"2022-03-25", "RELIANCE-FUT", 0, 0, 0, 0, false, "bullish", "futures", "RELIANCE22MARFUT"},
 	// Equite testing - individual securities
-	{"2022-04-15", "ASHOK LEYLAND", 0, 0, 0, 0, false, "", "equity", "ASHOKLEY"},
-	{"2020-04-15", "ASHOK LEYLAND", 0, 0, 0, 0, false, "", "equity", "ASHOKLEY"},
-	{"2022-04-15", "RELIANCE INDUSTRIES", 0, 0, 0, 0, false, "", "equity", "RELIANCE"},
+	{"2022-04-15", "ASHOKLEY", 0, 0, 0, 0, false, "", "equity", "ASHOKLEY"},
+	{"2020-04-15", "ASHOKLEY", 0, 0, 0, 0, false, "", "equity", "ASHOKLEY"},
+	{"2022-04-15", "RELIANCE", 0, 0, 0, 0, false, "", "equity", "RELIANCE"},
 }
 
 func TestDeriveInstrumentsName(t *testing.T) {
@@ -68,6 +68,7 @@ func TestDeriveInstrumentsName(t *testing.T) {
 	mydir, _ := os.Getwd()
 	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
 	db.DbInit()
+	db.DbSaveInstrCsv("instruments", mydir+"/../zfiles/Unittest-Support-Files/instruments_dbtest_data_24Mar22.csv")
 
 	var order appdata.OrderBook_S
 	var ts appdata.UserStrategies_S
@@ -89,7 +90,7 @@ func TestDeriveInstrumentsName(t *testing.T) {
 		actual, _ := deriveInstrumentsName(order, ts, date)
 
 		if actual != expected {
-			t.Errorf("deriveFuturesName() \nexpected:%q \n  actual:%q", expected, actual)
+			t.Errorf("deriveName() \nexpected:%q \n  actual:%q", expected, actual)
 		}
 	}
 }

@@ -97,7 +97,7 @@ var CalOrderMarginTests = []CalOrderMarginTesting{
 
 // ** This is live testcase - update dates are per current symbols dates and levels.
 // ** Result needs to be verified manually!!!
-func TestCalOrderMargin(t *testing.T) {
+func TestCalOrderMargin_LIVE(t *testing.T) {
 
 	srv.Init()
 	mydir, _ := os.Getwd()
