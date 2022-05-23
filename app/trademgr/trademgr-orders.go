@@ -120,10 +120,7 @@ func tradeExit(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 	}
 }
 
-// Fetch account balance
-// Calculate margin required
-// Check strategy winning percentage
-// Determine order size
+// Fetch account balance, Calculate margin required, Check strategy winning percentage, Determine order size
 func determineOrderSize(userMargin float64, orderMargin float64, winningRate float64, maxBudget float64, limitAmount float64) float64 {
 
 	maxBudget = (maxBudget / 100) * userMargin
