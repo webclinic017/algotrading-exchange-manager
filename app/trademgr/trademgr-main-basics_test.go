@@ -40,17 +40,14 @@ func TestStartTrader_LiveTesting(t *testing.T) {
 	t.Parallel()
 
 	// test4(t, 4, "[case AwaitSignal] get response from api\n")
-	test5(t, 5, "[case Real EQ Simulation] Simulate real equity signal and check values\n") // only at market time
+	LiveTesting1(t, 5, "[case Real EQ Simulation] Simulate real equity signal and check values\n") // only at market time
 	// test5(t, 5, "[case UserExitReq] Trade shall exit position\n")
 
 }
 
-/* start trades,
-use active apicall
-1st trade in PlaceOrders
-modify 2nd trade time for execution, wait for timetrigger, check the second is also in PlaceOrders
-*/
-func test5(t *testing.T, testId int, testDesc string) {
+/* start trades, use active apicall, 1st trade in PlaceOrders
+modify 2nd trade time for execution, wait for timetrigger, check the second is also in PlaceOrders */
+func LiveTesting1(t *testing.T, testId int, testDesc string) {
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
 
 	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
@@ -95,11 +92,8 @@ func test5(t *testing.T, testId int, testDesc string) {
 	}
 }
 
-/* start trades,
-use active apicall
-1st trade in PlaceOrders
-modify 2nd trade time for execution, wait for timetrigger, check the second is also in PlaceOrders
-*/
+/* start trades, use active apicall, 1st trade in PlaceOrders
+modify 2nd trade time for execution, wait for timetrigger, check the second is also in PlaceOrders */
 func test4(t *testing.T, testId int, testDesc string) {
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
 
@@ -227,4 +221,42 @@ func test2(t *testing.T, testId int, testDesc string) {
 	// terminate trademgr
 	TerminateTradeMgr = true
 	time.Sleep(time.Second * 1)
+}
+
+func TestCheckTriggerDays(t *testing.T) {
+
+	type tst struct {
+		id     int
+		days   string
+		result bool
+		today  string
+	}
+
+	// these unit testcase are sensitive to date in "instruments" table,
+	// load the instruments_dbtest_data_24Mar22.csv data before running the test cases
+	var testData = []tst{
+		{1, "SATURDAY, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, FRIDAY", true, "SATURDAY"},
+		{2, "SATURDAY, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, FRIDAY", true, "SUNDAY"},
+		{3, "SATURDAY, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, FRIDAY", true, "MONDAY"},
+		{4, "SATURDAY, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, FRIDAY", true, "TUESDAY"},
+		{5, "SATURDAY, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, FRIDAY", true, "WEDNESDAY"},
+		{6, "SATURDAY, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, FRIDAY", false, "THURSDAY"},
+		{7, "SATURDAY, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, FRIDAY", true, "FRIDAY"},
+		{8, "SATURDAY, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, FRIDAY", true, "SATURDaY"},
+		{9, "SATURDAY, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, FRIDAY", true, "SundaY"},
+		{10, "SATURDAY, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, FRIDAY", true, "SATURDAY"},
+		{11, "", false, "SATURDAY"},
+		{12, "MONDAY", false, ""},
+		{13, "SAturDAY, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, FRIDAY", true, "SATURDaY"},
+		{14, "saturday, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, FRIDAY", true, "SATURDaY"},
+	}
+
+	for _, test := range testData {
+
+		if test.result != checkTriggerDays(test.today, test.days) {
+			t.Error(appdata.ColorError, " ID: ", test.id, " expected:", test.result)
+		}
+	}
+	fmt.Println(appdata.ColorInfo)
+
 }

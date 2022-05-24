@@ -61,7 +61,8 @@ func StartTrader(daystart bool) {
 	if daystart {
 		for eachStrategy := range tradeUserStrategies {
 
-			if checkTriggerDays(tradeUserStrategies[eachStrategy]) {
+			if checkTriggerDays(time.Now().Weekday().String(), tradeUserStrategies[eachStrategy].Trigger_days) {
+				srv.TradesLogger.Println(tradeUserStrategies[eachStrategy].Strategy, " : Trade signal registered")
 				// check if the current day is a trading day.
 
 				// Read symbols within each strategy
@@ -71,6 +72,8 @@ func StartTrader(daystart bool) {
 					wgTrademgr.Add(1)
 					go operateSymbol(tradeSymbols[eachSymbol], tradeUserStrategies[eachStrategy], 0, wgTrademgr)
 				}
+			} else {
+				srv.TradesLogger.Println(tradeUserStrategies[eachStrategy].Strategy, " : Trade signal skipped due to no valid day trigger present")
 			}
 		}
 	}
@@ -190,18 +193,17 @@ tradingloop:
 }
 
 // RULE: Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.
-func checkTriggerDays(tradeUserStrategies appdata.UserStrategies_S) bool {
+func checkTriggerDays(currentday string, days string) bool {
 
-	triggerdays := strings.Split(tradeUserStrategies.Trigger_days, ",")
-	currentday := time.Now().Weekday().String()
+	currentday = strings.ToLower(currentday)
+	days = strings.ToLower(strings.Replace(days, " ", "", -1))
+	triggerdays := strings.Split(days, ",")
 
 	for each := range triggerdays {
 		if triggerdays[each] == currentday {
-			srv.TradesLogger.Println(tradeUserStrategies.Strategy, " : Trade signal registered")
 			return true
 		}
 	}
-	srv.TradesLogger.Println(tradeUserStrategies.Strategy, " : Trade signal skipped due to no valid day trigger present")
 	return false
 }
 
