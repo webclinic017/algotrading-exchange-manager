@@ -85,7 +85,6 @@ func StartTrader(daystart bool) {
 func StopTrader() {
 	TerminateTradeMgr = true
 	srv.TradesLogger.Println("(Terminating Trader) - Signal received")
-
 }
 
 // TODO: master exit condition & EoD termniation
@@ -210,7 +209,7 @@ func checkTriggerDays(currentday string, days string) bool {
 func loadValues(or *appdata.OrderBook_S) {
 	status, trtemp := db.ReadOrderBookFromDb(or.Id)
 	if status {
-		or.Id = trtemp.Id
+		// or.Id = trtemp.Id
 		or.Date = trtemp.Date
 		or.Instr = trtemp.Instr
 		or.Strategy = trtemp.Strategy

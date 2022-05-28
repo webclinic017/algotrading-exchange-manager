@@ -34,9 +34,6 @@ func getOrderMargin(order appdata.OrderBook_S, ts appdata.UserStrategies_S, tm t
 
 	switch ts.Parameters.Kite_Setting.OrderRoute {
 
-	default:
-		fallthrough
-
 	case "equity":
 		marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNSE
 

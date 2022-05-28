@@ -18,24 +18,24 @@ func ReadOrderBookFromDb(orderBookId uint16) (status bool, tr *appdata.OrderBook
 	myCon, _ := dbPool.Acquire(ctx)
 	defer myCon.Release()
 
-	var ts []*appdata.OrderBook_S
+	var or []*appdata.OrderBook_S
 
 	sqlquery := fmt.Sprintf(dbSqlQuery(sqlqueryOrderBookId), orderBookId)
 
-	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
+	err := pgxscan.Select(ctx, dbPool, &or, sqlquery)
 
 	if err != nil {
-		srv.ErrorLogger.Printf("order_trades read error %v\n", err.Error())
+		srv.TradesLogger.Printf("order_trades read error --> %v\n", err.Error())
 		return false, nil
 
 	}
 
-	if len(ts) == 0 {
-		srv.ErrorLogger.Printf("order_trades read error %v\n", err)
+	if len(or) == 0 {
+		srv.TradesLogger.Printf("order_trades - no orders present in db")
 		return false, nil
 	}
 
-	return true, ts[0]
+	return true, or[0]
 
 }
 
@@ -55,13 +55,13 @@ func ReadAllActiveOrderBookFromDb() []*appdata.OrderBook_S {
 	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
 	if err != nil {
-		srv.ErrorLogger.Printf("order_trades read error %v\n", err)
+		srv.ErrorLogger.Printf("order_trades read error --> %v\n", err)
 		return nil
 
 	}
 
 	if len(ts) == 0 {
-		srv.ErrorLogger.Printf("order_trades read error %v\n", err)
+		srv.ErrorLogger.Printf("order_trades  - no orders present in db")
 		return nil
 	}
 

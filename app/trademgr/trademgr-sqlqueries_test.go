@@ -5,7 +5,7 @@ var startTrader_TblUserStrategies_deleteAll = `DELETE FROM public.paragvb_strate
 
 var startTrader_TblUserStrategies_setup = `
 INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time,trigger_days,cdl_size,instruments,parameters) VALUES
-	 ('S999-CONT-001',true,'IntraDay_DNP','%TRIGGERTIME','Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',1,'TT_TEST1','{
+	 ('%STRATEGY_NAME_1',true,'IntraDay_DNP','%TRIGGERTIME','%TRIGGER_DAYS',1,'%SYMBOL_NAME_1','{
     "kite_setting": {
         "products": "MIS",
         "varieties": "regular",
@@ -36,7 +36,7 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
         "skip_exipry_week": true
     }
 }'),
-	 ('S999-TEST-002',true,'IntraDay_DNP','%TRIGGERTIME','Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',1,'TT_TEST2','{
+	 ('%STRATEGY_NAME_2',true,'IntraDay_DNP','%TRIGGERTIME','%TRIGGER_DAYS',1,'%SYMBOL_NAME_2','{
     "kite_setting": {
         "products": "MIS",
         "varieties": "regular",
@@ -106,6 +106,6 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
 
 var Test3_orderbook = `INSERT INTO public.paragvb_order_book_test 
 ("date",        instr,              strategy,       status,             dir,    exit_reason,    info,targets, orders_entr,orders_exit,post_analysis) VALUES
-('2022-04-20',  'CONTINOUS_test1',  'S99-TEST-002', 'AwaitSignal',  '',     '',             '{}','{}','[{}]','[{}]','{}'),
-('2022-04-20',  'TIMETRIG_test2',   'S999-TEST-002', 'AwaitSignal',  '',     '',             '{}','{}','[{}]','[{}]','{}')
+('2022-04-20',  'CONTINOUS_test1',  'S999-CONT-001', 'ExitOrdersPending',  'Bullish',     '',             '{"order_simulation":true}','{}','[{}]','[{}]','{}'),
+('2022-04-20',  'CONTINOUS_test2',   'S999-CONT-001', 'ExitOrdersPending',  'Bullish',     '',             '{"order_simulation":true}','{}','[{}]','[{}]','{}')
 ;`
