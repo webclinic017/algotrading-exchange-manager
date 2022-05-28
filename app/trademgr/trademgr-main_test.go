@@ -21,14 +21,13 @@ func TestStartTrader(t *testing.T) {
 	db.DbInit()
 	kite.Init()
 
-	test5(t, 5, "[case Initiate] Invalid strategy\n")
-	test1(t, 1, "[case Initiate] Start two threads\n")
-	test2(t, 2, "[case Initiate] daystart false, nothing should start\n")
-	test3(t, 3, "[case Resume] resume previous running trades. 1 with correct strategy set. 1 should resume\n") //
-	test4(t, 4, "[case Resume] Cannot resume - stratgey missing\n")
+	subtest_StartTrader_1(t, 1, "[case Initiate] Start two threads\n")
+	subtest_StartTrader_2(t, 2, "[case Initiate] daystart false, nothing should start\n")
+	subtest_StartTrader_3(t, 3, "[case Resume] resume previous running trades. 1 with correct strategy set. 1 should resume\n") //
+	subtest_StartTrader_4(t, 4, "[case Resume] Cannot resume - stratgey missing\n")
+	subtest_StartTrader_5(t, 5, "[case Initiate] Invalid strategy\n")
 }
-
-func test1(t *testing.T, testId int, testDesc string) {
+func subtest_StartTrader_1(t *testing.T, testId int, testDesc string) {
 
 	// test if all UserStrategies are spawned
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
@@ -60,8 +59,7 @@ func test1(t *testing.T, testId int, testDesc string) {
 		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found ", len(trades), appdata.ColorReset, "\n")
 	}
 }
-
-func test2(t *testing.T, testId int, testDesc string) {
+func subtest_StartTrader_2(t *testing.T, testId int, testDesc string) {
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
 
 	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
@@ -89,8 +87,7 @@ func test2(t *testing.T, testId int, testDesc string) {
 		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST_", testId, ": Trades found ", len(trades), appdata.ColorReset)
 	}
 }
-
-func test3(t *testing.T, testId int, testDesc string) {
+func subtest_StartTrader_3(t *testing.T, testId int, testDesc string) {
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
 
 	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
@@ -138,8 +135,7 @@ func test3(t *testing.T, testId int, testDesc string) {
 	TerminateTradeMgr = true
 	time.Sleep(time.Second * 3)
 }
-
-func test4(t *testing.T, testId int, testDesc string) {
+func subtest_StartTrader_4(t *testing.T, testId int, testDesc string) {
 
 	// test if all UserStrategies are spawned
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
@@ -171,8 +167,7 @@ func test4(t *testing.T, testId int, testDesc string) {
 		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found ", len(trades), appdata.ColorReset, "\n")
 	}
 }
-
-func test5(t *testing.T, testId int, testDesc string) {
+func subtest_StartTrader_5(t *testing.T, testId int, testDesc string) {
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
 
 	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
@@ -256,10 +251,11 @@ func TestCheckTriggerDays(t *testing.T) {
 		}
 	}
 	fmt.Println(appdata.ColorInfo)
-
 }
 
 func TestStartTrader_LiveTesting(t *testing.T) {
+	/* start trades, use active apicall, 1st trade in PlaceOrders
+	modify 2nd trade time for execution, wait for timetrigger, check the second is also in PlaceOrders */
 
 	fmt.Print((appdata.ColorWhite))
 	srv.Init()
@@ -272,16 +268,8 @@ func TestStartTrader_LiveTesting(t *testing.T) {
 		t.Errorf(appdata.ErrorColor, "\n\nLive testing is disabled. Set ZERODHA_LIVE_TEST to TRUE in userSettings.env")
 		return
 	}
-	// test4(t, 4, "[case AwaitSignal] get response from api\n")
-	LiveTesting1(t, 5, "[case Real EQ Simulation] Simulate real equity signal and check values\n") // only at market time
-	// test5(t, 5, "[case UserExitReq] Trade shall exit position\n")
 
-}
-
-/* start trades, use active apicall, 1st trade in PlaceOrders
-modify 2nd trade time for execution, wait for timetrigger, check the second is also in PlaceOrders */
-func LiveTesting1(t *testing.T, testId int, testDesc string) {
-	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
+	fmt.Print(appdata.ColorBlue, "\nTEST_5 [case Real EQ Simulation] Simulate real equity signal and check values\n") // only at market time
 
 	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
 	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
@@ -299,17 +287,17 @@ func LiveTesting1(t *testing.T, testId int, testDesc string) {
 	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
 	if len(trades) != 1 {
 		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print((appdata.ColorError), "TEST  ", testId, ": FAILED\n", string(appdata.ColorReset))
+		fmt.Print((appdata.ColorError), "TEST 5 : FAILED\n", string(appdata.ColorReset))
 	} else {
-		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST ", testId, ": Trades found in AwaitSignal", len(trades), string(appdata.ColorReset))
+		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST 5 : Trades found in AwaitSignal", len(trades), string(appdata.ColorReset))
 	}
 	time.Sleep(time.Second * 9)
 	trades = db.ReadAllOrderBookFromDb("=", "PlaceOrdersPending")
 	if len(trades) != 1 {
 		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
+		fmt.Print(appdata.ColorError, "TEST_5 : FAILED\n")
 	} else {
-		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in PlaceOrdersPending", len(trades))
+		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_5 : Trades found in PlaceOrdersPending", len(trades))
 	}
 
 	// terminate trademgr
@@ -319,6 +307,109 @@ func LiveTesting1(t *testing.T, testId int, testDesc string) {
 	trades = db.ReadAllOrderBookFromDb("=", "Terminate")
 	if len(trades) != 2 {
 		t.Errorf("Expected 2 trades, got %d", len(trades))
+		fmt.Print(appdata.ColorError, "TEST_5: FAILED\n")
+	} else {
+		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_5: Trades found in Terminate", len(trades))
+	}
+}
+
+func TestOperateSymbol_SimulationTesting(t *testing.T) {
+	// Precondition
+	// 1. setup user symbols
+	// 2. setup user strategies
+
+	fmt.Print((appdata.ColorWhite))
+	srv.Init()
+	mydir, _ := os.Getwd()
+	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
+	db.DbInit()
+	kite.Init()
+
+	testSimulation_1execute_with_termination(t, 1, "[case Initiate] Start 2 thread with 1 valid repsonce and 1 invalid resp from API to complete simulation\n")
+	testSimulation_1execute_1useExit(t, 1, "[case Initiate] Start 2 thread with 1 valid repsonce and 1 invalid resp from API to complete simulation\n")
+
+}
+
+func testSimulation_1execute_with_termination(t *testing.T, testId int, testDesc string) {
+
+	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
+
+	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
+	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
+
+	// add 10 seconds to timetriggered trade
+	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S999-TEST-001", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S999-CONT-002", -1)
+	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
+	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
+	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
+	sqlquery = strings.Replace(sqlquery, "%TRIGGERTIME",
+		time.Now().Local().Add(time.Second*time.Duration(2)).Format("15:04:05"), -1)
+
+	db.DbRawExec(sqlquery)
+
+	go StartTrader(true)
+
+	time.Sleep(time.Second * 3)
+	trades := db.ReadAllOrderBookFromDb("=", "ExitTrade")
+	if len(trades) != 1 {
+		t.Errorf("Expected 1 trades, got %d", len(trades))
+		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
+	} else {
+		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in PlaceOrdersPending", len(trades), "\nKite timeout can affect the result due to timeouts")
+	}
+
+	// terminate trademgr - trades remain in same state - no state change
+	StopTrader()
+	time.Sleep(time.Second * 1)
+
+	trades = db.ReadAllOrderBookFromDb("=", "AwaitSignal")
+	if len(trades) != 1 {
+		t.Errorf("Expected 1 trades, got %d", len(trades))
+		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
+	} else {
+		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in Terminate", len(trades))
+	}
+}
+
+func testSimulation_1execute_1useExit(t *testing.T, testId int, testDesc string) {
+
+	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
+
+	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
+	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
+
+	// add 10 seconds to timetriggered trade
+	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S999-TEST-001", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S999-CONT-002", -1)
+	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
+	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
+	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
+	sqlquery = strings.Replace(sqlquery, "%TRIGGERTIME",
+		time.Now().Local().Add(time.Second*time.Duration(2)).Format("15:04:05"), -1)
+
+	db.DbRawExec(sqlquery)
+
+	go StartTrader(true)
+
+	time.Sleep(time.Second * 3)
+	trades := db.ReadAllOrderBookFromDb("=", "ExitTrade")
+	if len(trades) != 1 {
+		t.Errorf("Expected 1 trades, got %d", len(trades))
+		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
+	} else {
+		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in PlaceOrdersPending", len(trades), "\nKite timeout can affect the result due to timeouts")
+	}
+
+	// terminate trademgr - trades remain in same state - no state change
+	StopTrader()
+	time.Sleep(time.Second * 1)
+
+	trades = db.ReadAllOrderBookFromDb("=", "AwaitSignal")
+	if len(trades) != 1 {
+		t.Errorf("Expected 1 trades, got %d", len(trades))
 		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
 	} else {
 		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in Terminate", len(trades))
