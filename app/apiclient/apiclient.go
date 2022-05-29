@@ -42,7 +42,13 @@ func SignalAnalyzer(tr *appdata.OrderBook_S, mode string) bool {
 			apiSig[0].Strategy == tr.Strategy { // register only if processed correctly
 
 			tr.Dir = apiSig[0].Dir
-			tr.Exit_reason = apiSig[0].ExitReason
+			if mode == "-entr" {
+				tr.Targets.EntrPrice = apiSig[0].TriggerValue
+			} else if mode == "-exit" {
+				tr.Exit_reason = apiSig[0].ExitReason
+				tr.Targets.ExitPrice = apiSig[0].TriggerValue
+			}
+
 			/*tr.Entry = apiSig[0].Entry
 			tr.Stoploss = apiSig[0].Stoploss
 			tr.Target = apiSig[0].Target*/

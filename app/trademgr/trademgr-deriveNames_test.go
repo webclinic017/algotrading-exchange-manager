@@ -78,7 +78,7 @@ func TestDeriveInstrumentsName(t *testing.T) {
 		dateString := test.argDate
 		date, _ := time.Parse("2006-01-02", dateString)
 		order.Instr = test.argInstr
-		order.Targets.Entry = test.argStrikePrice
+		order.Targets.EntrPrice = test.argStrikePrice
 		order.Dir = test.argDirection
 		ts.Parameters.Option_setting.OptionLevel = test.argOptionLevel
 		ts.Parameters.Futures_Setting.FuturesExpiryMonth = test.argMonthSel

@@ -72,7 +72,7 @@ func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool {
 
 	if order.Info.Order_simulation { // real trade
 
-		order.Info.TradingSymbol = order.Instr
+		order.Info.TradingSymbol = ""
 		if strings.Contains(order.Instr, "-FUT") { // RULE: only for futures and equity supported
 			order.Info.Exchange = kiteconnect.ExchangeNFO
 		} else {
@@ -81,7 +81,7 @@ func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool {
 		order.Info.OrderIdEntr = 0
 		order.Info.QtyReq = 0
 		order.Info.QtyFilledEntr = 0
-		order.Info.AvgPriceEnter = getLowestPrice(order.Instr, order.Dir)
+		order.Info.AvgPriceEnter = 0
 		return true
 
 	} else {
@@ -114,7 +114,7 @@ func tradeExit(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 	if ts.Parameters.Controls.TradeSimulate {
 		order.Info.OrderIdExit = 0
 		order.Info.QtyFilledExit = 0
-		order.Info.AvgPriceExit = getLowestPrice(order.Instr, order.Dir)
+		order.Info.AvgPriceExit = 0
 		return true
 	} else {
 
@@ -154,6 +154,7 @@ func determineOrderSize(userMargin float64, orderMargin float64, winningRate flo
 	}
 }
 
+// #ifdef NOT_USED
 func getLowestPrice(instr string, dir string) float64 {
 
 	qt, n := kite.GetLatestQuote(instr)
@@ -174,6 +175,8 @@ func getLowestPrice(instr string, dir string) float64 {
 		return qt[n].Depth.Sell[0].Price
 	}
 }
+
+// #endif
 
 /* option's at market price. equity and futures are limit order with limit value form Targets.Entry value */
 func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDate time.Time, qty float64, orderId uint64, enter bool) (orderID uint64) {
@@ -203,7 +206,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 		fallthrough
 
 	case "equity":
-		orderParam.Price = order.Targets.Entry
+		orderParam.Price = order.Targets.EntrPrice
 		orderParam.Exchange = kiteconnect.ExchangeNSE
 		orderParam.OrderType = ts.Parameters.Kite_Setting.OrderType
 
@@ -226,7 +229,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 		orderParam.OrderType = kiteconnect.OrderTypeMarket
 
 	case "futures":
-		orderParam.Price = order.Targets.Entry
+		orderParam.Price = order.Targets.EntrPrice
 		orderParam.Exchange = kiteconnect.ExchangeNFO
 		orderParam.OrderType = ts.Parameters.Kite_Setting.OrderType
 
@@ -234,6 +237,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 	var symbolMinQty float64
 	orderParam.Tradingsymbol, symbolMinQty = deriveInstrumentsName(order, ts, time.Now())
 	orderParam.Quantity = int(symbolMinQty * qty)
+	order.Info.TradingSymbol = orderParam.Tradingsymbol
 
 	if orderId == 0 { // new order
 		return kite.ExecOrder(orderParam, ts.Parameters.Kite_Setting.Varieties)

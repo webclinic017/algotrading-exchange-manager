@@ -124,7 +124,7 @@ func TestCalOrderMargin_LIVE(t *testing.T) {
 
 		order.Dir = test.argDirection
 		order.Instr = test.argInstr
-		order.Targets.Entry = test.argStrikePrice
+		order.Targets.EntrPrice = test.argStrikePrice
 
 		// expected := test.expected
 

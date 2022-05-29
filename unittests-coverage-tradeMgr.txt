@@ -12,6 +12,6 @@ algo-ex-mgr/app/trademgr/trademgr-orders.go:43:		pendingOrderExit	92.9%
 algo-ex-mgr/app/trademgr/trademgr-orders.go:71:		tradeEnter		86.4%
 algo-ex-mgr/app/trademgr/trademgr-orders.go:112:	tradeExit		83.3%
 algo-ex-mgr/app/trademgr/trademgr-orders.go:136:	determineOrderSize	100.0%
-algo-ex-mgr/app/trademgr/trademgr-orders.go:157:	getLowestPrice		80.0%
-algo-ex-mgr/app/trademgr/trademgr-orders.go:179:	finalizeOrder		93.5%
-total:							(statements)		96.0%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:158:	getLowestPrice		80.0%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:182:	finalizeOrder		100.0%
+total:							(statements)		96.8%

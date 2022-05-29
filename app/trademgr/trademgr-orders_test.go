@@ -66,6 +66,10 @@ func TestFinalizeOrder_LIVE(t *testing.T) {
 			"bullish", "option-sell", 0 + MonthSel, SkipExpWkTrue, kiteconnect.OrderTypeLimit,
 			kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, true},
 
+		{"SRB-001", "BANKNIFTY-FUT", false, 0 + WeekSel, 35000 + StrikePrice, 0 + OptionLevel,
+			"bullish", "option-sell", 0 + MonthSel, SkipExpWkTrue, kiteconnect.OrderTypeLimit,
+			kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, true},
+
 		// This order shall be placed (ensure strike price is within reach)
 		{"SRB-001", "ZEEL-FUT", true, 0 + WeekSel, 10 + StrikePrice, 0 + OptionLevel,
 			"bullish", "futures", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
@@ -89,6 +93,10 @@ func TestFinalizeOrder_LIVE(t *testing.T) {
 		{"SRB-001", "ICICIPRULI", false, 0 + WeekSel, 10 + StrikePrice, 0 + OptionLevel,
 			"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
 			kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, false},
+
+		{"SRB-901", "ICICIPRULI", false, 0 + WeekSel, 10 + StrikePrice, 0 + OptionLevel,
+			"bullish", "equity", 0 + MonthSel, SkipExpWkFalse, kiteconnect.OrderTypeLimit,
+			kiteconnect.VarietyAMO, kiteconnect.ValidityDay, kiteconnect.ProductMIS, false},
 	}
 
 	fmt.Printf(appdata.ErrorColor, warCheck)
@@ -107,11 +115,17 @@ func TestFinalizeOrder_LIVE(t *testing.T) {
 
 		order.Dir = test.argDirection
 		order.Instr = test.argInstr
-		order.Targets.Entry = test.argStrikePrice
+		order.Targets.EntrPrice = test.argStrikePrice
 
 		// expected := test.expected
 
-		orderID := finalizeOrder(order, ts, time.Now(), 1, 0, test.argEntry)
+		var ordModify uint64
+		if test.argStrategy == "SRB-901" {
+			ordModify = 1
+		} else {
+			ordModify = 0
+		}
+		orderID := finalizeOrder(order, ts, time.Now(), 1, ordModify, test.argEntry)
 
 		if orderID == 0 && test.orderPlaced == true {
 			t.Errorf(appdata.ErrorColor, "\nderiveFuturesName() No data fetched - check dates and levels are correct. This UT is live with server\n")

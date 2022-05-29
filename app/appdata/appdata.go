@@ -144,9 +144,10 @@ type OrderBook_S struct {
 // }
 
 type Targets_S struct {
-	Entry    float64 `json:"entry"`
-	Target   float64 `json:"target"`
-	Stoploss float64 `json:"stoploss"`
+	EntrPrice float64 `json:"entr_price"`
+	ExitPrice float64 `json:"exit_price "`
+	Target    float64 `json:"target"`
+	Stoploss  float64 `json:"stoploss"`
 }
 
 type Info_S struct {
@@ -166,16 +167,16 @@ type Info_S struct {
 
 // --------------------------------- API SIGNAL  ---------------------------------
 type ApiSignal struct {
-	Status     string    `json:"status"`
-	Id         uint16    `json:"id"`
-	Date       time.Time `json:"date"`
-	Instr      string    `json:"instr"`
-	Strategy   string    `json:"strategy"`
-	Dir        string    `json:"dir"`
-	Entry      float64   `json:"entry"`
-	Target     float64   `json:"target"`
-	Stoploss   float64   `json:"stoploss"`
-	ExitReason string    `json:"exit_reason"`
+	Status       string    `json:"status"`
+	Id           uint16    `json:"id"`
+	Date         time.Time `json:"date"`
+	Instr        string    `json:"instr"`
+	Strategy     string    `json:"strategy"`
+	Dir          string    `json:"dir"`
+	TriggerValue float64   `json:"trigger_value"`
+	Target       float64   `json:"target"`
+	Stoploss     float64   `json:"stoploss"`
+	ExitReason   string    `json:"exit_reason"`
 }
 
 // --------------------------------- ENV VARIABLES ---------------------------------
