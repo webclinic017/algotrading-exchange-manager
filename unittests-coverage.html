@@ -1,0 +1,746 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>trademgr: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">algo-ex-mgr/app/trademgr/trademgr-deriveNames.go (100.0%)</option>
+				
+				<option value="file1">algo-ex-mgr/app/trademgr/trademgr-main.go (100.0%)</option>
+				
+				<option value="file2">algo-ex-mgr/app/trademgr/trademgr-margin.go (100.0%)</option>
+				
+				<option value="file3">algo-ex-mgr/app/trademgr/trademgr-orders.go (62.5%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package trademgr
+
+import (
+        "algo-ex-mgr/app/appdata"
+        "algo-ex-mgr/app/db"
+        "fmt"
+
+        "strings"
+        "time"
+)
+
+// The format is BANKNIFTY&lt;YY&gt;&lt;M&gt;&lt;DD&gt;strike&lt;PE/CE&gt;
+// The month format is 1 for JAN, 2 for FEB, 3, 4, 5, 6, 7, 8, 9, O(capital o) for October, N for November, D for December.
+// var symbolFutStr string = "FAILED"
+// BANKNIFTY2232435000CE - 24th Mar 2022
+// BANKNIFTY22MAR31000CE - 31st Mar 2022
+// Last week of Month - will be monthly expiry
+func deriveInstrumentsName(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDate time.Time) (name string, qty float64) <span class="cov8" title="1">{
+
+        var (
+                instrumentType string
+                strStartDate   string
+                strEndDate     string
+                enddate        time.Time
+        )
+
+        // ----------------------------------------------------------------------
+        if ts.Parameters.Kite_Setting.OrderRoute == "option-buy" </span><span class="cov8" title="1">{
+                selDate = selDate.AddDate(0, 0, (7 * ts.Parameters.Option_setting.OptionExpiryWeek))
+                enddate = selDate.AddDate(0, 0, 7+(7*ts.Parameters.Option_setting.OptionExpiryWeek))
+                // ---------------------------------------------------------------------- Special case for expiry
+                // For individual securities expiry is monthly
+                if (strings.ToLower(order.Instr) != "nifty-fut") ||
+                        (strings.ToLower(order.Instr) != "banknifty-fut") ||
+                        (strings.ToLower(order.Instr) != "finnifty-fut") ||
+                        (strings.ToLower(order.Instr) != "midcpnifty-fut") </span><span class="cov8" title="1">{
+                        enddate = selDate.AddDate(0, 1, 0)
+                }</span>
+                <span class="cov8" title="1">if strings.ToLower(order.Dir) == "bullish" </span><span class="cov8" title="1">{
+                        instrumentType = "CE"
+                }</span> else<span class="cov8" title="1"> {
+                        instrumentType = "PE"
+                }</span>
+        } else<span class="cov8" title="1"> if ts.Parameters.Kite_Setting.OrderRoute == "option-sell" </span><span class="cov8" title="1">{
+                selDate = selDate.AddDate(0, 0, (7 * ts.Parameters.Option_setting.OptionExpiryWeek))
+                enddate = selDate.AddDate(0, 0, 7+(7*ts.Parameters.Option_setting.OptionExpiryWeek))
+                // ---------------------------------------------------------------------- Special case for expiry
+                // For individual securities expiry is monthly
+                if (strings.ToLower(order.Instr) != "nifty-fut") ||
+                        (strings.ToLower(order.Instr) != "banknifty-fut") ||
+                        (strings.ToLower(order.Instr) != "finnifty-fut") ||
+                        (strings.ToLower(order.Instr) != "midcpnifty-fut") </span><span class="cov8" title="1">{
+                        enddate = selDate.AddDate(0, 1, 0)
+                }</span>
+                <span class="cov8" title="1">if strings.ToLower(order.Dir) == "bullish" </span><span class="cov8" title="1">{
+                        instrumentType = "PE"
+                }</span> else<span class="cov8" title="1"> {
+                        instrumentType = "CE"
+                }</span>
+        } else<span class="cov8" title="1"> if ts.Parameters.Kite_Setting.OrderRoute == "futures" </span><span class="cov8" title="1">{
+                selDate = selDate.AddDate(0, ts.Parameters.Futures_Setting.FuturesExpiryMonth, 0)
+                enddate = selDate.AddDate(0, 1+ts.Parameters.Futures_Setting.FuturesExpiryMonth, 0)
+                instrumentType = "FUT"
+        }</span> else<span class="cov8" title="1"> if ts.Parameters.Kite_Setting.OrderRoute == "equity" </span><span class="cov8" title="1">{
+                enddate = selDate.AddDate(0, 0, 0)
+                instrumentType = "EQ"
+        }</span>
+
+        <span class="cov8" title="1">strStartDate = fmt.Sprintf("%d-%02d-%02d", selDate.Year(), selDate.Month(), selDate.Day())
+
+        strEndDate = fmt.Sprintf("%d-%02d-%02d", enddate.Year(), enddate.Month(), enddate.Day())
+
+        symbolFutStr, qty := db.FetchInstrData(order.Instr,
+                uint64(order.Targets.Entry),
+                ts.Parameters.Option_setting.OptionLevel,
+                instrumentType,
+                strStartDate,
+                strEndDate)
+
+        return symbolFutStr, qty</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">// trademgr - executes and manages trades.
+// Read strategies from db, spwans threads for each strategy.
+// Remains active till the trade is closed
+package trademgr
+
+import (
+        "algo-ex-mgr/app/apiclient"
+        "algo-ex-mgr/app/appdata"
+        "algo-ex-mgr/app/db"
+        "algo-ex-mgr/app/srv"
+        "strconv"
+        "strings"
+        "sync"
+        "time"
+)
+
+// tradeStrategies - list of all strategies to be executed. Read once from db at start of day
+const (
+        awaitSignalSleep = time.Second * 2
+        placeOrderSleep  = time.Millisecond * 100
+)
+
+var (
+        TerminateTradeMgr bool = false
+)
+
+// Scan DB for all strategies with strategy_en = 1. Each funtion is executed in a separate thread and remains active till the trade is complete.
+// TODO: recovery logic for server restarts
+func StartTrader(daystart bool) <span class="cov8" title="1">{
+
+        var wgTrademgr sync.WaitGroup
+
+        srv.TradesLogger.Print(
+                "\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+                "Trade Manager",
+                "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+
+        // --------------------------------- Read trading strategies from dB
+        tradeUserStrategies := db.ReadUserStrategiesFromDb()
+
+        // --------------------------------- Resume operations on restart or new day start
+        trSig := db.ReadAllOrderBookFromDb("!=", "Completed")
+        var s bool = false
+        for eachSymbol := range trSig </span><span class="cov8" title="1">{
+                s = false
+                for eachStrategy := range tradeUserStrategies </span><span class="cov8" title="1">{
+                        if trSig[eachSymbol].Strategy == tradeUserStrategies[eachStrategy].Strategy </span><span class="cov8" title="1">{
+
+                                wgTrademgr.Add(1)
+                                srv.TradesLogger.Println(appdata.ColorSuccess, "\n\nStrategy being resumed\n", trSig[eachSymbol])
+                                go operateSymbol("nil", tradeUserStrategies[eachStrategy], trSig[eachSymbol].Id, wgTrademgr)
+                                s = true
+                                break</span>
+                        }
+                }
+                <span class="cov8" title="1">if !s </span><span class="cov8" title="1">{
+                        srv.TradesLogger.Println(appdata.ColorError, "\n\nStrategy could not be resumed\n", trSig[eachSymbol])
+                }</span>
+        }
+
+        // --------------------------------- Setup operators for each symbol in every strategy
+        <span class="cov8" title="1">if daystart </span><span class="cov8" title="1">{
+                for eachStrategy := range tradeUserStrategies </span><span class="cov8" title="1">{
+
+                        if checkTriggerDays(time.Now().Weekday().String(), tradeUserStrategies[eachStrategy].Trigger_days) </span><span class="cov8" title="1">{
+                                srv.TradesLogger.Println(tradeUserStrategies[eachStrategy].Strategy, " : Trade signal registered")
+                                // check if the current day is a trading day.
+
+                                // Read symbols within each strategy
+                                tradeSymbols := strings.Split(tradeUserStrategies[eachStrategy].Instruments, ",")
+
+                                for eachSymbol := range tradeSymbols </span><span class="cov8" title="1">{
+                                        wgTrademgr.Add(1)
+                                        go operateSymbol(tradeSymbols[eachSymbol], tradeUserStrategies[eachStrategy], 0, wgTrademgr)
+                                }</span>
+                        } else<span class="cov8" title="1"> {
+                                srv.TradesLogger.Println(tradeUserStrategies[eachStrategy].Strategy, " : Trade signal skipped due to no valid day trigger present")
+                        }</span>
+                }
+        }
+        // --------------------------------- Await till all trades are completed
+        <span class="cov8" title="1">wgTrademgr.Wait()</span>
+}
+
+// to stop trademanager and exit all positions
+func StopTrader() <span class="cov8" title="1">{
+        TerminateTradeMgr = true
+        srv.TradesLogger.Println("(Terminating Trader) - Signal received")
+}</span>
+
+// TODO: master exit condition &amp; EoD termniation
+
+// symbolTradeManager
+func operateSymbol(tradeSymbol string, tradeUserStrategies appdata.UserStrategies_S, orderId uint16, wgTrademgr sync.WaitGroup) <span class="cov8" title="1">{
+        defer wgTrademgr.Done()
+
+        start := time.Now()
+
+        var order appdata.OrderBook_S
+
+        if orderId == 0 </span><span class="cov8" title="1">{
+                order.Status = "Initiate"
+        }</span> else<span class="cov8" title="1"> { // Resume previously registered symbol
+                order.Id = orderId
+                loadValues(&amp;order)
+        }</span>
+
+<span class="cov8" title="1">tradingloop:
+        for </span><span class="cov8" title="1">{
+                switch order.Status </span>{
+
+                // ------------------------------------------------------------------------ New symbol being registered for trade
+                case "Initiate":<span class="cov8" title="1">
+                        order.Date = time.Now()
+                        order.Strategy = tradeUserStrategies.Strategy
+                        order.Instr = tradeSymbol
+                        order.Status = "AwaitSignal"
+                        order.Info.Order_simulation = tradeUserStrategies.Parameters.Controls.TradeSimulate
+                        // tr.Order_info = "{}"
+                        order.Post_analysis = "{}"
+                        order.Id = db.StoreOrderBookInDb(order)</span>
+
+                // ------------------------------------------------------------------------ trade entry check (Scan Signals)
+                case "AwaitSignal":<span class="cov8" title="1">
+                        if tradeEnterSignalCheck(tradeSymbol, tradeUserStrategies, &amp;order) </span><span class="cov8" title="1">{
+                                order.Status = "PlaceOrders"
+                                db.StoreOrderBookInDb(order)
+                        }</span>
+                        <span class="cov8" title="1">time.Sleep(awaitSignalSleep)</span>
+
+                // ------------------------------------------------------------------------ enter trade (order)
+                case "PlaceOrders":<span class="cov8" title="1">
+                        if order.Dir != "" </span><span class="cov8" title="1">{ // on valid signal
+                                if tradeEnter(&amp;order, tradeUserStrategies) </span><span class="cov8" title="1">{
+                                        order.Status = "PlaceOrdersPending"
+                                        db.StoreOrderBookInDb(order)
+                                }</span>
+                        }
+                        <span class="cov8" title="1">time.Sleep(placeOrderSleep)</span>
+
+                        // ------------------------------------------------------------------------ enter trade (order)
+                case "PlaceOrdersPending":<span class="cov8" title="1">
+                        if pendingOrderEntr(&amp;order, tradeUserStrategies) </span><span class="cov8" title="1">{
+                                order.Status = "TradeMonitoring"
+                        }</span>
+                        <span class="cov8" title="1">db.StoreOrderBookInDb(order) // store orderbook, may be partially executed
+                        time.Sleep(placeOrderSleep)</span>
+                        // Todo: Add exit condition for retries
+
+                // ------------------------------------------------------------------------ monitor trade exits
+                case "TradeMonitoring":<span class="cov8" title="1">
+                        if apiclient.SignalAnalyzer(&amp;order, "-exit") </span><span class="cov8" title="1">{
+                                order.Status = "ExitTrade"
+                                db.StoreOrderBookInDb(order)
+                        }</span>
+                        <span class="cov8" title="1">time.Sleep(awaitSignalSleep)</span>
+
+                // ------------------------------------------------------------------------ squareoff trade
+                case "ExitTrade":<span class="cov8" title="1">
+                        if tradeExit(&amp;order, tradeUserStrategies) </span><span class="cov8" title="1">{
+                                order.Status = "ExitOrdersPending"
+                                db.StoreOrderBookInDb(order)
+                        }</span>
+                        <span class="cov8" title="1">time.Sleep(placeOrderSleep)</span>
+
+                        // ------------------------------------------------------------------------ enter trade (order)
+                case "ExitOrdersPending":<span class="cov8" title="1">
+                        if pendingOrderExit(&amp;order, tradeUserStrategies) </span><span class="cov8" title="1">{
+                                order.Status = "TradeCompleted"
+                        }</span>
+                        <span class="cov8" title="1">db.StoreOrderBookInDb(order) // store orderbook, may be partially executed
+                        time.Sleep(awaitSignalSleep)</span>
+
+                        // Todo: Add exit condition for retries
+
+                // ------------------------------------------------------------------------ complete housekeeping
+                case "TradeCompleted":<span class="cov8" title="1">
+                        break tradingloop</span>
+
+                // --------------------------------------------------------------- Terminate trade if any other status
+                default:<span class="cov8" title="1">
+                        break tradingloop</span>
+                }
+
+                <span class="cov8" title="1">loadValues(&amp;order)
+                if checkExits(&amp;order) </span><span class="cov8" title="1">{
+                        db.StoreOrderBookInDb(order)
+                }</span>
+
+        }
+        <span class="cov8" title="1">db.StoreOrderBookInDb(order)
+        srv.TradesLogger.Println("Trade Exectuion time (fine tune delays)", time.Since(start))</span>
+}
+
+func checkExits(order *appdata.OrderBook_S) bool <span class="cov8" title="1">{
+
+        e := db.ReadTradeExitsFromDb()
+        if strings.Contains(e, "all-terminate") || TerminateTradeMgr </span><span class="cov8" title="1">{
+                if (order.Status != "ExitTrade") &amp;&amp; (order.Status != "ExitOrdersPending") &amp;&amp; (order.Status != "TradeCompleted") </span><span class="cov8" title="1">{
+                        order.Status = "Terminate"
+                        return true
+                }</span>
+        } else<span class="cov8" title="1"> if strings.Contains(e, "all-exit") || strings.Contains(e, strconv.FormatUint(uint64(order.Id), 10)) </span><span class="cov8" title="1">{
+                if (order.Status != "ExitTrade") &amp;&amp; (order.Status != "ExitOrdersPending") &amp;&amp; (order.Status != "TradeCompleted") </span><span class="cov8" title="1">{
+                        order.Info.UserExitRequested = true
+                        order.Status = "ExitTrade"
+                        return true
+                }</span>
+        }
+        <span class="cov8" title="1">return false</span>
+}
+
+// RULE: Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.
+func checkTriggerDays(currentday string, days string) bool <span class="cov8" title="1">{
+
+        currentday = strings.ToLower(currentday)
+        days = strings.ToLower(strings.Replace(days, " ", "", -1))
+        triggerdays := strings.Split(days, ",")
+
+        for each := range triggerdays </span><span class="cov8" title="1">{
+                if triggerdays[each] == currentday </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+        <span class="cov8" title="1">return false</span>
+}
+
+func loadValues(or *appdata.OrderBook_S) <span class="cov8" title="1">{
+        status, trtemp := db.ReadOrderBookFromDb(or.Id)
+        if status </span><span class="cov8" title="1">{
+                // or.Id = trtemp.Id
+                or.Date = trtemp.Date
+                or.Instr = trtemp.Instr
+                or.Strategy = trtemp.Strategy
+                or.Status = trtemp.Status
+                or.Dir = trtemp.Dir
+                or.Exit_reason = trtemp.Exit_reason
+                or.Info = trtemp.Info
+                or.Targets = trtemp.Targets
+                or.Orders_entr = trtemp.Orders_entr
+                or.Orders_exit = trtemp.Orders_exit
+                or.Post_analysis = trtemp.Post_analysis
+        }</span> else<span class="cov8" title="1"> {
+                or.Info.ErrorCount++
+        }</span>
+}
+
+func tradeEnterSignalCheck(symbol string, tradeUserStrategies appdata.UserStrategies_S, tr *appdata.OrderBook_S) bool <span class="cov8" title="1">{
+
+        if tradeUserStrategies.Trigger_time.Hour() == 0 </span><span class="cov8" title="1">{
+                return apiclient.SignalAnalyzer(tr, "-entr")
+
+        }</span> else<span class="cov8" title="1"> if time.Now().Hour() == tradeUserStrategies.Trigger_time.Hour() </span><span class="cov8" title="1">{
+                if time.Now().Minute() == tradeUserStrategies.Trigger_time.Minute() </span><span class="cov8" title="1">{ // trigger time reached
+
+                        return apiclient.SignalAnalyzer(tr, "-entr")
+                }</span>
+        }
+        <span class="cov8" title="1">return false</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package trademgr
+
+import (
+        "algo-ex-mgr/app/appdata"
+        "algo-ex-mgr/app/kite"
+        "algo-ex-mgr/app/srv"
+        "strings"
+        "time"
+
+        kiteconnect "github.com/zerodha/gokiteconnect/v4"
+)
+
+func getOrderMargin(order appdata.OrderBook_S, ts appdata.UserStrategies_S, tm time.Time) []kiteconnect.OrderMargins <span class="cov8" title="1">{
+
+        var marginParam kiteconnect.GetMarginParams
+
+        //initialise the slice
+        marginParam.OrderParams = make([]kiteconnect.OrderMarginParam, 1)
+
+        // default params
+        marginParam.Compact = false
+
+        marginParam.OrderParams[0].OrderType = "MARKET"
+        marginParam.OrderParams[0].Price = 0
+        marginParam.OrderParams[0].TriggerPrice = 0
+        // specific params
+        marginParam.OrderParams[0].Variety = ts.Parameters.Kite_Setting.Varieties
+        marginParam.OrderParams[0].Product = ts.Parameters.Kite_Setting.Products
+        if strings.ToLower(order.Dir) == "bullish" </span><span class="cov8" title="1">{
+                marginParam.OrderParams[0].TransactionType = "BUY"
+        }</span> else<span class="cov8" title="1"> {
+                marginParam.OrderParams[0].TransactionType = "SELL"
+        }</span>
+
+        <span class="cov8" title="1">switch ts.Parameters.Kite_Setting.OrderRoute </span>{
+
+        case "equity":<span class="cov8" title="1">
+                marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNSE</span>
+
+        case "option-buy":<span class="cov8" title="1">
+                marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNFO
+                marginParam.OrderParams[0].TransactionType = "BUY"</span>
+
+        case "option-sell":<span class="cov8" title="1">
+                marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNFO
+                marginParam.OrderParams[0].TransactionType = "SELL"</span>
+
+        case "futures":<span class="cov8" title="1">
+                marginParam.OrderParams[0].Exchange = kiteconnect.ExchangeNFO</span>
+
+        }
+        <span class="cov8" title="1">marginParam.OrderParams[0].Tradingsymbol, marginParam.OrderParams[0].Quantity =
+                deriveInstrumentsName(order, ts, tm)
+
+        OrderMargins, err := kite.FetchOrderMargins(marginParam)
+
+        if err != nil </span><span class="cov8" title="1">{
+                srv.ErrorLogger.Println(err)
+        }</span>
+        <span class="cov8" title="1">return OrderMargins</span>
+
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package trademgr
+
+import (
+        "algo-ex-mgr/app/appdata"
+        "algo-ex-mgr/app/kite"
+        "algo-ex-mgr/app/srv"
+        "fmt"
+        "math"
+        "strings"
+        "time"
+
+        kiteconnect "github.com/zerodha/gokiteconnect/v4"
+)
+
+func pendingOrderEntr(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool <span class="cov8" title="1">{
+
+        if order.Info.Order_simulation </span><span class="cov8" title="1">{
+                return true
+        }</span> else<span class="cov0" title="0"> {
+
+                tradesList := kite.FetchOrderTrades(order.Info.OrderIdEntr)
+                var qtyFilled float64
+
+                for each := range tradesList </span><span class="cov0" title="0">{
+                        qtyFilled = qtyFilled + tradesList[each].Quantity
+                }</span>
+                <span class="cov0" title="0">order.Info.QtyFilledEntr = qtyFilled
+
+                order.Orders_entr = make([]kiteconnect.Trade, len(tradesList))
+                print(copy(order.Orders_entr, tradesList))
+
+                if order.Info.QtyReq &gt; order.Info.QtyFilledEntr </span><span class="cov0" title="0">{
+                        _ = finalizeOrder(*order, us, time.Now(), (order.Info.QtyReq - order.Info.QtyFilledEntr), true)
+                        return false
+                }</span> else<span class="cov0" title="0"> {
+                        return true
+                }</span>
+
+        }
+}
+
+func pendingOrderExit(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool <span class="cov8" title="1">{
+
+        if order.Info.Order_simulation </span><span class="cov8" title="1">{
+                return true
+        }</span> else<span class="cov8" title="1"> {
+
+                tradesList := kite.FetchOrderTrades(uint64(order.Info.OrderIdExit))
+                var qtyFilled float64
+
+                for each := range tradesList </span><span class="cov0" title="0">{
+                        qtyFilled = qtyFilled + tradesList[each].Quantity
+                }</span>
+                <span class="cov8" title="1">order.Info.QtyFilledExit = qtyFilled
+
+                order.Orders_exit = make([]kiteconnect.Trade, len(tradesList))
+                print(copy(order.Orders_exit, tradesList))
+
+                if order.Info.QtyFilledEntr &gt; order.Info.QtyFilledExit </span><span class="cov0" title="0">{
+                        _ = finalizeOrder(*order, us, time.Now(), (order.Info.QtyFilledEntr - order.Info.QtyFilledExit), false)
+                        return false
+                }</span> else<span class="cov8" title="1"> {
+                        return true
+                }</span>
+
+        }
+}
+
+func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool <span class="cov8" title="1">{
+
+        if order.Info.Order_simulation </span><span class="cov8" title="1">{ // real trade
+
+                order.Info.TradingSymbol = order.Instr
+                if strings.Contains(order.Instr, "-FUT") </span><span class="cov0" title="0">{ // RULE: only for futures and equity supported
+                        order.Info.Exchange = kiteconnect.ExchangeNFO
+                }</span> else<span class="cov8" title="1"> {
+                        order.Info.Exchange = kiteconnect.ExchangeNSE
+                }</span>
+                <span class="cov8" title="1">order.Info.OrderIdEntr = 0
+                order.Info.OrderIdExit = 0
+                order.Info.QtyReq = 0
+                order.Info.QtyFilledEntr = 0
+                val, n := kite.GetLatestQuote(order.Instr) // TODO: Add logic to loop through lowest values and return only the price. Add for buy sell
+                order.Info.AvgPriceEnter = val[n].Depth.Buy[4].Price
+                return true</span>
+
+        } else<span class="cov8" title="1"> { // simulation
+                entryTime := time.Now()
+
+                userMargin := kite.GetUserMargin()
+                orderMargin := getOrderMargin(*order, us, entryTime)
+
+                order.Info.QtyReq = determineOrderSize(userMargin, orderMargin[0].Total,
+                        us.Parameters.Controls.WinningRatio, us.Parameters.Controls.MaxBudget,
+                        us.Parameters.Controls.LimitAmount)
+
+                orderId := finalizeOrder(*order, us, entryTime, order.Info.QtyReq, true)
+
+                if orderId != 0 </span><span class="cov0" title="0">{
+                        order.Info.OrderIdEntr = orderId
+                        srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
+                }</span>
+                <span class="cov8" title="1">return orderId != 0</span>
+        }
+}
+
+func tradeExit(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool <span class="cov8" title="1">{
+
+        if ts.Parameters.Controls.TradeSimulate </span><span class="cov8" title="1">{
+                return true
+        }</span> else<span class="cov8" title="1"> {
+
+                if order.Info.QtyFilledEntr &gt; 0 </span><span class="cov0" title="0">{ // check if order has been filled, only then place exit order
+                        orderId := finalizeOrder(*order, ts, time.Now(), order.Info.QtyFilledEntr, false)
+
+                        if orderId != 0 </span><span class="cov0" title="0">{
+                                order.Info.OrderIdExit = orderId
+                                srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
+                        }</span>
+                        <span class="cov0" title="0">return orderId != 0</span>
+                } else<span class="cov8" title="1"> {
+                        return true
+                }</span>
+        }
+}
+
+// Fetch account balance, Calculate margin required, Check strategy winning percentage, Determine order size
+func determineOrderSize(userMargin float64, orderMargin float64, winningRate float64, maxBudget float64, limitAmount float64) float64 <span class="cov8" title="1">{
+
+        maxBudget = (maxBudget / 100) * userMargin
+        budget := math.Min(maxBudget, limitAmount)
+
+        if orderMargin &gt; budget </span><span class="cov8" title="1">{ // no money available for transaction
+                return 0
+        }</span> else<span class="cov8" title="1"> {
+                qty := (budget / orderMargin) * (winningRate / 100) // place order in % of winning rate
+                if qty &lt; 1 </span><span class="cov8" title="1">{
+                        return 1 // minimum order size if winning rate is less than 1
+                }</span> else<span class="cov8" title="1"> {
+                        if math.IsNaN(qty) </span><span class="cov0" title="0">{
+                                return 0
+                        }</span> else<span class="cov8" title="1"> {
+                                return math.Trunc(qty) // based on winning rate
+                        }</span>
+                }
+        }
+}
+
+func getLowestPrice(instr string) float64 <span class="cov0" title="0">{
+        qt, n := kite.GetLatestQuote(instr)
+        // ToDO: fetch min values for the enter/exit trades
+        fmt.Print(qt[n].Depth.Buy[0].Price)
+        return qt[n].Depth.Buy[0].Price
+}</span>
+
+func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDate time.Time, qty float64, entry bool) (orderID uint64) <span class="cov8" title="1">{
+
+        var orderParam kiteconnect.OrderParams
+
+        orderParam.Tag = ts.Strategy
+        orderParam.Product = ts.Parameters.Kite_Setting.Products
+        orderParam.Validity = ts.Parameters.Kite_Setting.Validities
+
+        // Valid only for equity and futures
+        // entry(true) + bullish - buy
+        // exit(false) + bearish - buy
+        // exit(false) + bullish - sell
+        // entry(true) + bearish - sell
+
+        if (strings.ToLower(order.Dir) == "bullish" &amp;&amp; !entry) || (strings.ToLower(order.Dir) == "bearish" &amp;&amp; entry) </span><span class="cov0" title="0">{
+                orderParam.TransactionType = "SELL"
+        }</span> else<span class="cov8" title="1"> {
+                orderParam.TransactionType = "BUY"
+        }</span>
+
+        <span class="cov8" title="1">switch ts.Parameters.Kite_Setting.OrderRoute </span>{
+
+        default:<span class="cov0" title="0">
+                fallthrough</span>
+
+        case "equity":<span class="cov8" title="1">
+                orderParam.Price = order.Targets.Entry
+                orderParam.Exchange = kiteconnect.ExchangeNSE
+                orderParam.OrderType = ts.Parameters.Kite_Setting.OrderType</span>
+
+        case "option-buy":<span class="cov8" title="1">
+                if entry </span><span class="cov8" title="1">{
+                        orderParam.TransactionType = "BUY"
+                }</span> else<span class="cov0" title="0"> {
+                        orderParam.TransactionType = "SELL"
+                }</span>
+                <span class="cov8" title="1">orderParam.Exchange = kiteconnect.ExchangeNFO
+                orderParam.OrderType = kiteconnect.OrderTypeMarket</span>
+
+        case "option-sell":<span class="cov0" title="0">
+                if entry </span><span class="cov0" title="0">{
+                        orderParam.TransactionType = "SELL"
+                }</span> else<span class="cov0" title="0"> {
+                        orderParam.TransactionType = "BUY"
+                }</span>
+                <span class="cov0" title="0">orderParam.Exchange = kiteconnect.ExchangeNFO
+                orderParam.OrderType = kiteconnect.OrderTypeMarket</span>
+
+        case "futures":<span class="cov0" title="0">
+                orderParam.Price = order.Targets.Entry
+                orderParam.Exchange = kiteconnect.ExchangeNFO
+                orderParam.OrderType = ts.Parameters.Kite_Setting.OrderType</span>
+
+        }
+        <span class="cov8" title="1">var symbolMinQty float64
+        orderParam.Tradingsymbol, symbolMinQty = deriveInstrumentsName(order, ts, time.Now())
+        orderParam.Quantity = int(symbolMinQty * qty)
+
+        var orderId uint64
+        if entry </span><span class="cov8" title="1">{ // check if order is already placed
+                orderId = order.Info.OrderIdEntr
+        }</span> else<span class="cov0" title="0"> {
+                orderId = order.Info.OrderIdExit
+        }</span>
+
+        <span class="cov8" title="1">if orderId == 0 </span><span class="cov8" title="1">{ // new order
+                return kite.ExecOrder(orderParam, ts.Parameters.Kite_Setting.Varieties)
+        }</span> else<span class="cov0" title="0"> {
+                return kite.ModifyOrder(orderId, ts.Parameters.Kite_Setting.Varieties, orderParam)
+        }</span>
+}
+
+// RULE - For optons its always MARKET price, else we need to scan the selected "option symbol" and quote price
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
