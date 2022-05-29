@@ -76,7 +76,6 @@ func GetLatestQuote(i string) (kiteconnect.Quote, string) {
 	}
 
 	quote, err := kc.GetQuote(q) // 'exchange:Insturment'
-	println(quote)
 	if err != nil {
 		srv.TradesLogger.Println(err.Error())
 		return kiteconnect.Quote{}, q

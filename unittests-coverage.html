@@ -61,7 +61,7 @@
 				
 				<option value="file2">algo-ex-mgr/app/trademgr/trademgr-margin.go (100.0%)</option>
 				
-				<option value="file3">algo-ex-mgr/app/trademgr/trademgr-orders.go (62.5%)</option>
+				<option value="file3">algo-ex-mgr/app/trademgr/trademgr-orders.go (90.3%)</option>
 				
 				</select>
 			</div>
@@ -136,7 +136,7 @@ func deriveInstrumentsName(order appdata.OrderBook_S, ts appdata.UserStrategies_
                 }</span>
         } else<span class="cov8" title="1"> if ts.Parameters.Kite_Setting.OrderRoute == "futures" </span><span class="cov8" title="1">{
                 selDate = selDate.AddDate(0, ts.Parameters.Futures_Setting.FuturesExpiryMonth, 0)
-                enddate = selDate.AddDate(0, 1+ts.Parameters.Futures_Setting.FuturesExpiryMonth, 0)
+                enddate = selDate.AddDate(0, 1+ts.Parameters.Futures_Setting.FuturesExpiryMonth, 7) // TODO: there is still some race condition when expiry on 1 month misses to fetch next expiry
                 instrumentType = "FUT"
         }</span> else<span class="cov8" title="1"> if ts.Parameters.Kite_Setting.OrderRoute == "equity" </span><span class="cov8" title="1">{
                 enddate = selDate.AddDate(0, 0, 0)
@@ -490,7 +490,6 @@ import (
         "algo-ex-mgr/app/appdata"
         "algo-ex-mgr/app/kite"
         "algo-ex-mgr/app/srv"
-        "fmt"
         "math"
         "strings"
         "time"
@@ -502,23 +501,25 @@ func pendingOrderEntr(order *appdata.OrderBook_S, us appdata.UserStrategies_S) b
 
         if order.Info.Order_simulation </span><span class="cov8" title="1">{
                 return true
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
 
-                tradesList := kite.FetchOrderTrades(order.Info.OrderIdEntr)
-                var qtyFilled float64
+                if (order.Info.OrderIdEntr) != 0 </span><span class="cov8" title="1">{
+                        tradesList := kite.FetchOrderTrades(order.Info.OrderIdEntr)
+                        var qtyFilled float64
 
-                for each := range tradesList </span><span class="cov0" title="0">{
-                        qtyFilled = qtyFilled + tradesList[each].Quantity
-                }</span>
-                <span class="cov0" title="0">order.Info.QtyFilledEntr = qtyFilled
+                        for each := range tradesList </span><span class="cov0" title="0">{
+                                qtyFilled = qtyFilled + tradesList[each].Quantity
+                        }</span>
+                        <span class="cov8" title="1">order.Info.QtyFilledEntr = qtyFilled
 
-                order.Orders_entr = make([]kiteconnect.Trade, len(tradesList))
-                print(copy(order.Orders_entr, tradesList))
+                        order.Orders_entr = make([]kiteconnect.Trade, len(tradesList))
+                        print(copy(order.Orders_entr, tradesList))</span>
 
-                if order.Info.QtyReq &gt; order.Info.QtyFilledEntr </span><span class="cov0" title="0">{
-                        _ = finalizeOrder(*order, us, time.Now(), (order.Info.QtyReq - order.Info.QtyFilledEntr), true)
+                }
+                <span class="cov8" title="1">if order.Info.QtyReq &gt; order.Info.QtyFilledEntr </span><span class="cov8" title="1">{
+                        _ = finalizeOrder(*order, us, time.Now(), (order.Info.QtyReq - order.Info.QtyFilledEntr), order.Info.OrderIdEntr, true)
                         return false
-                }</span> else<span class="cov0" title="0"> {
+                }</span> else<span class="cov8" title="1"> {
                         return true
                 }</span>
 
@@ -531,19 +532,20 @@ func pendingOrderExit(order *appdata.OrderBook_S, us appdata.UserStrategies_S) b
                 return true
         }</span> else<span class="cov8" title="1"> {
 
-                tradesList := kite.FetchOrderTrades(uint64(order.Info.OrderIdExit))
-                var qtyFilled float64
+                if (order.Info.OrderIdExit) != 0 </span><span class="cov8" title="1">{
+                        tradesList := kite.FetchOrderTrades(uint64(order.Info.OrderIdExit))
+                        var qtyFilled float64
 
-                for each := range tradesList </span><span class="cov0" title="0">{
-                        qtyFilled = qtyFilled + tradesList[each].Quantity
-                }</span>
-                <span class="cov8" title="1">order.Info.QtyFilledExit = qtyFilled
+                        for each := range tradesList </span><span class="cov0" title="0">{
+                                qtyFilled = qtyFilled + tradesList[each].Quantity
+                        }</span>
+                        <span class="cov8" title="1">order.Info.QtyFilledExit = qtyFilled
 
-                order.Orders_exit = make([]kiteconnect.Trade, len(tradesList))
-                print(copy(order.Orders_exit, tradesList))
-
-                if order.Info.QtyFilledEntr &gt; order.Info.QtyFilledExit </span><span class="cov0" title="0">{
-                        _ = finalizeOrder(*order, us, time.Now(), (order.Info.QtyFilledEntr - order.Info.QtyFilledExit), false)
+                        order.Orders_exit = make([]kiteconnect.Trade, len(tradesList))
+                        print(copy(order.Orders_exit, tradesList))</span>
+                }
+                <span class="cov8" title="1">if order.Info.QtyFilledEntr &gt; order.Info.QtyFilledExit </span><span class="cov8" title="1">{
+                        _ = finalizeOrder(*order, us, time.Now(), (order.Info.QtyFilledEntr - order.Info.QtyFilledExit), order.Info.OrderIdExit, false)
                         return false
                 }</span> else<span class="cov8" title="1"> {
                         return true
@@ -563,24 +565,27 @@ func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool <s
                         order.Info.Exchange = kiteconnect.ExchangeNSE
                 }</span>
                 <span class="cov8" title="1">order.Info.OrderIdEntr = 0
-                order.Info.OrderIdExit = 0
                 order.Info.QtyReq = 0
                 order.Info.QtyFilledEntr = 0
-                val, n := kite.GetLatestQuote(order.Instr) // TODO: Add logic to loop through lowest values and return only the price. Add for buy sell
-                order.Info.AvgPriceEnter = val[n].Depth.Buy[4].Price
+                order.Info.AvgPriceEnter = getLowestPrice(order.Instr, order.Dir)
                 return true</span>
 
-        } else<span class="cov8" title="1"> { // simulation
+        } else<span class="cov8" title="1"> {
                 entryTime := time.Now()
 
                 userMargin := kite.GetUserMargin()
                 orderMargin := getOrderMargin(*order, us, entryTime)
 
-                order.Info.QtyReq = determineOrderSize(userMargin, orderMargin[0].Total,
+                var odMargin float64 = 0
+                if len(orderMargin) != 0 </span><span class="cov8" title="1">{
+                        odMargin = orderMargin[0].Total
+                }</span>
+
+                <span class="cov8" title="1">order.Info.QtyReq = determineOrderSize(userMargin, odMargin,
                         us.Parameters.Controls.WinningRatio, us.Parameters.Controls.MaxBudget,
                         us.Parameters.Controls.LimitAmount)
 
-                orderId := finalizeOrder(*order, us, entryTime, order.Info.QtyReq, true)
+                orderId := finalizeOrder(*order, us, entryTime, order.Info.QtyReq, 0, true)
 
                 if orderId != 0 </span><span class="cov0" title="0">{
                         order.Info.OrderIdEntr = orderId
@@ -593,17 +598,20 @@ func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool <s
 func tradeExit(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool <span class="cov8" title="1">{
 
         if ts.Parameters.Controls.TradeSimulate </span><span class="cov8" title="1">{
+                order.Info.OrderIdExit = 0
+                order.Info.QtyFilledExit = 0
+                order.Info.AvgPriceExit = getLowestPrice(order.Instr, order.Dir)
                 return true
         }</span> else<span class="cov8" title="1"> {
 
-                if order.Info.QtyFilledEntr &gt; 0 </span><span class="cov0" title="0">{ // check if order has been filled, only then place exit order
-                        orderId := finalizeOrder(*order, ts, time.Now(), order.Info.QtyFilledEntr, false)
+                if order.Info.QtyFilledEntr &gt; 0 </span><span class="cov8" title="1">{ // check if order has been filled, only then place exit order
+                        orderId := finalizeOrder(*order, ts, time.Now(), order.Info.QtyFilledEntr, 0, false)
 
                         if orderId != 0 </span><span class="cov0" title="0">{
                                 order.Info.OrderIdExit = orderId
                                 srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
                         }</span>
-                        <span class="cov0" title="0">return orderId != 0</span>
+                        <span class="cov8" title="1">return orderId != 0</span>
                 } else<span class="cov8" title="1"> {
                         return true
                 }</span>
@@ -623,7 +631,7 @@ func determineOrderSize(userMargin float64, orderMargin float64, winningRate flo
                 if qty &lt; 1 </span><span class="cov8" title="1">{
                         return 1 // minimum order size if winning rate is less than 1
                 }</span> else<span class="cov8" title="1"> {
-                        if math.IsNaN(qty) </span><span class="cov0" title="0">{
+                        if math.IsNaN(qty) </span><span class="cov8" title="1">{
                                 return 0
                         }</span> else<span class="cov8" title="1"> {
                                 return math.Trunc(qty) // based on winning rate
@@ -632,14 +640,29 @@ func determineOrderSize(userMargin float64, orderMargin float64, winningRate flo
         }
 }
 
-func getLowestPrice(instr string) float64 <span class="cov0" title="0">{
-        qt, n := kite.GetLatestQuote(instr)
-        // ToDO: fetch min values for the enter/exit trades
-        fmt.Print(qt[n].Depth.Buy[0].Price)
-        return qt[n].Depth.Buy[0].Price
-}</span>
+func getLowestPrice(instr string, dir string) float64 <span class="cov8" title="1">{
 
-func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDate time.Time, qty float64, entry bool) (orderID uint64) <span class="cov8" title="1">{
+        qt, n := kite.GetLatestQuote(instr)
+
+        if dir == "buy" </span><span class="cov8" title="1">{
+                for i := 4; i &gt;= 0; i-- </span><span class="cov8" title="1">{
+                        if qt[n].Depth.Buy[i].Price != 0 </span><span class="cov0" title="0">{
+                                return qt[n].Depth.Buy[i].Price // return lowest price
+                        }</span>
+                }
+                <span class="cov8" title="1">return qt[n].Depth.Buy[0].Price</span> // if no price available, return the first price
+        } else<span class="cov8" title="1"> {
+                for i := 4; i &gt;= 0; i-- </span><span class="cov8" title="1">{
+                        if qt[n].Depth.Sell[i].Price != 0 </span><span class="cov0" title="0">{
+                                return qt[n].Depth.Sell[i].Price
+                        }</span>
+                }
+                <span class="cov8" title="1">return qt[n].Depth.Sell[0].Price</span>
+        }
+}
+
+/* option's at market price. equity and futures are limit order with limit value form Targets.Entry value */
+func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDate time.Time, qty float64, orderId uint64, enter bool) (orderID uint64) <span class="cov8" title="1">{
 
         var orderParam kiteconnect.OrderParams
 
@@ -647,13 +670,14 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
         orderParam.Product = ts.Parameters.Kite_Setting.Products
         orderParam.Validity = ts.Parameters.Kite_Setting.Validities
 
-        // Valid only for equity and futures
-        // entry(true) + bullish - buy
-        // exit(false) + bearish - buy
-        // exit(false) + bullish - sell
-        // entry(true) + bearish - sell
+        /* Valid only for equity and futures
+        entry(true) + bullish - buy
+        exit(false) + bearish - buy
+        exit(false) + bullish - sell
+        entry(true) + bearish - sell
+        */
 
-        if (strings.ToLower(order.Dir) == "bullish" &amp;&amp; !entry) || (strings.ToLower(order.Dir) == "bearish" &amp;&amp; entry) </span><span class="cov0" title="0">{
+        if (strings.ToLower(order.Dir) == "bullish" &amp;&amp; !enter) || (strings.ToLower(order.Dir) == "bearish" &amp;&amp; enter) </span><span class="cov8" title="1">{
                 orderParam.TransactionType = "SELL"
         }</span> else<span class="cov8" title="1"> {
                 orderParam.TransactionType = "BUY"
@@ -661,7 +685,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 
         <span class="cov8" title="1">switch ts.Parameters.Kite_Setting.OrderRoute </span>{
 
-        default:<span class="cov0" title="0">
+        default:<span class="cov8" title="1">
                 fallthrough</span>
 
         case "equity":<span class="cov8" title="1">
@@ -670,24 +694,24 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
                 orderParam.OrderType = ts.Parameters.Kite_Setting.OrderType</span>
 
         case "option-buy":<span class="cov8" title="1">
-                if entry </span><span class="cov8" title="1">{
+                if enter </span><span class="cov8" title="1">{
                         orderParam.TransactionType = "BUY"
-                }</span> else<span class="cov0" title="0"> {
+                }</span> else<span class="cov8" title="1"> {
                         orderParam.TransactionType = "SELL"
                 }</span>
                 <span class="cov8" title="1">orderParam.Exchange = kiteconnect.ExchangeNFO
                 orderParam.OrderType = kiteconnect.OrderTypeMarket</span>
 
-        case "option-sell":<span class="cov0" title="0">
-                if entry </span><span class="cov0" title="0">{
+        case "option-sell":<span class="cov8" title="1">
+                if enter </span><span class="cov8" title="1">{
                         orderParam.TransactionType = "SELL"
                 }</span> else<span class="cov0" title="0"> {
                         orderParam.TransactionType = "BUY"
                 }</span>
-                <span class="cov0" title="0">orderParam.Exchange = kiteconnect.ExchangeNFO
+                <span class="cov8" title="1">orderParam.Exchange = kiteconnect.ExchangeNFO
                 orderParam.OrderType = kiteconnect.OrderTypeMarket</span>
 
-        case "futures":<span class="cov0" title="0">
+        case "futures":<span class="cov8" title="1">
                 orderParam.Price = order.Targets.Entry
                 orderParam.Exchange = kiteconnect.ExchangeNFO
                 orderParam.OrderType = ts.Parameters.Kite_Setting.OrderType</span>
@@ -697,14 +721,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
         orderParam.Tradingsymbol, symbolMinQty = deriveInstrumentsName(order, ts, time.Now())
         orderParam.Quantity = int(symbolMinQty * qty)
 
-        var orderId uint64
-        if entry </span><span class="cov8" title="1">{ // check if order is already placed
-                orderId = order.Info.OrderIdEntr
-        }</span> else<span class="cov0" title="0"> {
-                orderId = order.Info.OrderIdExit
-        }</span>
-
-        <span class="cov8" title="1">if orderId == 0 </span><span class="cov8" title="1">{ // new order
+        if orderId == 0 </span><span class="cov8" title="1">{ // new order
                 return kite.ExecOrder(orderParam, ts.Parameters.Kite_Setting.Varieties)
         }</span> else<span class="cov0" title="0"> {
                 return kite.ModifyOrder(orderId, ts.Parameters.Kite_Setting.Varieties, orderParam)

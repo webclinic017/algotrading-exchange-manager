@@ -59,7 +59,7 @@ func deriveInstrumentsName(order appdata.OrderBook_S, ts appdata.UserStrategies_
 		}
 	} else if ts.Parameters.Kite_Setting.OrderRoute == "futures" {
 		selDate = selDate.AddDate(0, ts.Parameters.Futures_Setting.FuturesExpiryMonth, 0)
-		enddate = selDate.AddDate(0, 1+ts.Parameters.Futures_Setting.FuturesExpiryMonth, 0)
+		enddate = selDate.AddDate(0, 1+ts.Parameters.Futures_Setting.FuturesExpiryMonth, 7) // TODO: there is still some race condition when expiry on 1 month misses to fetch next expiry
 		instrumentType = "FUT"
 	} else if ts.Parameters.Kite_Setting.OrderRoute == "equity" {
 		enddate = selDate.AddDate(0, 0, 0)

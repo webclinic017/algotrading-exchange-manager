@@ -32,8 +32,8 @@ var FetchInstrDataTests = []FetchInstrDataTesting{
 	{"BANKNIFTY-FUT", 36020, -1, "PE", "2022-03-23", "2022-03-30", "BANKNIFTY2232436000PE"},
 	{"BANKNIFTY-FUT", 36020, -11, "PE", "2022-03-23", "2022-03-30", "BANKNIFTY2232435000PE"},
 
-	{"ASHOK LEYLAND", 0, 0, "EQ", "2022-03-23", "2022-03-30", "ASHOKLEY"},
-	{"RELIANCE INDUSTRIES", 0, 0, "EQ", "2022-03-23", "2022-03-30", "RELIANCE"},
+	{"ASHOKLEY", 0, 0, "EQ", "2022-03-23", "2022-03-30", "ASHOKLEY"},
+	{"RELIANCE", 0, 0, "EQ", "2022-03-23", "2022-03-30", "RELIANCE"},
 }
 
 func TestFetchInstrData(t *testing.T) {

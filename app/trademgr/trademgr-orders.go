@@ -4,7 +4,6 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/kite"
 	"algo-ex-mgr/app/srv"
-	"fmt"
 	"math"
 	"strings"
 	"time"
@@ -18,19 +17,21 @@ func pendingOrderEntr(order *appdata.OrderBook_S, us appdata.UserStrategies_S) b
 		return true
 	} else {
 
-		tradesList := kite.FetchOrderTrades(order.Info.OrderIdEntr)
-		var qtyFilled float64
+		if (order.Info.OrderIdEntr) != 0 {
+			tradesList := kite.FetchOrderTrades(order.Info.OrderIdEntr)
+			var qtyFilled float64
 
-		for each := range tradesList {
-			qtyFilled = qtyFilled + tradesList[each].Quantity
+			for each := range tradesList {
+				qtyFilled = qtyFilled + tradesList[each].Quantity
+			}
+			order.Info.QtyFilledEntr = qtyFilled
+
+			order.Orders_entr = make([]kiteconnect.Trade, len(tradesList))
+			print(copy(order.Orders_entr, tradesList))
+
 		}
-		order.Info.QtyFilledEntr = qtyFilled
-
-		order.Orders_entr = make([]kiteconnect.Trade, len(tradesList))
-		print(copy(order.Orders_entr, tradesList))
-
 		if order.Info.QtyReq > order.Info.QtyFilledEntr {
-			_ = finalizeOrder(*order, us, time.Now(), (order.Info.QtyReq - order.Info.QtyFilledEntr), true)
+			_ = finalizeOrder(*order, us, time.Now(), (order.Info.QtyReq - order.Info.QtyFilledEntr), order.Info.OrderIdEntr, true)
 			return false
 		} else {
 			return true
@@ -45,19 +46,20 @@ func pendingOrderExit(order *appdata.OrderBook_S, us appdata.UserStrategies_S) b
 		return true
 	} else {
 
-		tradesList := kite.FetchOrderTrades(uint64(order.Info.OrderIdExit))
-		var qtyFilled float64
+		if (order.Info.OrderIdExit) != 0 {
+			tradesList := kite.FetchOrderTrades(uint64(order.Info.OrderIdExit))
+			var qtyFilled float64
 
-		for each := range tradesList {
-			qtyFilled = qtyFilled + tradesList[each].Quantity
+			for each := range tradesList {
+				qtyFilled = qtyFilled + tradesList[each].Quantity
+			}
+			order.Info.QtyFilledExit = qtyFilled
+
+			order.Orders_exit = make([]kiteconnect.Trade, len(tradesList))
+			print(copy(order.Orders_exit, tradesList))
 		}
-		order.Info.QtyFilledExit = qtyFilled
-
-		order.Orders_exit = make([]kiteconnect.Trade, len(tradesList))
-		print(copy(order.Orders_exit, tradesList))
-
 		if order.Info.QtyFilledEntr > order.Info.QtyFilledExit {
-			_ = finalizeOrder(*order, us, time.Now(), (order.Info.QtyFilledEntr - order.Info.QtyFilledExit), false)
+			_ = finalizeOrder(*order, us, time.Now(), (order.Info.QtyFilledEntr - order.Info.QtyFilledExit), order.Info.OrderIdExit, false)
 			return false
 		} else {
 			return true
@@ -77,24 +79,27 @@ func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool {
 			order.Info.Exchange = kiteconnect.ExchangeNSE
 		}
 		order.Info.OrderIdEntr = 0
-		order.Info.OrderIdExit = 0
 		order.Info.QtyReq = 0
 		order.Info.QtyFilledEntr = 0
-		val, n := kite.GetLatestQuote(order.Instr) // TODO: Add logic to loop through lowest values and return only the price. Add for buy sell
-		order.Info.AvgPriceEnter = val[n].Depth.Buy[4].Price
+		order.Info.AvgPriceEnter = getLowestPrice(order.Instr, order.Dir)
 		return true
 
-	} else { // simulation
+	} else {
 		entryTime := time.Now()
 
 		userMargin := kite.GetUserMargin()
 		orderMargin := getOrderMargin(*order, us, entryTime)
 
-		order.Info.QtyReq = determineOrderSize(userMargin, orderMargin[0].Total,
+		var odMargin float64 = 0
+		if len(orderMargin) != 0 {
+			odMargin = orderMargin[0].Total
+		}
+
+		order.Info.QtyReq = determineOrderSize(userMargin, odMargin,
 			us.Parameters.Controls.WinningRatio, us.Parameters.Controls.MaxBudget,
 			us.Parameters.Controls.LimitAmount)
 
-		orderId := finalizeOrder(*order, us, entryTime, order.Info.QtyReq, true)
+		orderId := finalizeOrder(*order, us, entryTime, order.Info.QtyReq, 0, true)
 
 		if orderId != 0 {
 			order.Info.OrderIdEntr = orderId
@@ -107,11 +112,14 @@ func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool {
 func tradeExit(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 
 	if ts.Parameters.Controls.TradeSimulate {
+		order.Info.OrderIdExit = 0
+		order.Info.QtyFilledExit = 0
+		order.Info.AvgPriceExit = getLowestPrice(order.Instr, order.Dir)
 		return true
 	} else {
 
 		if order.Info.QtyFilledEntr > 0 { // check if order has been filled, only then place exit order
-			orderId := finalizeOrder(*order, ts, time.Now(), order.Info.QtyFilledEntr, false)
+			orderId := finalizeOrder(*order, ts, time.Now(), order.Info.QtyFilledEntr, 0, false)
 
 			if orderId != 0 {
 				order.Info.OrderIdExit = orderId
@@ -146,14 +154,29 @@ func determineOrderSize(userMargin float64, orderMargin float64, winningRate flo
 	}
 }
 
-func getLowestPrice(instr string) float64 {
+func getLowestPrice(instr string, dir string) float64 {
+
 	qt, n := kite.GetLatestQuote(instr)
-	// ToDO: fetch min values for the enter/exit trades
-	fmt.Print(qt[n].Depth.Buy[0].Price)
-	return qt[n].Depth.Buy[0].Price
+
+	if dir == "buy" {
+		for i := 4; i >= 0; i-- {
+			if qt[n].Depth.Buy[i].Price != 0 {
+				return qt[n].Depth.Buy[i].Price // return lowest price
+			}
+		}
+		return qt[n].Depth.Buy[0].Price // if no price available, return the first price
+	} else {
+		for i := 4; i >= 0; i-- {
+			if qt[n].Depth.Sell[i].Price != 0 {
+				return qt[n].Depth.Sell[i].Price
+			}
+		}
+		return qt[n].Depth.Sell[0].Price
+	}
 }
 
-func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDate time.Time, qty float64, entry bool) (orderID uint64) {
+/* option's at market price. equity and futures are limit order with limit value form Targets.Entry value */
+func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDate time.Time, qty float64, orderId uint64, enter bool) (orderID uint64) {
 
 	var orderParam kiteconnect.OrderParams
 
@@ -161,13 +184,14 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 	orderParam.Product = ts.Parameters.Kite_Setting.Products
 	orderParam.Validity = ts.Parameters.Kite_Setting.Validities
 
-	// Valid only for equity and futures
-	// entry(true) + bullish - buy
-	// exit(false) + bearish - buy
-	// exit(false) + bullish - sell
-	// entry(true) + bearish - sell
+	/* Valid only for equity and futures
+	entry(true) + bullish - buy
+	exit(false) + bearish - buy
+	exit(false) + bullish - sell
+	entry(true) + bearish - sell
+	*/
 
-	if (strings.ToLower(order.Dir) == "bullish" && !entry) || (strings.ToLower(order.Dir) == "bearish" && entry) {
+	if (strings.ToLower(order.Dir) == "bullish" && !enter) || (strings.ToLower(order.Dir) == "bearish" && enter) {
 		orderParam.TransactionType = "SELL"
 	} else {
 		orderParam.TransactionType = "BUY"
@@ -184,7 +208,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 		orderParam.OrderType = ts.Parameters.Kite_Setting.OrderType
 
 	case "option-buy":
-		if entry {
+		if enter {
 			orderParam.TransactionType = "BUY"
 		} else {
 			orderParam.TransactionType = "SELL"
@@ -193,7 +217,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 		orderParam.OrderType = kiteconnect.OrderTypeMarket
 
 	case "option-sell":
-		if entry {
+		if enter {
 			orderParam.TransactionType = "SELL"
 		} else {
 			orderParam.TransactionType = "BUY"
@@ -210,13 +234,6 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 	var symbolMinQty float64
 	orderParam.Tradingsymbol, symbolMinQty = deriveInstrumentsName(order, ts, time.Now())
 	orderParam.Quantity = int(symbolMinQty * qty)
-
-	var orderId uint64
-	if entry { // check if order is already placed
-		orderId = order.Info.OrderIdEntr
-	} else {
-		orderId = order.Info.OrderIdExit
-	}
 
 	if orderId == 0 { // new order
 		return kite.ExecOrder(orderParam, ts.Parameters.Kite_Setting.Varieties)
