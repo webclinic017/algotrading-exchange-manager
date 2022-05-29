@@ -1,0 +1,22 @@
+took 58s   at 10:07:45 am  
+❯ go tool cover -html=tm_coverage.out                 
+
+    ~/devArea/algotrading-exchange-manager  on   master !6 ▓▒░······························································································░▒▓ at 10:07:50 am  
+❯ go tool cover -func=tm_coverage.out
+algo-ex-mgr/app/trademgr/trademgr-deriveNames.go:18:    deriveInstrumentsName   100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:29:           StartTrader             100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:86:           StopTrader              100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:94:           operateSymbol           100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:195:          checkExits              100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:214:          checkTriggerDays        100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:228:          loadValues              100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:248:          tradeEnterSignalCheck   100.0%
+algo-ex-mgr/app/trademgr/trademgr-margin.go:13:         getOrderMargin          100.0%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:15:         pendingOrderEntr        15.4%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:42:         pendingOrderExit        15.4%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:69:         tradeEnter              52.4%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:107:        tradeExit               28.6%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:124:        determineOrderSize      90.0%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:145:        getLowestPrice          0.0%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:152:        finalizeOrder           0.0%
+total:                                                  (statements)            71.5%

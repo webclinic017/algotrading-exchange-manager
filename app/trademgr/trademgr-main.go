@@ -8,6 +8,7 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/db"
 	"algo-ex-mgr/app/srv"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -182,13 +183,31 @@ tradingloop:
 		}
 
 		loadValues(&order)
-		if TerminateTradeMgr {
+		if checkExits(&order) {
+			db.StoreOrderBookInDb(order)
+		}
+
+	}
+	db.StoreOrderBookInDb(order)
+	srv.TradesLogger.Println("Trade Exectuion time (fine tune delays)", time.Since(start))
+}
+
+func checkExits(order *appdata.OrderBook_S) bool {
+
+	e := db.ReadTradeExitsFromDb()
+	if strings.Contains(e, "all-terminate") || TerminateTradeMgr {
+		if (order.Status != "ExitTrade") && (order.Status != "ExitOrdersPending") && (order.Status != "TradeCompleted") {
 			order.Status = "Terminate"
-		} else if order.Info.UserExitRequested {
+			return true
+		}
+	} else if strings.Contains(e, "all-exit") || strings.Contains(e, strconv.FormatUint(uint64(order.Id), 10)) {
+		if (order.Status != "ExitTrade") && (order.Status != "ExitOrdersPending") && (order.Status != "TradeCompleted") {
+			order.Info.UserExitRequested = true
 			order.Status = "ExitTrade"
+			return true
 		}
 	}
-	srv.TradesLogger.Println("Trade Exectuion time (fine tune delays)", time.Since(start))
+	return false
 }
 
 // RULE: Check if the current day is a trading day. Valid syntax "Monday,Tuesday,Wednesday,Thursday,Friday". For day selection to trade - Every day must be explicitly listed in dB.

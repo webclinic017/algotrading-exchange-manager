@@ -1,5 +1,8 @@
 package trademgr
 
+var settings_exits_deleteAll = `UPDATE paragvb_setting_test set controls = '' WHERE name = 'trademgr.exits';`
+var settings_exits_setVal = `UPDATE paragvb_setting_test set controls = '%EXIT_ID' WHERE name = 'trademgr.exits';`
+
 var startTrader_TblOdrbook_deleteAll = `DELETE FROM public.paragvb_order_book_test;`
 var startTrader_TblUserStrategies_deleteAll = `DELETE FROM public.paragvb_strategies_test;`
 

@@ -9,6 +9,26 @@ import (
 	"github.com/georgysavva/scany/pgxscan"
 )
 
+func ReadTradeExitsFromDb() string {
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	ctx := context.Background()
+	myCon, _ := dbPool.Acquire(ctx)
+	defer myCon.Release()
+
+	var e string
+
+	err := myCon.QueryRow(ctx, dbSqlQuery(DB_TRADEMGR_EXISTS_QUERY)).Scan(&e)
+
+	if err != nil {
+		srv.TradesLogger.Printf("trademgr - exit conditions read error --> %v\n", err.Error())
+		return ""
+	}
+	return e
+}
+
 func ReadOrderBookFromDb(orderBookId uint16) (status bool, tr *appdata.OrderBook_S) {
 
 	lock.Lock()
@@ -27,7 +47,6 @@ func ReadOrderBookFromDb(orderBookId uint16) (status bool, tr *appdata.OrderBook
 	if err != nil {
 		srv.TradesLogger.Printf("order_trades read error --> %v\n", err.Error())
 		return false, nil
-
 	}
 
 	if len(or) == 0 {
@@ -36,37 +55,6 @@ func ReadOrderBookFromDb(orderBookId uint16) (status bool, tr *appdata.OrderBook
 	}
 
 	return true, or[0]
-
-}
-
-func ReadAllActiveOrderBookFromDb() []*appdata.OrderBook_S {
-
-	lock.Lock()
-	defer lock.Unlock()
-
-	ctx := context.Background()
-	myCon, _ := dbPool.Acquire(ctx)
-	defer myCon.Release()
-
-	var ts []*appdata.OrderBook_S
-
-	sqlquery := fmt.Sprintf(dbSqlQuery(sqlQueryAllActiveOrderBook), "TradeCompleted")
-
-	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
-
-	if err != nil {
-		srv.ErrorLogger.Printf("order_trades read error --> %v\n", err)
-		return nil
-
-	}
-
-	if len(ts) == 0 {
-		srv.ErrorLogger.Printf("order_trades  - no orders present in db")
-		return nil
-	}
-
-	return ts
-
 }
 
 func ReadAllOrderBookFromDb(condition string, status string) []*appdata.OrderBook_S {
@@ -87,16 +75,13 @@ func ReadAllOrderBookFromDb(condition string, status string) []*appdata.OrderBoo
 	if err != nil {
 		srv.ErrorLogger.Printf("order_trades read error %v\n", err.Error())
 		return nil
-
 	}
 
 	if len(order) == 0 {
 		srv.InfoLogger.Printf("order_trades 0 %v\n", err)
 		return nil
 	}
-
 	return order
-
 }
 
 func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {

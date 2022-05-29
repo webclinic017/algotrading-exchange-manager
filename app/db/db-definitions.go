@@ -9,6 +9,7 @@ import (
 
 var DB_EXISTS_QUERY = "SELECT datname FROM pg_catalog.pg_database  WHERE lower(datname) = lower('algotrading');"
 var DB_CREATE_QUERY = "CREATE DATABASE algotrading;"
+var DB_TRADEMGR_EXISTS_QUERY = "SELECT controls from %DB_TBL_USER_SETTING WHERE name = 'trademgr.exits';"
 
 var DB_CREATE_TBL_INSTRUMENTS = `DROP TABLE IF EXISTS %DB_TBL_INSTRUMENTS;
 
@@ -207,8 +208,6 @@ var sqlQueryNseEqTokens = `SELECT i.instrument_token, ts.mysymbol
 // ---------------------------------- db-orderbook ----------------------------------
 
 var sqlqueryOrderBookId = "SELECT * FROM %DB_TBL_ORDER_BOOK WHERE id = %d"
-
-var sqlQueryAllActiveOrderBook = "SELECT * FROM %DB_TBL_ORDER_BOOK WHERE status ! = %d"
 var sqlqueryAllOrderBookCondition = "SELECT * FROM %DB_TBL_ORDER_BOOK WHERE status %s '%s'"
 
 var sqlCreateOrder = `INSERT INTO  %DB_TBL_ORDER_BOOK (
