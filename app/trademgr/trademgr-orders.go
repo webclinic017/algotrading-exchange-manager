@@ -110,13 +110,17 @@ func tradeExit(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 		return true
 	} else {
 
-		orderId := finalizeOrder(*order, ts, time.Now(), order.Info.QtyFilledEntr, false)
+		if order.Info.QtyFilledEntr > 0 { // check if order has been filled, only then place exit order
+			orderId := finalizeOrder(*order, ts, time.Now(), order.Info.QtyFilledEntr, false)
 
-		if orderId != 0 {
-			order.Info.OrderIdExit = orderId
-			srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
+			if orderId != 0 {
+				order.Info.OrderIdExit = orderId
+				srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
+			}
+			return orderId != 0
+		} else {
+			return true
 		}
-		return orderId != 0
 	}
 }
 
