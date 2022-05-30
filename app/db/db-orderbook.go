@@ -15,18 +15,22 @@ func ReadTradeExitsFromDb() string {
 	defer lock.Unlock()
 
 	ctx := context.Background()
-	myCon, _ := dbPool.Acquire(ctx)
+	myCon, err := dbPool.Acquire(ctx)
+	if err != nil { // DB connection error
+		return ""
+	}
+
 	defer myCon.Release()
 
 	var e string
-
-	err := myCon.QueryRow(ctx, dbSqlQuery(DB_TRADEMGR_EXISTS_QUERY)).Scan(&e)
+	err = myCon.QueryRow(ctx, dbSqlQuery(DB_TRADEMGR_EXISTS_QUERY)).Scan(&e)
 
 	if err != nil {
 		srv.TradesLogger.Printf("trademgr - exit conditions read error --> %v\n", err.Error())
 		return ""
 	}
 	return e
+
 }
 
 func ReadOrderBookFromDb(orderBookId uint16) (status bool, tr *appdata.OrderBook_S) {
@@ -35,14 +39,18 @@ func ReadOrderBookFromDb(orderBookId uint16) (status bool, tr *appdata.OrderBook
 	defer lock.Unlock()
 
 	ctx := context.Background()
-	myCon, _ := dbPool.Acquire(ctx)
+	myCon, err := dbPool.Acquire(ctx)
+
+	if err != nil { // DB connection error
+		return false, nil
+	}
 	defer myCon.Release()
 
 	var or []*appdata.OrderBook_S
 
 	sqlquery := fmt.Sprintf(dbSqlQuery(sqlqueryOrderBookId), orderBookId)
 
-	err := pgxscan.Select(ctx, dbPool, &or, sqlquery)
+	err = pgxscan.Select(ctx, dbPool, &or, sqlquery)
 
 	if err != nil {
 		srv.TradesLogger.Printf("order_trades read error --> %v\n", err.Error())
@@ -55,6 +63,7 @@ func ReadOrderBookFromDb(orderBookId uint16) (status bool, tr *appdata.OrderBook
 	}
 
 	return true, or[0]
+
 }
 
 func ReadAllOrderBookFromDb(condition string, status string) []*appdata.OrderBook_S {
@@ -63,14 +72,17 @@ func ReadAllOrderBookFromDb(condition string, status string) []*appdata.OrderBoo
 	defer lock.Unlock()
 
 	ctx := context.Background()
-	myCon, _ := dbPool.Acquire(ctx)
+	myCon, err := dbPool.Acquire(ctx)
+	if err != nil { // DB connection error
+		return nil
+	}
 	defer myCon.Release()
 
 	var order []*appdata.OrderBook_S
 
 	sqlquery := fmt.Sprintf(dbSqlQuery(sqlqueryAllOrderBookCondition), condition, status)
 
-	err := pgxscan.Select(ctx, dbPool, &order, sqlquery)
+	err = pgxscan.Select(ctx, dbPool, &order, sqlquery)
 
 	if err != nil {
 		srv.ErrorLogger.Printf("order_trades read error %v\n", err.Error())
@@ -82,6 +94,7 @@ func ReadAllOrderBookFromDb(condition string, status string) []*appdata.OrderBoo
 		return nil
 	}
 	return order
+
 }
 
 func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {
@@ -89,7 +102,11 @@ func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {
 	defer lock.Unlock()
 
 	ctx := context.Background()
-	myCon, _ := dbPool.Acquire(ctx)
+	myCon, err := dbPool.Acquire(ctx)
+
+	if err != nil {
+		return tr.Id
+	}
 	defer myCon.Release()
 
 	if tr.Id == 0 {
@@ -110,6 +127,31 @@ func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {
 		if err != nil {
 			srv.ErrorLogger.Printf("Order Entry : Unable to create new order for strategy-symbol in DB: %v\n", err)
 		}
+
+		var c uint16
+		err = myCon.QueryRow(ctx, dbSqlQuery(sqlOrderCount),
+			tr.Instr,
+			tr.Date,
+			tr.Strategy).Scan(&c)
+		// RULE: Instrument, Date, Strategy (combined) must be unique
+
+		if err != nil {
+			srv.ErrorLogger.Printf("OrderBook DB store error %v\n", err)
+			return 0
+		}
+
+		if c == 1 {
+			err = myCon.QueryRow(ctx, dbSqlQuery(sqlOrderId),
+				tr.Instr,
+				tr.Date,
+				tr.Strategy).Scan(&c)
+
+			if err != nil {
+				srv.ErrorLogger.Printf("OrderBook DB store error %v\n", err)
+				return 0
+			}
+			return c
+		}
 	} else {
 
 		_, err := myCon.Exec(ctx, dbSqlQuery(sqlUpdateOrder),
@@ -129,33 +171,9 @@ func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {
 		if err != nil {
 			srv.ErrorLogger.Printf("Unable to update Order for strategy-symbol in DB: %v\n", err)
 		}
+		return tr.Id
 	}
-
-	var c uint16
-	err := myCon.QueryRow(ctx, dbSqlQuery(sqlOrderCount),
-		tr.Instr,
-		tr.Date,
-		tr.Strategy).Scan(&c)
-	// RULE: Instrument, Date, Strategy (combined) must be unique
-
-	if err != nil {
-		srv.ErrorLogger.Printf("OrderBook DB store error %v\n", err)
-		return 0
-	}
-
-	if c == 1 {
-		err = myCon.QueryRow(ctx, dbSqlQuery(sqlOrderId),
-			tr.Instr,
-			tr.Date,
-			tr.Strategy).Scan(&c)
-
-		if err != nil {
-			srv.ErrorLogger.Printf("OrderBook DB store error %v\n", err)
-			return 0
-		}
-		return c
-	}
-	return 0
+	return tr.Id
 }
 
 func FetchOrderData(orderBookId uint16) []*appdata.OrderBook_S {
@@ -164,22 +182,22 @@ func FetchOrderData(orderBookId uint16) []*appdata.OrderBook_S {
 	defer lock.Unlock()
 
 	ctx := context.Background()
-	myCon, _ := dbPool.Acquire(ctx)
+	myCon, err := dbPool.Acquire(ctx)
+
+	if err != nil { // DB connection error
+		return nil
+	}
 	defer myCon.Release()
 
 	var ts []*appdata.OrderBook_S
 
 	sqlquery := fmt.Sprintf(dbSqlQuery(sqlqueryOrderBookId), orderBookId)
 
-	err := pgxscan.Select(ctx, dbPool, &ts, sqlquery)
+	err = pgxscan.Select(ctx, dbPool, &ts, sqlquery)
 
 	if err != nil {
 		srv.ErrorLogger.Printf("FetchOrderData error %v\n", err)
 		return nil
 	}
-
 	return ts
-
 }
-
-// t_entry = 0

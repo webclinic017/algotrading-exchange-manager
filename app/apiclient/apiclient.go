@@ -37,31 +37,31 @@ func SignalAnalyzer(tr *appdata.OrderBook_S, mode string) bool {
 			return false
 		}
 		// check if signal processed for the same as requested
-		if apiSig[0].Status == "signal-processed" &&
-			apiSig[0].Instr == tr.Instr &&
-			apiSig[0].Strategy == tr.Strategy { // register only if processed correctly
+		if len(apiSig) > 0 {
+			if apiSig[0].Status == "signal-processed" &&
+				apiSig[0].Instr == tr.Instr &&
+				apiSig[0].Strategy == tr.Strategy { // register only if processed correctly
 
-			tr.Dir = apiSig[0].Dir
-			if mode == "-entr" {
-				tr.Targets.EntrPrice = apiSig[0].TriggerValue
-			} else if mode == "-exit" {
-				tr.Exit_reason = apiSig[0].ExitReason
-				tr.Targets.ExitPrice = apiSig[0].TriggerValue
+				tr.Dir = apiSig[0].Dir
+				if mode == "-entr" {
+					tr.Targets.EntrPrice = apiSig[0].TriggerValue
+				} else if mode == "-exit" {
+					tr.Exit_reason = apiSig[0].ExitReason
+					tr.Targets.ExitPrice = apiSig[0].TriggerValue
+				}
+
+				/*tr.Entry = apiSig[0].Entry
+				tr.Stoploss = apiSig[0].Stoploss
+				tr.Target = apiSig[0].Target*/
+				return true
+			} else {
+				srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", apiSig[0].Status)
+				return false
 			}
-
-			/*tr.Entry = apiSig[0].Entry
-			tr.Stoploss = apiSig[0].Stoploss
-			tr.Target = apiSig[0].Target*/
-			return true
-		} else {
-			srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", apiSig[0].Status)
-			return false
 		}
-	} else {
-
-		srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", resp.R.StatusCode)
-		return false
 	}
+	srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", resp.R.StatusCode)
+	return false
 }
 
 func Services(service string, date time.Time) bool {

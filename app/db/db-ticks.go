@@ -94,16 +94,21 @@ func executeBatch(dataTick []appdata.TickData, tableName string) {
 
 	ctx := context.Background()
 
-	myCon, _ := dbPool.Acquire(ctx)
+	myCon, err := dbPool.Acquire(ctx)
+	if err != nil {
+		srv.ErrorLogger.Printf("DB-Ticks : MAJOR ISSUE : Error acquiring connection (this chunk is skipped): %v", err)
+	}
 	defer myCon.Release()
 
 	// stat := dbpool.Stat()
 
 	br := myCon.SendBatch(ctx, batch)
-	_, err := br.Exec()
+	_, err = br.Exec()
 
 	if err != nil {
 		ErrCnt++
 		srv.WarningLogger.Printf("Unable to execute statement in batch queue %v\n", err)
 	}
 }
+
+// TODO: Major Issue: if ctx fails, write fails to DB - What happens to data? How to recover?

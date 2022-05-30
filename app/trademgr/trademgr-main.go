@@ -16,8 +16,8 @@ import (
 
 // tradeStrategies - list of all strategies to be executed. Read once from db at start of day
 const (
-	awaitSignalSleep = time.Second * 2
-	placeOrderSleep  = time.Millisecond * 100
+	awaitSignalSleep = time.Second * 5
+	placeOrderSleep  = time.Millisecond * 500
 )
 
 var (
@@ -119,6 +119,7 @@ tradingloop:
 			// tr.Order_info = "{}"
 			order.Post_analysis = "{}"
 			order.Id = db.StoreOrderBookInDb(order)
+			time.Sleep(awaitSignalSleep)
 
 		// ------------------------------------------------------------------------ trade entry check (Scan Signals)
 		case "AwaitSignal":
@@ -136,14 +137,17 @@ tradingloop:
 					db.StoreOrderBookInDb(order)
 				}
 			}
+			time.Sleep(awaitSignalSleep)
 			time.Sleep(placeOrderSleep)
 
 			// ------------------------------------------------------------------------ enter trade (order)
 		case "PlaceOrdersPending":
 			if pendingOrderEntr(&order, tradeUserStrategies) {
 				order.Status = "TradeMonitoring"
+				db.StoreOrderBookInDb(order)
 			}
-			db.StoreOrderBookInDb(order) // store orderbook, may be partially executed
+
+			time.Sleep(awaitSignalSleep)
 			time.Sleep(placeOrderSleep)
 			// Todo: Add exit condition for retries
 
@@ -161,14 +165,15 @@ tradingloop:
 				order.Status = "ExitOrdersPending"
 				db.StoreOrderBookInDb(order)
 			}
+			time.Sleep(awaitSignalSleep)
 			time.Sleep(placeOrderSleep)
 
 			// ------------------------------------------------------------------------ enter trade (order)
 		case "ExitOrdersPending":
 			if pendingOrderExit(&order, tradeUserStrategies) {
 				order.Status = "TradeCompleted"
+				db.StoreOrderBookInDb(order)
 			}
-			db.StoreOrderBookInDb(order) // store orderbook, may be partially executed
 			time.Sleep(awaitSignalSleep)
 
 			// Todo: Add exit condition for retries
