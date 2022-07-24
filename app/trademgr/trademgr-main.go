@@ -153,7 +153,7 @@ tradingloop:
 
 		// ------------------------------------------------------------------------ monitor trade exits
 		case "TradeMonitoring":
-			if apiclient.SignalAnalyzer(&order, "-exit") {
+			if apiclient.SignalAnalyzer(&order, "exit") {
 				order.Status = "ExitTrade"
 				db.StoreOrderBookInDb(order)
 			}
@@ -253,12 +253,12 @@ func loadValues(or *appdata.OrderBook_S) {
 func tradeEnterSignalCheck(symbol string, tradeUserStrategies appdata.UserStrategies_S, tr *appdata.OrderBook_S) bool {
 
 	if tradeUserStrategies.Trigger_time.Hour() == 0 {
-		return apiclient.SignalAnalyzer(tr, "-entr")
+		return apiclient.SignalAnalyzer(tr, "entr")
 
 	} else if time.Now().Hour() == tradeUserStrategies.Trigger_time.Hour() {
 		if time.Now().Minute() == tradeUserStrategies.Trigger_time.Minute() { // trigger time reached
 
-			return apiclient.SignalAnalyzer(tr, "-entr")
+			return apiclient.SignalAnalyzer(tr, "entr")
 		}
 	}
 	return false

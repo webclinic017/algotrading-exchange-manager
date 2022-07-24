@@ -32,8 +32,8 @@ func main() {
 	sessionCron = cron.New()
 	sessionCron.AddFunc("0 0 9 * * 1-5", startMainSession)
 	sessionCron.AddFunc("0 0 16 * * 1-5", stopMainSession)
-	sessionCron.AddFunc("0 0 8 * * 1-5", preTradeOps)
-	sessionCron.AddFunc("0 5 16 * * 1-5", postTradeOps)
+	sessionCron.AddFunc("0 0 8 * * 1-5", preTradeOps)   // @ 8am every weekday
+	sessionCron.AddFunc("0 0 22 * * 1-5", postTradeOps) // @ 10pm every weekday
 	sessionCron.AddFunc("0 0 3 * * 6", weeklyMaintenance)
 	sessionCron.Start()
 
@@ -134,7 +134,7 @@ func preTradeOps() {
 
 func postTradeOps() {
 	srv.InfoLogger.Println("postTradeOps Started")
-	if !apiclient.Services("createCandles", time.Now()) {
+	if !apiclient.Services("store_1min_candles", time.Now()) {
 		srv.ErrorLogger.Println("FAILED - postTradeOps/candle1min-converter")
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"algo-ex-mgr/app/appdata"
 	"algo-ex-mgr/app/srv"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -11,56 +12,61 @@ import (
 )
 
 // todo: add multi symbol support in response? current hardcoded to first signal
-func SignalAnalyzer(tr *appdata.OrderBook_S, mode string) bool {
+func SignalAnalyzer(ob *appdata.OrderBook_S, mode string) bool {
 
 	p := requests.Params{
-		"multisymbol": "false",
-		"algo":        tr.Strategy + mode,
-		"symbol":      tr.Instr,
-		"date":        time.Now().Format("2006-01-02"),
+		"mode":           mode,
+		"algo":           ob.Strategy,
+		"symbol":         ob.Instr,
+		"date":           time.Now().Format("2006-01-02"),
+		"pos_dir":        ob.Dir,
+		"pos_entr_price": fmt.Sprintf("%f", ob.Targets.EntrPrice),
+		"pos_entr_time":  ob.Date.Format(time.RFC3339),
 	}
 	resp, err := requests.Get(appdata.Env["ALGO_ANALYSIS_ADDRESS"]+"tradesignals/", p)
 
 	if err != nil {
-		// srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", err.Error())
+		// srv.WarningLogger.Println(ob.Instr, "-", ob.Strategy, "]", err.Error())
 		return false
 	}
 
 	if resp.R.StatusCode == http.StatusOK {
 
-		var apiSig []appdata.ApiSignal
+		var apiSig []appdata.ApiSignal_S
 
 		// fmt.Println(resp.Text())
 		err := json.Unmarshal([]byte(resp.Text()), &apiSig)
 		if err != nil {
-			srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", err.Error())
+			srv.WarningLogger.Println(ob.Instr, "-", ob.Strategy, "]", err.Error())
 			return false
 		}
 		// check if signal processed for the same as requested
 		if len(apiSig) > 0 {
 			if apiSig[0].Status == "signal-processed" &&
-				apiSig[0].Instr == tr.Instr &&
-				apiSig[0].Strategy == tr.Strategy { // register only if processed correctly
+				apiSig[0].Instr == ob.Instr &&
+				apiSig[0].Strategy == ob.Strategy { // register only if processed correctly
 
-				tr.Dir = apiSig[0].Dir
+				ob.Dir = apiSig[0].Dir
 				if mode == "-entr" {
-					tr.Targets.EntrPrice = apiSig[0].TriggerValue
+					ob.Targets.EntrPrice = apiSig[0].TriggerValue
+					ob.Targets.EntrTime = apiSig[0]
+
 				} else if mode == "-exit" {
-					tr.Exit_reason = apiSig[0].ExitReason
-					tr.Targets.ExitPrice = apiSig[0].TriggerValue
+					ob.Exit_reason = apiSig[0].ExitReason
+					ob.Targets.ExitPrice = apiSig[0].TriggerValue
 				}
 
-				/*tr.Entry = apiSig[0].Entry
-				tr.Stoploss = apiSig[0].Stoploss
-				tr.Target = apiSig[0].Target*/
+				/*ob.Entry = apiSig[0].Entry
+				ob.Stoploss = apiSig[0].Stoploss
+				ob.Target = apiSig[0].Target*/
 				return true
 			} else {
-				srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", apiSig[0].Status)
+				srv.WarningLogger.Println(ob.Instr, "-", ob.Strategy, "]", apiSig[0].Status)
 				return false
 			}
 		}
 	}
-	srv.WarningLogger.Println(tr.Instr, "-", tr.Strategy, "]", resp.R.StatusCode)
+	srv.WarningLogger.Println(ob.Instr, "-", ob.Strategy, "]", resp.R.StatusCode)
 	return false
 }
 

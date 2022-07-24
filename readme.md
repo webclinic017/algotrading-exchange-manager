@@ -85,18 +85,23 @@ go tool cover -html=coverage.out
 
 
 ## Version : In-Development
-- [ ] Strategies - read live data
+- [ ] API Signal structure modified. OrderBook table updated
 - [ ] Candle table - backtesting
 - [ ] Post candle cleanup
 - [ ] Evaluate movement of all *-FUT to ticks_nsefut table?
-- [ ] Order placement - local
-- [ ] Order placement - live testing
-- [ ] Order tracking
-- [ ] Order reconcillation
-- [ ] Order completion/exit
 - [ ] fast data (buffer) analysis. [tick based strategies]
 - [ ] DB buffer size optimisation
 - [ ] Loggin file creation - clean ups and new daily file logic
+- [ ] Order placement - local
+
+## Version : v0.5.1
+- [x] Candles - 1 min candle timescaledb.view (3 day period) created. scheduled everyday @ 5pm
+- [x] Strategies - read live data
+- [x] Order placement - live testing
+- [x] Order tracking
+- [x] Order reconcillation
+- [x] Order completion/exit
+- [x] log files each day for trade and ticker
 
 - Hypertable periods and Compression policy updated for ticks_nsefuts
 - DB table names updated
@@ -139,7 +144,6 @@ go tool cover -html=coverage.out
 - Data loaded in struct for application to process
 - [ ] Only 'kiteaccessToken' is loaded from os.env()
 
-
 ## Version : ~ v0.3.1
 - [x] Connect to DB
 - [x] Connect to Kite
@@ -149,6 +153,3 @@ go tool cover -html=coverage.out
 - [x] Setup queue consumer
 - [x] Setup queue producer
 - [x] Setup message handler
-
-
-

@@ -92,6 +92,8 @@ var DB_CREATE_TABLE_ORDER_BOOK = `CREATE TABLE %DB_TBL_ORDER_BOOK (
 									exit_reason TEXT  DEFAULT 'NA',
 									info JSON,
 									targets JSON,
+									api_signal_entr JSON,
+									api_signal_exit JSON,
 									orders_entr JSON,
 									orders_exit JSON,
 									post_analysis JSON
@@ -123,9 +125,9 @@ var DB_VIEW_CREATE_FUT = `
 						MAX(last_traded_price) as high,
 						MIN(last_traded_price) as low,
 						LAST(last_traded_price, time) as close,
-						AVG(buy_demand) as buy_demand,
-						AVG(sell_demand) as sell_demand,
-						AVG(open_interest) as open_interest,
+						ROUND(AVG(buy_demand),2) as buy_demand,
+						ROUND(AVG(sell_demand),2) as sell_demand,
+						ROUND(AVG(open_interest),2) as open_interest,
 						LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
 					FROM
 						%DB_TBL_TICK_NSEFUT
@@ -147,9 +149,9 @@ var DB_VIEW_CREATE_STK = `
 						MAX(last_traded_price) as high,
 						MIN(last_traded_price) as low,
 						LAST(last_traded_price, time) as close,
-						AVG(buy_demand) as buy_demand,
-						AVG(sell_demand) as sell_demand,
-						AVG(open_interest) as open_interest,
+						ROUND(AVG(buy_demand),2) as buy_demand,
+						ROUND(AVG(sell_demand),2) as sell_demand,
+						ROUND(AVG(open_interest),2) as open_interest,
 						LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
 					FROM
 						%DB_TBL_TICK_NSESTK
@@ -264,11 +266,13 @@ var sqlCreateOrder = `INSERT INTO  %DB_TBL_ORDER_BOOK (
 	exit_reason,
 	info,
 	targets,
+	api_signal_entr,
+	api_signal_exit,
 	orders_entr,
 	orders_exit,
 	post_analysis)
 	VALUES
-	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);`
+	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);`
 
 var sqlUpdateOrder = ` UPDATE %DB_TBL_ORDER_BOOK SET
 	date = $1,
@@ -279,10 +283,12 @@ var sqlUpdateOrder = ` UPDATE %DB_TBL_ORDER_BOOK SET
 	exit_reason = $6,
 	info = $7,
 	targets = $8,
-	orders_entr = $9,
-	orders_exit = $10,
-	post_analysis = $11
-	WHERE id = $12
+	api_signal_entr = $9,
+	api_signal_exit = $10,
+	orders_entr = $11,
+	orders_exit = $12,
+	post_analysis = $13
+	WHERE id = $14
 	;`
 
 var sqlOrderCount = `SELECT COUNT(*) FROM %DB_TBL_ORDER_BOOK

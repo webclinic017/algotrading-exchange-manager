@@ -125,10 +125,14 @@ type OrderBook_S struct {
 	Exit_reason   string
 	Info          Info_S
 	Targets       Targets_S
+	ApiSignalEntr ApiSignal_S
+	ApiSignalExit ApiSignal_S
 	Orders_entr   []kiteconnect.Trade
 	Orders_exit   []kiteconnect.Trade
 	Post_analysis string
 }
+
+// TODO: API response tobe saved into DB
 
 // // Trade represents an individual trade response.
 // type Trade struct {
@@ -169,17 +173,25 @@ type Info_S struct {
 }
 
 // --------------------------------- API SIGNAL  ---------------------------------
-type ApiSignal struct {
+type ApiSignal_S struct {
 	Status       string    `json:"status"`
 	Id           uint16    `json:"id"`
 	Date         time.Time `json:"date"`
 	Instr        string    `json:"instr"`
 	Strategy     string    `json:"strategy"`
 	Dir          string    `json:"dir"`
-	TriggerValue float64   `json:"trigger_value"`
+	Entry        string    `json:"entry"`
 	Target       float64   `json:"target"`
 	Stoploss     float64   `json:"stoploss"`
+	DebugEntr    float64   `json:"debug_entr"`
+	EntryTime    time.Time `json:"entry_time"`
+	TriggerValue float64   `json:"trigger_value"`
+	Exit         float64   `json:"exit"`
+	ExitTime     time.Time `json:"exit_time"`
 	ExitReason   string    `json:"exit_reason"`
+	Debug        string    `json:"debug"`
+	Gain         float64   `json:"gain"`
+	TimeDiff     int64     `json:"time_diff_sec"`
 }
 
 // --------------------------------- ENV VARIABLES ---------------------------------

@@ -28,8 +28,8 @@ func TestStartTrader(t *testing.T) {
 	subtest_StartTrader_3(t, 3, "[case Resume] resume previous running trades. 1 with correct strategy set. 1 should resume\n") //
 	subtest_StartTrader_4(t, 4, "[case Resume] Cannot resume - stratgey missing\n")
 	subtest_StartTrader_5(t, 5, "[case Initiate] Invalid strategy\n")
-	subtest_StartTrader_6(t, 5, "[case Initiate] TimeTrigged - Wait period\n")
-	subtest_StartTrader_7(t, 5, "[case Initiate] TimeTrigged - Execute\n")
+	subtest_StartTrader_6(t, 6, "[case Initiate] TimeTrigged - Wait period\n")
+	subtest_StartTrader_7(t, 7, "[case Initiate] TimeTrigged - Execute\n")
 }
 func subtest_StartTrader_1(t *testing.T, testId int, testDesc string) {
 
@@ -256,7 +256,6 @@ func subtest_StartTrader_6(t *testing.T, testId int, testDesc string) {
 	StopTrader()
 	time.Sleep(time.Second * 2)
 }
-
 func subtest_StartTrader_7(t *testing.T, testId int, testDesc string) {
 
 	// test if all UserStrategies are spawned
