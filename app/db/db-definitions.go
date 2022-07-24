@@ -114,23 +114,68 @@ var DB_VIEW_EXISTS = `
 					FROM timescaledb_information.continuous_aggregates
 					WHERE view_name = $1;`
 
-var DB_VIEW_CREATE = `
-					CREATE MATERIALIZED VIEW candles_$1min
+var DB_VIEW_CREATE_FUT = `
+					CREATE MATERIALIZED VIEW %DB_TBL_CDL_VIEW_FUT
 					WITH (timescaledb.continuous) AS
-					SELECT time_bucket('$1 minutes', time) AS candle, 
+					SELECT time_bucket('1 minutes', time) AS candle, 
 						symbol,
 						FIRST(last_traded_price, time) as open,
 						MAX(last_traded_price) as high,
 						MIN(last_traded_price) as low,
 						LAST(last_traded_price, time) as close,
+						AVG(buy_demand) as buy_demand,
+						AVG(sell_demand) as sell_demand,
+						AVG(open_interest) as open_interest,
 						LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
 					FROM
-						ticks_data
-					
+						%DB_TBL_TICK_NSEFUT
 					GROUP by
 						symbol, candle
 					WITH NO DATA;
+
+					SELECT add_continuous_aggregate_policy('%DB_TBL_CDL_VIEW_FUT',
+						start_offset => INTERVAL '3 day',
+						end_offset => INTERVAL '1 day',
+						schedule_interval => INTERVAL '1 day');
 					`
+var DB_VIEW_CREATE_STK = `
+					CREATE MATERIALIZED VIEW %DB_TBL_CDL_VIEW_STK
+					WITH (timescaledb.continuous) AS
+					SELECT time_bucket('1 minutes', time) AS candle, 
+						symbol,
+						FIRST(last_traded_price, time) as open,
+						MAX(last_traded_price) as high,
+						MIN(last_traded_price) as low,
+						LAST(last_traded_price, time) as close,
+						AVG(buy_demand) as buy_demand,
+						AVG(sell_demand) as sell_demand,
+						AVG(open_interest) as open_interest,
+						LAST(trades_till_now, time) - FIRST(trades_till_now, time) as volume
+					FROM
+						%DB_TBL_TICK_NSESTK
+					GROUP by
+						symbol, candle
+					WITH NO DATA;
+
+					SELECT add_continuous_aggregate_policy('%DB_TBL_CDL_VIEW_STK',
+						start_offset => INTERVAL '3 day',
+						end_offset => INTERVAL '1 day',
+						schedule_interval => INTERVAL '1 day');
+					`
+
+var sqlQueryViewStkGetID = `SELECT job_id 
+							FROM timescaledb_information.jobs j, timescaledb_information.continuous_aggregates ca
+							WHERE 
+								j.hypertable_name = ca.materialization_hypertable_name
+								AND
+								ca.view_name  = '%DB_TBL_CDL_VIEW_STK';`
+
+var sqlQueryViewFutGetID = `SELECT job_id 
+							FROM timescaledb_information.jobs j, timescaledb_information.continuous_aggregates ca
+							WHERE 
+								j.hypertable_name = ca.materialization_hypertable_name
+								AND
+								ca.view_name  = '%DB_TBL_CDL_VIEW_FUT';`
 
 // ---------------------------------- db-instruments ----------------------------------
 

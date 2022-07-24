@@ -5,6 +5,7 @@ import (
 	"algo-ex-mgr/app/srv"
 	"context"
 	"encoding/csv"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -87,9 +88,13 @@ func DbInit() bool {
 		s = s && createTable("DB_TBL_USER_SETTING", DB_CREATE_TABLE_USER_SETTING)
 		s = s && createTable("DB_TBL_USER_STRATEGIES", DB_CREATE_TABLE_USER_STRATEGIES)
 		s = s && createTable("DB_TBL_ORDER_BOOK", DB_CREATE_TABLE_ORDER_BOOK)
+		s = s && createTable("DB_TBL_CDL_VIEW_STK", DB_VIEW_CREATE_STK)
+		s = s && createTable("DB_TBL_CDL_VIEW_FUT", DB_VIEW_CREATE_FUT)
+
+		// schedule views to run @ 5pm everyday
+		views_reschedule()
 
 		if s {
-			// createViews()
 			// setupDbCompression(appdata.Env["DB_TICK_TABLE_NSEFUT"])
 			srv.InfoLogger.Printf("DB checks completed\n")
 			return true
@@ -97,6 +102,27 @@ func DbInit() bool {
 
 	}
 	return false
+}
+
+func views_reschedule() {
+	ctx := context.Background()
+	myCon, _ := dbPool.Acquire(ctx)
+
+	var retVal int
+
+	dt := time.Now().Format("2006-01-02")
+	dt = dt + " 17:00:00.000 +0530"
+
+	myCon.QueryRow(ctx, dbSqlQuery(sqlQueryViewStkGetID)).Scan(&retVal)
+	query := "SELECT alter_job(" + fmt.Sprintf("%v", retVal) + ", next_start => '" + dt + "');"
+	myCon.Exec(ctx, query)
+
+	myCon.QueryRow(ctx, dbSqlQuery(sqlQueryViewFutGetID)).Scan(&retVal)
+	query = "SELECT alter_job(" + fmt.Sprintf("%v", retVal) + ", next_start => '" + dt + "');"
+	myCon.Exec(ctx, query)
+
+	myCon.Release()
+
 }
 
 func CloseDb() {

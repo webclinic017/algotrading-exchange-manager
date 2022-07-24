@@ -24,7 +24,7 @@ func TestPostTradeOps(t *testing.T) {
 func TestStartMainSession(t *testing.T) {
 
 	startMainSession()
-	time.Sleep(time.Second * 30)
+	time.Sleep(time.Second * 20)
 	stopMainSession()
 	time.Sleep(time.Second * 2)
 }

@@ -76,6 +76,8 @@ type Parameters_S struct {
 	Controls        Controls_S       `json:"controls"`
 	Option_setting  OptionsSetting_S `json:"options_setting"`
 	Futures_Setting FuturesSetting_S `json:"futures_setting"`
+	// Algo_specific   AlgoSpecific_s   `json:"algo_specific"`
+	//  algo_specific will not be read, the structure will vary with algo, req for python micro-service
 }
 
 type KiteSetting_S struct {
@@ -88,17 +90,18 @@ type KiteSetting_S struct {
 }
 
 type Controls_S struct {
-	TradeSimulate    bool      `json:"trade_simulate"`
-	TargetPer        float64   `json:"target_per"`              // "target": 1,
-	SlPer            float64   `json:"stoploss_per"`            // "sl": 1,
-	DeepSlPer        float64   `json:"deep_stoploss_per"`       // "deepsl": 1
-	DelayedSlMin     time.Time `json:"delayed_stoploss_min"`    // 	"delayed_stoploss_min": "00:30:00",
-	StallDetectMin   time.Time `json:"stall_detect_period_min"` // 	"stall_detect_period_min": "00:30:00"
-	MaxBudget        float64   `json:"budget_max_per"`          // "limit_budget": 50%,
-	LimitAmount      float64   `json:"limit_amount"`
-	TrailTarget      bool      `json:"trail_target_en"`      // 	"trail_target_en": true,
-	PositionReversal bool      `json:"position_reversal_en"` // 	"position_reversal_en": true,
-	WinningRatio     float64   `json:"winning_ratio"`        // "winning_ratio": 80%,
+	TradeSimulate    bool    `json:"trade_simulate"`
+	TargetPer        float64 `json:"target_per"`
+	SlPer            float64 `json:"stoploss_per"`
+	DeepSlPer        float64 `json:"deep_stoploss_per"`
+	DelayedSlMin     uint64  `json:"delayed_stoploss_seconds"`
+	StallDetectMin   uint64  `json:"stall_detect_period_seconds"`
+	MaxBudget        float64 `json:"budget_max_per"`
+	LimitAmount      float64 `json:"limit_amount"`
+	TrailTarget      bool    `json:"target_trail_enabled"`
+	StoplossTrail    bool    `json:"stoploss_trail_enabled"`
+	PositionReversal bool    `json:"position_reversal_en"`
+	WinningRatio     float64 `json:"winning_ratio"`
 }
 
 type OptionsSetting_S struct {
@@ -203,6 +206,8 @@ var UserSettings = []string{
 	"DB_TBL_USER_SETTING",
 	"DB_TBL_USER_STRATEGIES",
 	"DB_TBL_ORDER_BOOK",
+	"DB_TBL_CDL_VIEW_STK",
+	"DB_TBL_CDL_VIEW_FUT",
 	"DB_TEST_PREFIX",
 	"DB_TBL_PREFIX_USER_ID",
 }
