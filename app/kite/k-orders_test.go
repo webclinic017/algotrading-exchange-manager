@@ -27,6 +27,9 @@ func TestGetLatestQuote(t *testing.T) {
 
 	val, n = GetLatestQuote("BANKNIFTY-FUT")
 
+	if n == "" {
+		t.Errorf("error")
+	}
 	fmt.Print(appdata.ColorBlue, val[n])
 
 	// appdata.ChTick = make(chan appdata.TickData, 1000)

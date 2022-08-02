@@ -71,7 +71,7 @@ func deriveInstrumentsName(order appdata.OrderBook_S, ts appdata.UserStrategies_
 	strEndDate = fmt.Sprintf("%d-%02d-%02d", enddate.Year(), enddate.Month(), enddate.Day())
 
 	symbolFutStr, qty := db.FetchInstrData(order.Instr,
-		uint64(order.Targets.EntrPrice),
+		uint64(order.ApiSignalEntr.Entry),
 		ts.Parameters.Option_setting.OptionLevel,
 		instrumentType,
 		strStartDate,

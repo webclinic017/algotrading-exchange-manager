@@ -20,7 +20,7 @@ func SignalAnalyzer(ob *appdata.OrderBook_S, mode string) bool {
 		"symbol":         ob.Instr,
 		"date":           time.Now().Format("2006-01-02"),
 		"pos_dir":        ob.Dir,
-		"pos_entr_price": fmt.Sprintf("%f", ob.Targets.EntrPrice),
+		"pos_entr_price": fmt.Sprintf("%f", ob.ApiSignalEntr.Entry),
 		"pos_entr_time":  ob.Date.Format(time.RFC3339),
 	}
 	resp, err := requests.Get(appdata.Env["ALGO_ANALYSIS_ADDRESS"]+"tradesignals/", p)
@@ -47,13 +47,15 @@ func SignalAnalyzer(ob *appdata.OrderBook_S, mode string) bool {
 				apiSig[0].Strategy == ob.Strategy { // register only if processed correctly
 
 				ob.Dir = apiSig[0].Dir
-				if mode == "-entr" {
-					ob.Targets.EntrPrice = apiSig[0].TriggerValue
-					ob.Targets.EntrTime = apiSig[0]
+				if mode == "entr" {
+					copyApiSignalvalues(&apiSig[0], &ob.ApiSignalEntr)
+					// ob.Targets.EntrPrice = apiSig[0].TriggerValue
+					// ob.Targets.EntrTime = apiSig[0]
 
-				} else if mode == "-exit" {
-					ob.Exit_reason = apiSig[0].ExitReason
-					ob.Targets.ExitPrice = apiSig[0].TriggerValue
+				} else if mode == "exit" {
+					copyApiSignalvalues(&apiSig[0], &ob.ApiSignalExit)
+					// ob.Exit_reason = apiSig[0].ExitReason
+					// ob.Targets.ExitPrice = apiSig[0].TriggerValue
 				}
 
 				/*ob.Entry = apiSig[0].Entry
@@ -68,6 +70,29 @@ func SignalAnalyzer(ob *appdata.OrderBook_S, mode string) bool {
 	}
 	srv.WarningLogger.Println(ob.Instr, "-", ob.Strategy, "]", resp.R.StatusCode)
 	return false
+}
+
+func copyApiSignalvalues(rec *appdata.ApiSignal_S, d *appdata.ApiSignal_S) {
+
+	d.Status = rec.Status
+	d.Id = rec.Id
+	d.Date = rec.Date
+	d.Instr = rec.Instr
+	d.Strategy = rec.Strategy
+	d.Dir = rec.Dir
+	d.Entry = rec.Entry
+	d.Target = rec.Target
+	d.Stoploss = rec.Stoploss
+	d.DebugEntr = rec.DebugEntr
+	d.EntryTime = rec.EntryTime
+	d.TriggerValue = rec.TriggerValue
+	d.Exit = rec.Exit
+	d.ExitTime = rec.ExitTime
+	d.ExitReason = rec.ExitReason
+	d.Debug = rec.Debug
+	d.Gain = rec.Gain
+	d.TimeDiff = rec.TimeDiff
+	// rec.
 }
 
 func Services(service string, date time.Time) bool {

@@ -91,7 +91,6 @@ var DB_CREATE_TABLE_ORDER_BOOK = `CREATE TABLE %DB_TBL_ORDER_BOOK (
 									dir VARCHAR(50),
 									exit_reason TEXT  DEFAULT 'NA',
 									info JSON,
-									targets JSON,
 									api_signal_entr JSON,
 									api_signal_exit JSON,
 									orders_entr JSON,
@@ -265,14 +264,28 @@ var sqlCreateOrder = `INSERT INTO  %DB_TBL_ORDER_BOOK (
 	dir,
 	exit_reason,
 	info,
-	targets,
 	api_signal_entr,
 	api_signal_exit,
 	orders_entr,
 	orders_exit,
 	post_analysis)
 	VALUES
-	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);`
+	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);`
+
+	var sqlUpdateOrderSigle = ` UPDATE %DB_TBL_ORDER_BOOK SET
+	date = $1,
+	instr = $2,
+	strategy = $3,
+	status = $4,
+	dir = $5,
+	exit_reason = $6,
+	info = $7,
+	orders_entr = $8,
+	orders_exit = $9,
+	post_analysis = $10
+	WHERE id = $11
+	;`
+
 
 var sqlUpdateOrder = ` UPDATE %DB_TBL_ORDER_BOOK SET
 	date = $1,
@@ -282,13 +295,10 @@ var sqlUpdateOrder = ` UPDATE %DB_TBL_ORDER_BOOK SET
 	dir = $5,
 	exit_reason = $6,
 	info = $7,
-	targets = $8,
-	api_signal_entr = $9,
-	api_signal_exit = $10,
-	orders_entr = $11,
-	orders_exit = $12,
-	post_analysis = $13
-	WHERE id = $14
+	orders_entr = $8,
+	orders_exit = $9,
+	post_analysis = $10
+	WHERE id = $11
 	;`
 
 var sqlOrderCount = `SELECT COUNT(*) FROM %DB_TBL_ORDER_BOOK

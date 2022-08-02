@@ -116,15 +116,15 @@ type FuturesSetting_S struct {
 
 // --------------------------------- ORDER BOOK  ---------------------------------
 type OrderBook_S struct {
-	Id            uint16
-	Date          time.Time
-	Instr         string
-	Strategy      string
-	Status        string
-	Dir           string
-	Exit_reason   string
-	Info          Info_S
-	Targets       Targets_S
+	Id          uint16
+	Date        time.Time
+	Instr       string
+	Strategy    string
+	Status      string
+	Dir         string
+	Exit_reason string
+	Info        Info_S
+	// Targets       Targets_S
 	ApiSignalEntr ApiSignal_S
 	ApiSignalExit ApiSignal_S
 	Orders_entr   []kiteconnect.Trade
@@ -150,12 +150,12 @@ type OrderBook_S struct {
 // 	InstrumentToken   uint32  `json:"instrument_token"`
 // }
 
-type Targets_S struct {
-	EntrPrice float64 `json:"entr_price"`
-	ExitPrice float64 `json:"exit_price "`
-	Target    float64 `json:"target"`
-	Stoploss  float64 `json:"stoploss"`
-}
+// type Targets_S struct {
+// 	EntrPrice float64 `json:"entr_price"`
+// 	ExitPrice float64 `json:"exit_price "`
+// 	Target    float64 `json:"target"`
+// 	Stoploss  float64 `json:"stoploss"`
+// }
 
 type Info_S struct {
 	TradingSymbol     string  `json:"trading_symbol"`
@@ -174,24 +174,24 @@ type Info_S struct {
 
 // --------------------------------- API SIGNAL  ---------------------------------
 type ApiSignal_S struct {
-	Status       string    `json:"status"`
-	Id           uint16    `json:"id"`
-	Date         time.Time `json:"date"`
-	Instr        string    `json:"instr"`
-	Strategy     string    `json:"strategy"`
-	Dir          string    `json:"dir"`
-	Entry        string    `json:"entry"`
-	Target       float64   `json:"target"`
-	Stoploss     float64   `json:"stoploss"`
-	DebugEntr    float64   `json:"debug_entr"`
-	EntryTime    time.Time `json:"entry_time"`
-	TriggerValue float64   `json:"trigger_value"`
-	Exit         float64   `json:"exit"`
-	ExitTime     time.Time `json:"exit_time"`
-	ExitReason   string    `json:"exit_reason"`
-	Debug        string    `json:"debug"`
-	Gain         float64   `json:"gain"`
-	TimeDiff     int64     `json:"time_diff_sec"`
+	Status       string  `json:"status"`
+	Id           uint16  `json:"id"`
+	Date         string  `json:"date"`
+	Instr        string  `json:"instr"`
+	Strategy     string  `json:"strategy"`
+	Dir          string  `json:"dir"`
+	Entry        float64 `json:"entry"`
+	Target       float64 `json:"target"`
+	Stoploss     float64 `json:"stoploss"`
+	DebugEntr    float64 `json:"debug_entr"`
+	EntryTime    string  `json:"entry_time"`
+	TriggerValue float64 `json:"trigger_value"`
+	Exit         float64 `json:"exit"`
+	ExitTime     string  `json:"exit_time"`
+	ExitReason   string  `json:"exit_reason"`
+	Debug        string  `json:"debug"`
+	Gain         float64 `json:"gain"`
+	TimeDiff     int64   `json:"time_diff_sec"`
 }
 
 // --------------------------------- ENV VARIABLES ---------------------------------

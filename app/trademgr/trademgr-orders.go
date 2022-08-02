@@ -206,7 +206,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 		fallthrough
 
 	case "equity":
-		orderParam.Price = order.Targets.EntrPrice
+		orderParam.Price = order.ApiSignalEntr.Entry
 		orderParam.Exchange = kiteconnect.ExchangeNSE
 		orderParam.OrderType = ts.Parameters.Kite_Setting.OrderType
 
@@ -229,7 +229,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 		orderParam.OrderType = kiteconnect.OrderTypeMarket
 
 	case "futures":
-		orderParam.Price = order.Targets.EntrPrice
+		orderParam.Price = order.ApiSignalEntr.Entry
 		orderParam.Exchange = kiteconnect.ExchangeNFO
 		orderParam.OrderType = ts.Parameters.Kite_Setting.OrderType
 

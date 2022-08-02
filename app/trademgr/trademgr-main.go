@@ -71,6 +71,7 @@ func StartTrader(daystart bool) {
 
 				for eachSymbol := range tradeSymbols {
 					wgTrademgr.Add(1)
+					// TODO: add 'simple-order' check for this type of order placement
 					go operateSymbol(tradeSymbols[eachSymbol], tradeUserStrategies[eachStrategy], 0, wgTrademgr)
 				}
 			} else {
@@ -118,6 +119,10 @@ tradingloop:
 			order.Info.Order_simulation = tradeUserStrategies.Parameters.Controls.TradeSimulate
 			// tr.Order_info = "{}"
 			order.Post_analysis = "{}"
+			// order.ApiSignalEntr = '{}'
+			// order.ApiSignalEntr.ExitTime = time.Now()
+			// order.ApiSignalExit.EntryTime = time.Now()
+			// order.ApiSignalExit.ExitTime = time.Now()
 			order.Id = db.StoreOrderBookInDb(order)
 			time.Sleep(awaitSignalSleep)
 
@@ -241,7 +246,9 @@ func loadValues(or *appdata.OrderBook_S) {
 		or.Dir = trtemp.Dir
 		or.Exit_reason = trtemp.Exit_reason
 		or.Info = trtemp.Info
-		or.Targets = trtemp.Targets
+		// or.Targets = trtemp.Targets
+		or.ApiSignalEntr = trtemp.ApiSignalEntr
+		or.ApiSignalExit = trtemp.ApiSignalExit
 		or.Orders_entr = trtemp.Orders_entr
 		or.Orders_exit = trtemp.Orders_exit
 		or.Post_analysis = trtemp.Post_analysis

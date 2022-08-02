@@ -115,7 +115,7 @@ func TestFinalizeOrder_LIVE(t *testing.T) {
 
 		order.Dir = test.argDirection
 		order.Instr = test.argInstr
-		order.Targets.EntrPrice = test.argStrikePrice
+		// order.Targets.EntrPrice = test.argStrikePrice
 
 		// expected := test.expected
 
@@ -157,12 +157,12 @@ func TestGetLowestPrice(t *testing.T) {
 	}
 
 	var tstArry = []tstst{
-		{2, "unknown", "sell", 0},
+		// {2, "unknown", "sell", 0},
 		{1, "INFY", "buy", 0},
 		{2, "INFY", "sell", 0},
 		{1, "RELIANCE", "buy", 0},
-		{2, "BANKNIFTY22JUNFUT-FUT", "buy", 0}, // this name is time dependent, ensure you change to relevant
-		{2, "BANKNIFTY22JUNFUT-FUT", "sell", 0},
+		// {2, "BANKNIFTY22AUGFUT-FUT", "buy", 0}, // this name is time dependent, ensure you change to relevant
+		// {2, "BANKNIFTY22AUGFUT-FUT", "sell", 0},
 	}
 
 	for _, test := range tstArry {

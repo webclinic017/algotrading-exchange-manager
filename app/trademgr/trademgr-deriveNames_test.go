@@ -55,7 +55,7 @@ var DeriveInstrumentsNameTests = []DeriveInstrumentsNameTesting{
 	{"2022-04-15", "ASHOKLEY-FUT", 0, 1, 0, 0, false, "bullish", "futures", "ASHOKLEY22MAYFUT"},
 	{"2022-04-15", "ASHOKLEY-FUT", 0, 0, 0, 0, false, "bullish", "futures", "ASHOKLEY22APRFUT"},
 	{"2022-04-15", "RELIANCE-FUT", 0, 1, 0, 0, false, "bullish", "futures", "RELIANCE22MAYFUT"},
-	{"2022-03-25", "RELIANCE-FUT", 0, 0, 0, 0, false, "bullish", "futures", "RELIANCE22MARFUT"},
+	{"2022-03-25", "RELIANCE-FUT", 0, 0, 0, 0, false, "bullish", "futures", "RELIANCE22APRFUT"},
 	// Equite testing - individual securities
 	{"2022-04-15", "ASHOKLEY", 0, 0, 0, 0, false, "", "equity", "ASHOKLEY"},
 	{"2020-04-15", "ASHOKLEY", 0, 0, 0, 0, false, "", "equity", "ASHOKLEY"},
@@ -78,7 +78,7 @@ func TestDeriveInstrumentsName(t *testing.T) {
 		dateString := test.argDate
 		date, _ := time.Parse("2006-01-02", dateString)
 		order.Instr = test.argInstr
-		order.Targets.EntrPrice = test.argStrikePrice
+		order.ApiSignalEntr.Entry = test.argStrikePrice
 		order.Dir = test.argDirection
 		ts.Parameters.Option_setting.OptionLevel = test.argOptionLevel
 		ts.Parameters.Futures_Setting.FuturesExpiryMonth = test.argMonthSel

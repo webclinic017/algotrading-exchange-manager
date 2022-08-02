@@ -71,11 +71,12 @@ func TestGetInstrumentsToken(t *testing.T) {
 
 	actual := GetInstrumentsToken()
 
-	if len(actual) == 124 {
-		fmt.Println(appdata.ColorSuccess, "\nGetInstrumentsToken() expected: 124 actual: ", len(actual))
+	if len(actual) == 99 || len(actual) == 124 {
+		//the sql query has EXTRACT(MONTH FROM current_date)+1, so unless its the current month. it will not return futures
+		fmt.Println(appdata.ColorSuccess, "\nGetInstrumentsToken() expected: 99/124 actual: ", len(actual))
 		fmt.Println(appdata.ColorInfo)
 	} else {
-		t.Error(appdata.ColorError, "\nGetInstrumentsToken() expected: 124 actual: ", len(actual))
+		t.Error(appdata.ColorError, "\nGetInstrumentsToken() expected: 99/124 actual: ", len(actual))
 		t.Error(appdata.ColorInfo)
 	}
 	fmt.Println(actual)
