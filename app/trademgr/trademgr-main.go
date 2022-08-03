@@ -47,7 +47,7 @@ func StartTrader(daystart bool) {
 			if trSig[eachSymbol].Strategy == tradeUserStrategies[eachStrategy].Strategy {
 
 				wgTrademgr.Add(1)
-				srv.TradesLogger.Println(appdata.ColorSuccess, "\n\nStrategy being resumed\n", trSig[eachSymbol])
+				srv.TradesLogger.Println(appdata.ColorPurple, "\n\nStrategy being resumed\n", trSig[eachSymbol])
 				go operateSymbol("nil", tradeUserStrategies[eachStrategy], trSig[eachSymbol].Id, wgTrademgr)
 				s = true
 				break
@@ -117,12 +117,7 @@ tradingloop:
 			order.Instr = tradeSymbol
 			order.Status = "AwaitSignal"
 			order.Info.Order_simulation = tradeUserStrategies.Parameters.Controls.TradeSimulate
-			// tr.Order_info = "{}"
 			order.Post_analysis = "{}"
-			// order.ApiSignalEntr = '{}'
-			// order.ApiSignalEntr.ExitTime = time.Now()
-			// order.ApiSignalExit.EntryTime = time.Now()
-			// order.ApiSignalExit.ExitTime = time.Now()
 			order.Id = db.StoreOrderBookInDb(order)
 			time.Sleep(awaitSignalSleep)
 
@@ -130,7 +125,7 @@ tradingloop:
 		case "AwaitSignal":
 			if tradeEnterSignalCheck(tradeSymbol, tradeUserStrategies, &order) {
 				order.Status = "PlaceOrders"
-				db.StoreOrderBookInDb(order)
+				db.StoreApiSigOrderBookInDB(order.ApiSignalEntr, order.Id, "entr")
 			}
 			time.Sleep(awaitSignalSleep)
 
@@ -160,7 +155,7 @@ tradingloop:
 		case "TradeMonitoring":
 			if apiclient.SignalAnalyzer(&order, "exit") {
 				order.Status = "ExitTrade"
-				db.StoreOrderBookInDb(order)
+				db.StoreApiSigOrderBookInDB(order.ApiSignalExit, order.Id, "exit")
 			}
 			time.Sleep(awaitSignalSleep)
 
@@ -236,7 +231,7 @@ func checkTriggerDays(currentday string, days string) bool {
 }
 
 func loadValues(or *appdata.OrderBook_S) {
-	status, trtemp := db.ReadOrderBookFromDb(or.Id)
+	status, trtemp := db.ReadOrderIdFromDb(or.Id)
 	if status {
 		// or.Id = trtemp.Id
 		or.Date = trtemp.Date

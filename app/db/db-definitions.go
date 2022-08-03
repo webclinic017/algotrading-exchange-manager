@@ -280,13 +280,14 @@ var sqlUpdateOrder = ` UPDATE %DB_TBL_ORDER_BOOK SET
 	dir = $5,
 	exit_reason = $6,
 	info = $7,
-	api_signal_entr = $8,
-	api_signal_exit = $9,
-	orders_entr = $10,
-	orders_exit = $11,
-	post_analysis = $12
-	WHERE id = $13
+	post_analysis = $8
+	WHERE id = $9
 	;`
+
+var sqlUpdateApiEntr = `UPDATE %DB_TBL_ORDER_BOOK SET api_signal_entr = $1 	WHERE id = $2;`
+var sqlUpdateApiExit = `UPDATE %DB_TBL_ORDER_BOOK SET api_signal_exit = $1 	WHERE id = $2;`
+var sqlUpdateOrdersEntr = `UPDATE %DB_TBL_ORDER_BOOK SET orders_entr = $1 	WHERE id = $2;`
+var sqlUpdateOrdersExit = `UPDATE %DB_TBL_ORDER_BOOK SET orders_exit = $1 	WHERE id = $2;`
 
 var sqlOrderCount = `SELECT COUNT(*) FROM %DB_TBL_ORDER_BOOK
 						WHERE  (

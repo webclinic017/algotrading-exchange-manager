@@ -2,6 +2,7 @@ package trademgr
 
 import (
 	"algo-ex-mgr/app/appdata"
+	"algo-ex-mgr/app/db"
 	"algo-ex-mgr/app/kite"
 	"algo-ex-mgr/app/srv"
 	"math"
@@ -26,8 +27,10 @@ func pendingOrderEntr(order *appdata.OrderBook_S, us appdata.UserStrategies_S) b
 			}
 			order.Info.QtyFilledEntr = qtyFilled
 
-			order.Orders_entr = make([]kiteconnect.Trade, len(tradesList))
-			print(copy(order.Orders_entr, tradesList))
+			// order.Orders_entr = make([]kiteconnect.Trade, len(tradesList))
+			// print(copy(order.Orders_entr, tradesList))
+			// TODO: check if this logic works
+			db.StoreKiteOrdersOrderBookInDB(tradesList, order.Id, "entr")
 
 		}
 		if order.Info.QtyReq > order.Info.QtyFilledEntr {
@@ -55,8 +58,10 @@ func pendingOrderExit(order *appdata.OrderBook_S, us appdata.UserStrategies_S) b
 			}
 			order.Info.QtyFilledExit = qtyFilled
 
-			order.Orders_exit = make([]kiteconnect.Trade, len(tradesList))
-			print(copy(order.Orders_exit, tradesList))
+			// order.Orders_exit = make([]kiteconnect.Trade, len(tradesList))
+			// print(copy(order.Orders_exit, tradesList))
+			// TODO: check if this logic works
+			db.StoreKiteOrdersOrderBookInDB(tradesList, order.Id, "exit")
 		}
 		if order.Info.QtyFilledEntr > order.Info.QtyFilledExit {
 			_ = finalizeOrder(*order, us, time.Now(), (order.Info.QtyFilledEntr - order.Info.QtyFilledExit), order.Info.OrderIdExit, false)

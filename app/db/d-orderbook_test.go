@@ -14,7 +14,7 @@ func TestReadOrderBookFromDb(t *testing.T) {
 	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
 	DbInit()
 
-	a, b := ReadOrderBookFromDb(1)
+	a, b := ReadOrderIdFromDb(1)
 
 	fmt.Println(a)
 	fmt.Println(b)

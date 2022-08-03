@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/georgysavva/scany/pgxscan"
+	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
 func ReadTradeExitsFromDb() string {
@@ -33,7 +34,7 @@ func ReadTradeExitsFromDb() string {
 
 }
 
-func ReadOrderBookFromDb(orderBookId uint16) (status bool, tr *appdata.OrderBook_S) {
+func ReadOrderIdFromDb(orderBookId uint16) (status bool, tr *appdata.OrderBook_S) {
 
 	lock.Lock()
 	defer lock.Unlock()
@@ -94,7 +95,58 @@ func ReadAllOrderBookFromDb(condition string, status string) []*appdata.OrderBoo
 		return nil
 	}
 	return order
+}
 
+func StoreApiSigOrderBookInDB(as appdata.ApiSignal_S, id uint16, record string) bool {
+	lock.Lock()
+	defer lock.Unlock()
+
+	ctx := context.Background()
+	myCon, err := dbPool.Acquire(ctx)
+
+	if err != nil {
+		return false
+	}
+	defer myCon.Release()
+
+	switch record {
+	case "entr":
+		_, err = myCon.Exec(ctx, dbSqlQuery(sqlUpdateApiEntr), as)
+
+	case "exit":
+		_, err = myCon.Exec(ctx, dbSqlQuery(sqlUpdateApiExit), as)
+
+	default:
+		return false
+	}
+
+	return err == nil
+}
+
+func StoreKiteOrdersOrderBookInDB(trades []kiteconnect.Trade, id uint16, record string) bool {
+	lock.Lock()
+	defer lock.Unlock()
+
+	ctx := context.Background()
+	myCon, err := dbPool.Acquire(ctx)
+
+	if err != nil {
+		return false
+	}
+	defer myCon.Release()
+
+	switch record {
+	case "entr":
+		_, err = myCon.Exec(ctx, dbSqlQuery(sqlUpdateOrdersEntr), trades)
+
+	case "exit":
+		_, err = myCon.Exec(ctx, dbSqlQuery(sqlUpdateOrdersExit), trades)
+
+	default:
+		return false
+	}
+
+	return err == nil
 }
 
 func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {
@@ -119,10 +171,10 @@ func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {
 			tr.Dir,
 			tr.Exit_reason,
 			tr.Info,
-			tr.ApiSignalEntr, // first write will be skipped issue for reading empty dates
-			tr.ApiSignalExit,
-			tr.Orders_entr,
-			tr.Orders_exit,
+			"{}",   // tr.ApiSignalEntr, // first write will be skipped issue for reading empty dates
+			"{}",   // tr.ApiSignalExit,
+			"[{}]", // tr.Orders_entr,
+			"[{}]", // tr.Orders_exit,
 			tr.Post_analysis,
 		)
 		if err != nil {
@@ -163,10 +215,10 @@ func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {
 			tr.Dir,
 			tr.Exit_reason,
 			tr.Info,
-			tr.ApiSignalEntr,
-			tr.ApiSignalExit,
-			tr.Orders_entr,
-			tr.Orders_exit,
+			// tr.ApiSignalEntr,
+			// tr.ApiSignalExit,
+			// tr.Orders_entr,
+			// tr.Orders_exit,
 			tr.Post_analysis,
 			tr.Id,
 		)
