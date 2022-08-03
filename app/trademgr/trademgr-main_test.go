@@ -23,7 +23,7 @@ func TestStartTrader(t *testing.T) {
 	kite.Init()
 	db.DbRawExec(settings_exits_deleteAll) // no exits ar defined
 
-	subtest_StartTrader_1(t, 1, "[case Initiate] Start two threads\n")
+	// subtest_StartTrader_1(t, 1, "[case Initiate] Start two threads\n")
 	// subtest_StartTrader_2(t, 2, "[case Initiate] daystart false, nothing should start\n")
 	subtest_StartTrader_3(t, 3, "[case Resume] resume previous running trades. 1 with correct strategy set. 1 should resume\n") //
 	subtest_StartTrader_4(t, 4, "[case Resume] Cannot resume - stratgey missing\n")
@@ -52,7 +52,7 @@ func subtest_StartTrader_1(t *testing.T, testId int, testDesc string) {
 	// start trader
 	go StartTrader(true)
 
-	time.Sleep(time.Second * 2000)
+	time.Sleep(time.Second * 2)
 	// check if trades are logged in order_book
 	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
 	if len(trades) != 2 {
@@ -71,8 +71,8 @@ func subtest_StartTrader_2(t *testing.T, testId int, testDesc string) {
 
 	// make continour trigerred trades
 	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S999-CONT-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S999-CONT-002", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-CONT-001", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-CONT-002", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
 	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
@@ -99,8 +99,8 @@ func subtest_StartTrader_3(t *testing.T, testId int, testDesc string) {
 
 	// make continous trigerred trades
 	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S999-CONT-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S999-CONT-002", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-CONT-001", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-CONT-002", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
 	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
@@ -113,19 +113,20 @@ func subtest_StartTrader_3(t *testing.T, testId int, testDesc string) {
 		t.Errorf("\nCheck 3.1 - Expected 0 trades, got %d", len(trades))
 	}
 	// setup old order
-	db.DbRawExec(test_2)
+	db.DbRawExec(Test3_orderbook)
 	time.Sleep(time.Second * 2)
-	trades = db.ReadAllOrderBookFromDb("!=", "a")
+	// check if the trades are in orderbook
+	trades = db.ReadAllOrderBookFromDb("=", "ExitOrdersPending")
 	if len(trades) != 2 {
 		t.Errorf("\nCheck 3.2 - Expected 2 trades, got %d", len(trades))
 	}
 
-	// start trader, do not spawn new trades
-	// go StartTrader(false)
+	// now start trader, do not spawn new trades
+	go StartTrader(false)
 
 	time.Sleep(time.Second * 2)
-	// check if trades are logged in order_book
-	trades = db.ReadAllOrderBookFromDb("!=", "ExitOrdersPending")
+	// check if trades are processeed in order_book
+	trades = db.ReadAllOrderBookFromDb("=", "TradeCompleted")
 	println(len(trades))
 	if len(trades) != 0 { // len can be 0 when since no trade data from kite is stored, db parsing is resulting 0 trades.
 		t.Errorf("\nCheck 3.3 - Expected 2 trades, got %d", len(trades))
@@ -150,8 +151,8 @@ func subtest_StartTrader_4(t *testing.T, testId int, testDesc string) {
 
 	// make continour trigerred trades
 	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S999-CONT-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S999-CONT-002", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-CONT-001", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-CONT-002", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
 	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "", -1) // no days for trigger trading
@@ -232,8 +233,8 @@ func subtest_StartTrader_6(t *testing.T, testId int, testDesc string) {
 	// make continour trigerred trades
 	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME",
 		time.Now().Local().Add(time.Second*time.Duration(120)).Format("15:04:05"), -1) // after 2 min, should not execute
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S999-TEST-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S999-TEST-002", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-TEST-001", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-TEST-002", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
 	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
@@ -269,8 +270,8 @@ func subtest_StartTrader_7(t *testing.T, testId int, testDesc string) {
 	// make continour trigerred trades
 	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME",
 		time.Now().Local().Add(time.Second*time.Duration(3)).Format("15:04:05"), -1) // after 2 min, should not execute
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S999-TEST-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S999-TEST-002", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-TEST-001", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-TEST-002", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
 	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
@@ -413,8 +414,8 @@ func testSimulation_1execute_with_termination(t *testing.T, testId int, testDesc
 
 	// add 10 seconds to timetriggered trade
 	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S999-TEST-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S999-CONT-002", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-TEST-001", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-CONT-002", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
 	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
@@ -457,8 +458,8 @@ func testSimulation_1execute_1userExit(t *testing.T, testId int, testDesc string
 
 	// add 10 seconds to timetriggered trade
 	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S999-TEST-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S999-CONT-002", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-TEST-001", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-CONT-002", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
 	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
@@ -503,8 +504,8 @@ func testSimulation_1execute_with_allTermination(t *testing.T, testId int, testD
 
 	// add 10 seconds to timetriggered trade
 	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S999-TEST-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S999-CONT-002", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-TEST-001", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-CONT-002", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
 	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
@@ -549,8 +550,8 @@ func testSimulation_1execute_with_allExit(t *testing.T, testId int, testDesc str
 
 	// add 10 seconds to timetriggered trade
 	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S999-TEST-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S999-CONT-002", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-TEST-001", -1)
+	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-CONT-002", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
 	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
 	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)

@@ -85,12 +85,12 @@ func ReadAllOrderBookFromDb(condition string, status string) []*appdata.OrderBoo
 	err = pgxscan.Select(ctx, dbPool, &order, sqlquery)
 
 	if err != nil {
-		srv.ErrorLogger.Printf("order_trades read error %v\n", err.Error())
+		srv.ErrorLogger.Printf("OrdereBook read error %v\n", err.Error())
 		return nil
 	}
 
 	if len(order) == 0 {
-		srv.InfoLogger.Printf("order_trades 0 %v\n", err)
+		srv.InfoLogger.Printf("OrdereBook 0 %v\n", err)
 		return nil
 	}
 	return order
@@ -119,8 +119,8 @@ func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {
 			tr.Dir,
 			tr.Exit_reason,
 			tr.Info,
-			"{}", // tr.ApiSignalEntr, // first write will be skipped issue for reading empty dates
-			"{}", // tr.ApiSignalExit,
+			tr.ApiSignalEntr, // first write will be skipped issue for reading empty dates
+			tr.ApiSignalExit,
 			tr.Orders_entr,
 			tr.Orders_exit,
 			tr.Post_analysis,
@@ -163,8 +163,8 @@ func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {
 			tr.Dir,
 			tr.Exit_reason,
 			tr.Info,
-			// tr.ApiSignalEntr,
-			// tr.ApiSignalExit,
+			tr.ApiSignalEntr,
+			tr.ApiSignalExit,
 			tr.Orders_entr,
 			tr.Orders_exit,
 			tr.Post_analysis,

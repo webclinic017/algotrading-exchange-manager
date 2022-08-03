@@ -272,21 +272,6 @@ var sqlCreateOrder = `INSERT INTO  %DB_TBL_ORDER_BOOK (
 	VALUES
 	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);`
 
-	var sqlUpdateOrderSigle = ` UPDATE %DB_TBL_ORDER_BOOK SET
-	date = $1,
-	instr = $2,
-	strategy = $3,
-	status = $4,
-	dir = $5,
-	exit_reason = $6,
-	info = $7,
-	orders_entr = $8,
-	orders_exit = $9,
-	post_analysis = $10
-	WHERE id = $11
-	;`
-
-
 var sqlUpdateOrder = ` UPDATE %DB_TBL_ORDER_BOOK SET
 	date = $1,
 	instr = $2,
@@ -295,10 +280,12 @@ var sqlUpdateOrder = ` UPDATE %DB_TBL_ORDER_BOOK SET
 	dir = $5,
 	exit_reason = $6,
 	info = $7,
-	orders_entr = $8,
-	orders_exit = $9,
-	post_analysis = $10
-	WHERE id = $11
+	api_signal_entr = $8,
+	api_signal_exit = $9,
+	orders_entr = $10,
+	orders_exit = $11,
+	post_analysis = $12
+	WHERE id = $13
 	;`
 
 var sqlOrderCount = `SELECT COUNT(*) FROM %DB_TBL_ORDER_BOOK
