@@ -111,10 +111,10 @@ func StoreApiSigOrderBookInDB(as appdata.ApiSignal_S, id uint16, record string) 
 
 	switch record {
 	case "entr":
-		_, err = myCon.Exec(ctx, dbSqlQuery(sqlUpdateApiEntr), as)
+		_, err = myCon.Exec(ctx, dbSqlQuery(sqlUpdateApiEntr), as, id)
 
 	case "exit":
-		_, err = myCon.Exec(ctx, dbSqlQuery(sqlUpdateApiExit), as)
+		_, err = myCon.Exec(ctx, dbSqlQuery(sqlUpdateApiExit), as, id)
 
 	default:
 		return false
@@ -137,10 +137,10 @@ func StoreKiteOrdersOrderBookInDB(trades []kiteconnect.Trade, id uint16, record 
 
 	switch record {
 	case "entr":
-		_, err = myCon.Exec(ctx, dbSqlQuery(sqlUpdateOrdersEntr), trades)
+		_, err = myCon.Exec(ctx, dbSqlQuery(sqlUpdateOrdersEntr), trades, id)
 
 	case "exit":
-		_, err = myCon.Exec(ctx, dbSqlQuery(sqlUpdateOrdersExit), trades)
+		_, err = myCon.Exec(ctx, dbSqlQuery(sqlUpdateOrdersExit), trades, id)
 
 	default:
 		return false

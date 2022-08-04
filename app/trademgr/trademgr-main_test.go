@@ -109,9 +109,8 @@ func TestStartTrader_LiveTesting(t *testing.T) {
 	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
 	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
 
-	// add 10 seconds to timetriggered trade
 	sqlquery := strings.Replace(startTrader_TblUserStrategies_EqASHOKLEY_REAL, "%TRIGGERTIME",
-		time.Now().Local().Add(time.Second*time.Duration(2)).Format("15:04:05"), -1)
+		time.Now().Local().Add(time.Minute*time.Duration(1)).Format("15:04:05"), -1)
 
 	db.DbRawExec(sqlquery)
 
@@ -153,9 +152,9 @@ func TestStartTrader(t *testing.T) {
 	subtest_StartTrader_2(t, 2, "[case Initiate] daystart false, nothing should start\n")
 	subtest_StartTrader_3(t, 3, "[case Resume] resume previous running trades. 1 with correct strategy set. 1 should resume\n") //
 	subtest_StartTrader_4(t, 4, "[case Resume] Cannot resume - strategy day not enabled\n")
-	subtest_StartTrader_5(t, 5, "[case Initiate] Invalid strategy. New and Resume\n")
-	subtest_StartTrader_6(t, 6, "[case Initiate] TimeTrigged - Wait period\n")
-	subtest_StartTrader_7(t, 7, "[case Initiate] TimeTrigged - Execute\n")
+	subtest_StartTrader_5(t, 5, "[case Invalid Strategy] Invalid strategy. New and Resume\n")
+	subtest_StartTrader_6(t, 6, "[case Wait for Trigger] TimeTrigged - Wait period\n")
+	subtest_StartTrader_7(t, 7, "[case Execute on Trigger] TimeTrigged - Completee Execution\n")
 }
 func subtest_StartTrader_1(t *testing.T, testId int, testDesc string) {
 
@@ -238,16 +237,14 @@ func subtest_StartTrader_6(t *testing.T, testId int, testDesc string) {
 func subtest_StartTrader_7(t *testing.T, testId int, testDesc string) {
 
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
-
-	// setup Db entries
 	TerminateTradeMgr = false
 
 	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME",
-		time.Now().Local().Add(time.Second*time.Duration(3)).Format("15:04:05"), -1) // after 2 min, should not execute
+		time.Now().Local().Add(time.Minute*time.Duration(1)).Format("15:04:05"), -1) // execute after 1 min
 	db.DbRawExec(_resetOrderBook(sqlquery))
 
 	go StartTrader(true)
-	_checkOrderBook(t, "7.1", 3, "=", "ExitTrade", 2)
+	_checkOrderBook(t, "7.1", 100, "=", "TradeCompleted", 2)
 
 	_exit()
 }

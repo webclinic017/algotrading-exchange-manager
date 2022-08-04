@@ -50,7 +50,7 @@
     "todo-tree.tree.hideIconsWhenGroupedByTag": true,
     "plantuml.fileExtensions": ".wsd,.pu,.puml,.plantuml,.iuml,",
     "plantuml.render": "Local",
-    "go.testTimeout": "120s"
+    "go.testTimeout": "300s"
     
 }
 

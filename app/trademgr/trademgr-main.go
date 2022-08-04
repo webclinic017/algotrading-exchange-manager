@@ -126,6 +126,7 @@ tradingloop:
 			if tradeEnterSignalCheck(tradeSymbol, tradeUserStrategies, &order) {
 				order.Status = "PlaceOrders"
 				db.StoreApiSigOrderBookInDB(order.ApiSignalEntr, order.Id, "entr")
+				db.StoreOrderBookInDb(order)
 			}
 			time.Sleep(awaitSignalSleep)
 
@@ -156,6 +157,7 @@ tradingloop:
 			if apiclient.SignalAnalyzer(&order, "exit") {
 				order.Status = "ExitTrade"
 				db.StoreApiSigOrderBookInDB(order.ApiSignalExit, order.Id, "exit")
+				db.StoreOrderBookInDb(order)
 			}
 			time.Sleep(awaitSignalSleep)
 
