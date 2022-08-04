@@ -25,7 +25,7 @@ func _checkOrderBook(t *testing.T, tname string, s uint64, condition string, val
 	trades := db.ReadAllOrderBookFromDb(condition, value)
 
 	if len(trades) != expVal {
-		t.Errorf("\nCheck "+tname+" - Expected 0 trades, got %d", len(trades))
+		t.Errorf("\nCheck "+tname+" - Expected %d trades, got %d", expVal, len(trades))
 		fmt.Print((appdata.ColorError), "TEST_", tname, ": FAILED\n", "Check if API Server is running")
 	} else {
 		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST_", tname, ": Trades found ", len(trades), "\n")
@@ -86,7 +86,7 @@ func TestCheckTriggerDays(t *testing.T) {
 }
 
 // #################################################################################################### StartTrader - LIVE
-func TestStartTrader_LiveTesting(t *testing.T) {
+func TestStartTrader_LiveTesting_AfterMarketOnly(t *testing.T) {
 	/* start trades, use active apicall, 1st trade in PlaceOrders
 	modify 2nd trade time for execution, wait for timetrigger, check the second is also in PlaceOrders */
 
@@ -96,45 +96,29 @@ func TestStartTrader_LiveTesting(t *testing.T) {
 	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
 	db.DbInit()
 	kite.Init()
+	TerminateTradeMgr = false
 
 	if appdata.Env["ZERODHA_LIVE_TEST"] != "TRUE" {
 		t.Errorf(appdata.ErrorColor, "\n\nLive testing is disabled. Set ZERODHA_LIVE_TEST to TRUE in userSettings.env")
 		return
 	}
-
-	fmt.Print(appdata.ColorBlue, "\nTEST_5 [case Real EQ Simulation] Simulate real equity signal and check values\n") // only at market time
-
-	TerminateTradeMgr = false
+	fmt.Print(appdata.ColorBlue, "\nTEST [case Real EQ Trade] Place real equity order (after market) and check values\n") // only at market time
 	db.DbRawExec(settings_exits_deleteAll)
 	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
 	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
 
-	sqlquery := strings.Replace(startTrader_TblUserStrategies_EqASHOKLEY_REAL, "%TRIGGERTIME",
-		time.Now().Local().Add(time.Minute*time.Duration(1)).Format("15:04:05"), -1)
-
-	db.DbRawExec(sqlquery)
+	db.DbRawExec(_resetOrderBook(startTrader_TblUserStrategies_EqASHOKLEY_REAL))
 
 	go StartTrader(true)
-
-	time.Sleep(time.Second * 3)
-	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
-	if len(trades) != 0 {
-		t.Errorf("Expected 0 trades, got %d in AwaitSignal", len(trades))
-		fmt.Print(appdata.ColorError, "TEST_LiveTesting : FAILED\n")
-	}
+	_checkOrderBook(t, "TestStartTrader_LiveTesting_AfterMarketOnly", 20, "=", "PlaceOrdersPending", 1)
 
 	// exit trademgr - intiate sell order
-	sqlquery = strings.Replace(settings_exits_setVal, "%EXIT_ID", "all-exit", -1)
+	sqlquery := strings.Replace(settings_exits_setVal, "%EXIT_ID", "all-exit", -1)
 	db.DbRawExec(sqlquery) // no exits ar defined
-	time.Sleep(time.Second * 2)
 
-	trades = db.ReadAllOrderBookFromDb("=", "TradeCompleted")
-	if len(trades) != 1 {
-		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print(appdata.ColorError, "TEST_LiveTesting: FAILED\n")
-	} else {
-		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_LiveTesting: Trades found in TradeCompleted :", len(trades))
-	}
+	_checkOrderBook(t, "TestStartTrader_LiveTesting_ExitTrade", 20, "=", "TradeCompleted", 1)
+	_exit()
+
 }
 
 // #################################################################################################### StartTrader
@@ -244,7 +228,7 @@ func subtest_StartTrader_7(t *testing.T, testId int, testDesc string) {
 	db.DbRawExec(_resetOrderBook(sqlquery))
 
 	go StartTrader(true)
-	_checkOrderBook(t, "7.1", 100, "=", "TradeCompleted", 2)
+	_checkOrderBook(t, "7.1", 75, "=", "TradeCompleted", 2)
 
 	_exit()
 }

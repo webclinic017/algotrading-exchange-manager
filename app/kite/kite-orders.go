@@ -42,10 +42,28 @@ func ModifyOrder(orderId uint64, variety string, orderParams kiteconnect.OrderPa
 	}
 	s, err := strconv.ParseUint(orderResponse.OrderID, 10, 64)
 	if err == nil {
-		srv.TradesLogger.Printf("%T, %v\n", s, s)
+		srv.TradesLogger.Printf("Order ID: %v updated \n", s)
 	}
 	return s
 
+}
+
+func CancelOrder(variety string, orderID uint64) uint64 {
+
+	odr := strconv.FormatUint(orderID, 10)
+	parentOrderID := ""
+	orderResponse, poerr := kc.CancelOrder(variety, odr, &parentOrderID)
+	if poerr != nil {
+		srv.TradesLogger.Println(poerr.Error())
+		return 0
+	}
+
+	// Resp : convert string to uint
+	s, err := strconv.ParseUint(orderResponse.OrderID, 10, 64)
+	if err == nil {
+		srv.TradesLogger.Printf("%T, %v\n", s, s)
+	}
+	return s
 }
 
 func ExecOrder(orderParams kiteconnect.OrderParams, variety string) uint64 {

@@ -75,14 +75,15 @@ func pendingOrderExit(order *appdata.OrderBook_S, us appdata.UserStrategies_S) b
 
 func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool {
 
+	if strings.Contains(order.Instr, "-FUT") { // RULE: only for futures and equity supported
+		order.Info.Exchange = kiteconnect.ExchangeNFO
+	} else {
+		order.Info.Exchange = kiteconnect.ExchangeNSE
+	}
+
 	if order.Info.Order_simulation { // real trade
 
 		order.Info.TradingSymbol = ""
-		if strings.Contains(order.Instr, "-FUT") { // RULE: only for futures and equity supported
-			order.Info.Exchange = kiteconnect.ExchangeNFO
-		} else {
-			order.Info.Exchange = kiteconnect.ExchangeNSE
-		}
 		order.Info.OrderIdEntr = 0
 		order.Info.QtyReq = 0
 		order.Info.QtyFilledEntr = 0
@@ -104,13 +105,19 @@ func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool {
 			us.Parameters.Controls.WinningRatio, us.Parameters.Controls.MaxBudget,
 			us.Parameters.Controls.LimitAmount)
 
-		orderId := finalizeOrder(*order, us, entryTime, order.Info.QtyReq, 0, true)
+		if order.Info.QtyReq == 0 {
+			srv.TradesLogger.Print("Order size eval failed for ", order.Strategy, " Order Size : ", order.Info.QtyReq)
+		} else {
 
-		if orderId != 0 {
-			order.Info.OrderIdEntr = orderId
-			srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
+			orderId := finalizeOrder(*order, us, entryTime, order.Info.QtyReq, 0, true)
+
+			if orderId != 0 {
+				order.Info.OrderIdEntr = orderId
+				srv.TradesLogger.Print("Order Placed: ", order.Strategy, " ", orderId)
+			}
+			return orderId != 0
 		}
-		return orderId != 0
+		return false
 	}
 }
 
@@ -132,7 +139,13 @@ func tradeExit(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 			}
 			return orderId != 0
 		} else {
-			return true
+			// order is pending execution, place cancel order
+
+			if kite.CancelOrder(ts.Parameters.Kite_Setting.Varieties, order.Info.OrderIdEntr) != 0 {
+				return true
+			} else {
+				return false
+			}
 		}
 	}
 }

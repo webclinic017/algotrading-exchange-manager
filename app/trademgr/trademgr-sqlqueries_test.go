@@ -74,12 +74,14 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
 }');
 `
 
+// https://parag-b.github.io/algotrading-exchange-manager/#tradeStrategies%20-%20%23defs
+
 var startTrader_TblUserStrategies_EqASHOKLEY_REAL = `
 INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time,trigger_days,cdl_size,instruments,parameters) VALUES
 	('S990-TEST-002',true,'IntraDay_DNP','%TRIGGERTIME','Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',1,'ASHOKLEY','{
     "kite_setting": {
-        "products": "MIS",
-        "varieties": "regular",
+        "products": "CNC",
+        "varieties": "amo",  
         "order_type": "MARKET",
         "validities": "DAY",
         "position_type": "day",
@@ -92,8 +94,8 @@ INSERT INTO public.paragvb_strategies_test (strategy,enabled,engine,trigger_time
         "deep_stoploss_per": 32,
         "delayed_stoploss_seconds":60,
         "stall_detect_period_seconds":60,
-        "budget_max_per": 52,
-        "limit_amount": 50,
+        "budget_max_per": 10,
+        "limit_amount": 150,
         "target_trail_enabled": true,
         "stoploss_trail_enabled": true,
         "position_reversal_en": false,

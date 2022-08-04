@@ -142,6 +142,7 @@ tradingloop:
 			time.Sleep(placeOrderSleep)
 
 			// ------------------------------------------------------------------------ enter trade (order)
+			// RULE: Orders will be always placed, cannot be cancelled ever!
 		case "PlaceOrdersPending":
 			if pendingOrderEntr(&order, tradeUserStrategies) {
 				order.Status = "TradeMonitoring"
@@ -205,12 +206,14 @@ func checkExits(order *appdata.OrderBook_S) bool {
 	if strings.Contains(e, "all-terminate") || TerminateTradeMgr {
 		if (order.Status != "ExitTrade") && (order.Status != "ExitOrdersPending") && (order.Status != "TradeCompleted") {
 			order.Status = "Terminate"
+			order.Exit_reason = "Terminate"
 			return true
 		}
 	} else if strings.Contains(e, "all-exit") || strings.Contains(e, strconv.FormatUint(uint64(order.Id), 10)) {
 		if (order.Status != "ExitTrade") && (order.Status != "ExitOrdersPending") && (order.Status != "TradeCompleted") {
 			order.Info.UserExitRequested = true
 			order.Status = "ExitTrade"
+			order.Exit_reason = "ExitTrade"
 			return true
 		}
 	}
