@@ -104,7 +104,11 @@ func TestCalOrderMargin_LIVE(t *testing.T) {
 	srv.LoadEnvVariables(mydir+"/../../userSettings.env", false)
 	db.DbInit()
 	kite.Init()
-	t.Parallel()
+
+	if appdata.Env["ZERODHA_LIVE_TEST"] != "TRUE" {
+		t.Errorf(appdata.ErrorColor, "\n\nLive testing is disabled. Set ZERODHA_LIVE_TEST to TRUE in userSettings.env")
+		return
+	}
 
 	var order appdata.OrderBook_S
 	var ts appdata.UserStrategies_S
@@ -131,9 +135,9 @@ func TestCalOrderMargin_LIVE(t *testing.T) {
 		actual := getOrderMargin(order, ts, test.argDate)
 
 		if len(actual) == 0 {
-			t.Errorf(appdata.ErrorColor, "\nderiveFuturesName() No data fetched - check dates/levels/Server Auth code. This UT is live with server\n")
+			t.Errorf(appdata.ErrorColor, "\nderiveFuturesName() No data fetched - check dates/levels/Server Auth code. \nUT Condition needs to be updated with current market levels\n")
 		} else if actual[0].Total == 0 {
-			t.Errorf(appdata.ErrorColor, "\nderiveFuturesName() No margin calculated - check dates/levels/Server Auth code. This UT is live with server\n")
+			t.Errorf(appdata.ErrorColor, "\nderiveFuturesName() No margin calculated - check dates/levels/Server Auth code. \nUT Condition needs to be updated with current market levels\n")
 		} else {
 			// print result for manual check
 

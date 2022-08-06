@@ -1,0 +1,17 @@
+algo-ex-mgr/app/trademgr/trademgr-deriveNames.go:18:	deriveInstrumentsName	100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:29:		StartTrader		100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:87:		StopTrader		100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:95:		operateSymbol		94.4%
+algo-ex-mgr/app/trademgr/trademgr-main.go:203:		checkExits		100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:224:		checkTriggerDays	100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:238:		loadValues		100.0%
+algo-ex-mgr/app/trademgr/trademgr-main.go:260:		tradeEnterSignalCheck	100.0%
+algo-ex-mgr/app/trademgr/trademgr-margin.go:13:		getOrderMargin		100.0%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:15:		pendingOrderEntr	92.3%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:46:		pendingOrderExit	92.3%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:76:		tradeEnter		72.0%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:124:	tradeExit		78.6%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:154:	determineOrderSize	100.0%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:176:	getLowestPrice		80.0%
+algo-ex-mgr/app/trademgr/trademgr-orders.go:200:	finalizeOrder		53.1%
+total:							(statements)		89.0%

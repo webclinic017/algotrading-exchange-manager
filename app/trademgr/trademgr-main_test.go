@@ -28,11 +28,13 @@ func _checkOrderBook(t *testing.T, tname string, s uint64, condition string, val
 		t.Errorf("\nCheck "+tname+" - Expected %d trades, got %d", expVal, len(trades))
 		fmt.Print((appdata.ColorError), "TEST_", tname, ": FAILED\n", "Check if API Server is running")
 	} else {
-		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST_", tname, ": Trades found ", len(trades), "\n")
+		fmt.Print(string(appdata.ColorSuccess), "PASSED: TEST_", tname, ": Trades found in ", value, "-", len(trades), "\n")
 	}
 }
 func _resetOrderBook(sql string) string {
 	// setup Db entries
+	TerminateTradeMgr = false
+	db.DbRawExec(settings_exits_deleteAll)
 	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
 	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
 
@@ -234,7 +236,7 @@ func subtest_StartTrader_7(t *testing.T, testId int, testDesc string) {
 }
 
 // #################################################################################################### StartTrader - SIMULATION
-func TestOperateSymbol_SimulationTesting(t *testing.T) {
+func TestOperateSymbol_TerminateTrades(t *testing.T) {
 	// Precondition
 	// 1. setup user symbols
 	// 2. setup user strategies
@@ -247,189 +249,86 @@ func TestOperateSymbol_SimulationTesting(t *testing.T) {
 	kite.Init()
 	db.DbRawExec(settings_exits_deleteAll) // no exits ar defined
 
-	subtestSimulation_1execute_with_termination(t, 1, "[case Initiate] Start 2 thread with 1 valid repsonce and 1 invalid resp from API to complete simulation\n")
-	subtestSimulation_1execute_1userExit(t, 1, "[case Initiate] Start 2 thread with 1 valid repsonce and 1 invalid resp from API to complete simulation\n")
-	subtestSimulation_1execute_with_allTermination(t, 1, "[case Initiate] Start 2 use keyword 'all-terminate, 1 trade should in Terminate'\n")
-	subtestSimulation_1execute_with_allExit(t, 1, "[case Initiate] Start 2 use keyword 'all-exit, all trades should be TradeCompleted'\n")
+	subtest_TerminateTrades_1(t, 1, "[case - Terminate all using API StopTrades() ]\n")
+	subtest_TerminateTrades_2(t, 1, "[case - Exit thread based on ID ]\n")
+	subtest_TerminateTrades_3(t, 1, "[case - all-exit  from db settings ]\n")
+	subtest_TerminateTrades_4(t, 1, "[case - all-terminate  from db settings ]\n")
 }
-func subtestSimulation_1execute_with_termination(t *testing.T, testId int, testDesc string) {
+func subtest_TerminateTrades_1(t *testing.T, testId int, testDesc string) {
 
 	fmt.Print(appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
 
-	TerminateTradeMgr = false
-	db.DbRawExec(settings_exits_deleteAll)
-	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
-	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
-
-	// add 10 seconds to timetriggered trade
-	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-TEST-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-CONT-002", -1)
-	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
-	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
-	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
-	sqlquery = strings.Replace(sqlquery, "%TRIGGERTIME",
-		time.Now().Local().Add(time.Second*time.Duration(2)).Format("15:04:05"), -1)
-
-	db.DbRawExec(sqlquery)
+	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME",
+		time.Now().Local().Add(time.Minute*time.Duration(1)).Format("15:04:05"), -1) // execute after 1 min
+	db.DbRawExec(_resetOrderBook(sqlquery))
 
 	go StartTrader(true)
-
-	time.Sleep(time.Second * 3)
-	trades := db.ReadAllOrderBookFromDb("=", "ExitTrade")
-	if len(trades) != 1 {
-		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
-	} else {
-		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in PlaceOrdersPending :", len(trades), "\nKite timeout can affect the result due to timeouts")
-	}
+	_checkOrderBook(t, "Terminate 1.1", 5, "=", "AwaitSignal", 2)
 
 	// terminate trademgr - trades remain in same state - no state change
 	StopTrader()
-	time.Sleep(time.Second * 2)
+	_checkOrderBook(t, "Terminate 1.2", 10, "=", "Terminate", 2)
 
-	trades = db.ReadAllOrderBookFromDb("=", "Terminate")
-	if len(trades) != 1 {
-		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
-	} else {
-		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in Terminate state :", len(trades))
-	}
+	_exit()
 }
-func subtestSimulation_1execute_1userExit(t *testing.T, testId int, testDesc string) {
+func subtest_TerminateTrades_2(t *testing.T, testId int, testDesc string) {
 
 	fmt.Print(appdata.ColorReset, appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
 
-	TerminateTradeMgr = false
-	db.DbRawExec(settings_exits_deleteAll)
-	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
-	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
-
-	// add 10 seconds to timetriggered trade
-	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-TEST-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-CONT-002", -1)
-	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
-	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
-	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
-	sqlquery = strings.Replace(sqlquery, "%TRIGGERTIME",
-		time.Now().Local().Add(time.Second*time.Duration(2)).Format("15:04:05"), -1)
-
-	db.DbRawExec(sqlquery)
+	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME",
+		time.Now().Local().Add(time.Minute*time.Duration(1)).Format("15:04:05"), -1) // execute after 1 min
+	db.DbRawExec(_resetOrderBook(sqlquery))
 
 	go StartTrader(true)
+	_checkOrderBook(t, "Terminate 2.1", 5, "=", "AwaitSignal", 2)
 
-	time.Sleep(time.Second * 3)
+	// read id and set in db for exiting that trade
 	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
-	if len(trades) != 1 {
-		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
-	} else {
-		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in AwaitSignal :", len(trades), "\nKite timeout can affect the result due to timeouts")
-	}
-
-	// terminate trademgr - trades remain in same state - no state change
-	println(trades[0].Id) // trade in "AwaitSignal" state
+	println(trades[0].Id)
 	sqlquery = strings.Replace(settings_exits_setVal, "%EXIT_ID", strconv.FormatUint(uint64(trades[0].Id), 10), -1)
-	db.DbRawExec(sqlquery) // no exits ar defined
-	time.Sleep(time.Second * 3)
+	db.DbRawExec(sqlquery)
 
-	trades = db.ReadAllOrderBookFromDb("=", "TradeCompleted")
-	if len(trades) != 2 {
-		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
-	} else {
-		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in TradeCompleted state :", len(trades))
-	}
+	_checkOrderBook(t, "Terminate 2.1", 20, "=", "TradeCompleted", 1)
+	_exit()
+
 }
-func subtestSimulation_1execute_with_allTermination(t *testing.T, testId int, testDesc string) {
+func subtest_TerminateTrades_3(t *testing.T, testId int, testDesc string) {
 
 	fmt.Print(appdata.ColorReset, appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
 
-	TerminateTradeMgr = false
-	db.DbRawExec(settings_exits_deleteAll)
-	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
-	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
-
-	// add 10 seconds to timetriggered trade
-	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-TEST-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-CONT-002", -1)
-	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
-	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
-	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
-	sqlquery = strings.Replace(sqlquery, "%TRIGGERTIME",
-		time.Now().Local().Add(time.Second*time.Duration(2)).Format("15:04:05"), -1)
-
-	db.DbRawExec(sqlquery)
+	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME",
+		time.Now().Local().Add(time.Minute*time.Duration(1)).Format("15:04:05"), -1) // execute after 1 min
+	db.DbRawExec(_resetOrderBook(sqlquery))
 
 	go StartTrader(true)
+	_checkOrderBook(t, "Terminate 3.1", 5, "=", "AwaitSignal", 2)
 
-	time.Sleep(time.Second * 3)
 	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
-	if len(trades) != 1 {
-		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
-	} else {
-		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in AwaitSignal :", len(trades), "\nKite timeout can affect the result due to timeouts")
-	}
-
-	// terminate trademgr - trades remain in same state - no state change
-	println(trades[0].Id) // trade in "AwaitSignal" state
-	sqlquery = strings.Replace(settings_exits_setVal, "%EXIT_ID", "all-terminate", -1)
-	db.DbRawExec(sqlquery) // no exits ar defined
-	time.Sleep(time.Second * 3)
-
-	trades = db.ReadAllOrderBookFromDb("=", "Terminate")
-	if len(trades) != 1 {
-		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
-	} else {
-		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in Terminate state :", len(trades))
-	}
-}
-func subtestSimulation_1execute_with_allExit(t *testing.T, testId int, testDesc string) {
-
-	fmt.Print(appdata.ColorReset, appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
-
-	TerminateTradeMgr = false
-	db.DbRawExec(settings_exits_deleteAll)
-	db.DbRawExec(startTrader_TblUserStrategies_deleteAll)
-	db.DbRawExec(startTrader_TblOdrbook_deleteAll)
-
-	// add 10 seconds to timetriggered trade
-	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME", "00:00:00", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_1", "S990-TEST-001", -1)
-	sqlquery = strings.Replace(sqlquery, "%STRATEGY_NAME_2", "S990-CONT-002", -1)
-	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_1", "TT_TEST1", -1)
-	sqlquery = strings.Replace(sqlquery, "%SYMBOL_NAME_2", "TT_TEST2", -1)
-	sqlquery = strings.Replace(sqlquery, "%TRIGGER_DAYS", "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday", -1)
-	sqlquery = strings.Replace(sqlquery, "%TRIGGERTIME",
-		time.Now().Local().Add(time.Second*time.Duration(2)).Format("15:04:05"), -1)
-
-	db.DbRawExec(sqlquery)
-
-	go StartTrader(true)
-
-	time.Sleep(time.Second * 2)
-	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
-	if len(trades) != 1 {
-		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
-	} else {
-		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in AwaitSignal :", len(trades), "\nKite timeout can affect the result due to timeouts")
-	}
-
-	println(trades[0].Id) // trade in "AwaitSignal" state
+	println(trades[0].Id)
 	sqlquery = strings.Replace(settings_exits_setVal, "%EXIT_ID", "all-exit", -1)
-	db.DbRawExec(sqlquery) // no exits ar defined
-	time.Sleep(time.Second * 3)
+	db.DbRawExec(sqlquery)
 
-	trades = db.ReadAllOrderBookFromDb("=", "TradeCompleted")
-	if len(trades) != 2 {
-		t.Errorf("Expected 1 trades, got %d", len(trades))
-		fmt.Print(appdata.ColorError, "TEST_", testId, ": FAILED\n")
-	} else {
-		fmt.Print(appdata.ColorSuccess, "PASSED: TEST_", testId, ": Trades found in TradeCompleted state :", len(trades))
-	}
+	_checkOrderBook(t, "Terminate 3.1", 20, "=", "TradeCompleted", 2)
+	_exit()
+
+}
+func subtest_TerminateTrades_4(t *testing.T, testId int, testDesc string) {
+
+	fmt.Print(appdata.ColorReset, appdata.ColorBlue, "\nTEST_", testId, ": ", testDesc)
+
+	sqlquery := strings.Replace(startTrader_TblUserStrategies_setup, "%TRIGGERTIME",
+		time.Now().Local().Add(time.Minute*time.Duration(1)).Format("15:04:05"), -1) // execute after 1 min
+	db.DbRawExec(_resetOrderBook(sqlquery))
+
+	go StartTrader(true)
+	_checkOrderBook(t, "Terminate 4.1", 5, "=", "AwaitSignal", 2)
+
+	trades := db.ReadAllOrderBookFromDb("=", "AwaitSignal")
+	println(trades[0].Id)
+	sqlquery = strings.Replace(settings_exits_setVal, "%EXIT_ID", "all-terminate", -1)
+	db.DbRawExec(sqlquery)
+
+	_checkOrderBook(t, "Terminate 4.1", 20, "=", "Terminate", 2)
+	_exit()
+
 }
