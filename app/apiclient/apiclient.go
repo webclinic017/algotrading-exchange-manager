@@ -92,8 +92,9 @@ func copyApiSignalvalues(rec *appdata.ApiSignal_S, d *appdata.ApiSignal_S) {
 func Services(service string, date time.Time) bool {
 
 	p := requests.Params{
-		"sid":  service,
-		"date": date.Format("2006-01-02"),
+		"sid":   service,
+		"date":  date.Format("2006-01-02"),
+		"table": "all",
 	}
 	req := requests.Requests()
 	req.SetTimeout(120) // set timeout to 120 seconds, candle service requires time to respond

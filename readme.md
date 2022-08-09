@@ -94,7 +94,12 @@ go tool cover -html=coverage.out
 - [ ] Loggin file creation - clean ups and new daily file logic
 - [ ] Order placement - local
 
-## Version : v0.5.1
+
+## Version : v0.5.4
+- [x] 1Min Candles -API created. Copy from view to table. View updated @5pm, copy API invoked at 10pm every working day.
+
+
+## Version : v0.5.3
 - [x] Candles - 1 min candle timescaledb.view (3 day period) created. scheduled everyday @ 5pm
 - [x] Strategies - read live data
 - [x] Order placement - live testing

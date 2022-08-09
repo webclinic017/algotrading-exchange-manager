@@ -134,7 +134,7 @@ func preTradeOps() {
 
 func postTradeOps() {
 	srv.InfoLogger.Println("postTradeOps Started")
-	if !apiclient.Services("store_1min_candles", time.Now()) {
+	if !apiclient.Services("copy_candles_from_view", time.Now()) {
 		srv.ErrorLogger.Println("FAILED - postTradeOps/candle1min-converter")
 	}
 }

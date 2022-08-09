@@ -21,7 +21,7 @@ func Init() {
 	InitLogger()
 	InitTradeLogger()
 
-	InfoLogger.Printf("\n\n#######################################################################################\n|\tNew Instance of algotrading-exchange-manager v0.5.0 (Rel. Date: 30-May-2022) [02]   \n#######################################################################################\n")
+	InfoLogger.Printf("\n\n#######################################################################################\n|\tNew Instance of algotrading-exchange-manager v0.5.4 (Rel. Date: 09-August-2022) [00]   \n#######################################################################################\n")
 }
 
 func InitTradeLogger() {
