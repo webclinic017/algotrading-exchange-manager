@@ -1,36 +1,118 @@
 version: '3.4'
 
+networks:
+  gatekeeper_nw:
+    external: false
+    name: gatekeeper_nw
+
 services:
-  goticker:
-    image: paragba/algotrading-exchange-manager:latest
-    container_name: algoexmgr
+  algotrading-exchange-manager:  # !!! This service need to start with delay after DB starts, else issues connecting to DB at init()
+    image: paragba/algotrading-exchange-manager:v0.5.4
+    container_name: algotrading-exchange-manager
+    depends_on:
+      algotrading-db:
+        condition: service_healthy
     restart: unless-stopped
+    networks:
+      - gatekeeper_nw    
     environment:
       TZ: 'Asia/Kolkata'
-      ZERODHA_USER_ID         : ""
+      ZERODHA_LIVE_TEST       : "FALSE"                   # used for UnitTesting with Live trades placd on Zerodha
+      APP_LIVE_TRADING_MODE   : "TRUE"                    # not used 
+      DB_TBL_TICK_NSEFUT      : "ticks_nsefut"            # DB table names
+      DB_TBL_TICK_NSESTK      : "ticks_nsestk"
+      DB_TBL_USER_SYMBOLS     : "_symbols"
+      DB_TBL_USER_SETTING     : "_setting"
+      DB_TBL_USER_STRATEGIES  : "_strategies"
+      DB_TBL_ORDER_BOOK       : "_order_book"
+      DB_TBL_INSTRUMENTS      : "ticks_instr"
+      DB_TBL_CDL_VIEW_STK     : "view_1min_cdl_stk"
+      DB_TBL_CDL_VIEW_FUT     : "view_1min_cdl_fut"      
+      DB_TEST_PREFIX          : "_test"
+      DB_TBL_PREFIX_USER_ID   : "myname"    
       ZERODHA_PASSWORD        : ""
+      ZERODHA_USER_ID         : ""
       ZERODHA_API_KEY         : ""
       ZERODHA_API_SECRET      : ""
-      ZERODHA_PIN             : ""  # Set ZERODHA_TOTP_SECRET_KEY = `NOT-USED` , to use ZERODHA_PIN for twauth
-      ZERODHA_TOTP_SECRET_KEY : "NOT-USED"
+      ZERODHA_PIN             : ""
+      ZERODHA_TOTP_SECRET_KEY : ""                      # Key provided by Zerodha while enabling TOTP. Mandatory for trading API.
       ZERODHA_REQ_TOKEN_URL   : "https://kite.zerodha.com/connect/login?v=3&api_key="
-      APP_LIVE_TRADING_MODE   : "TRUE"
-      TIMESCALEDB_USERNAME    : ""
-      TIMESCALEDB_PASSWORD    : ""
-      TIMESCALEDB_ADDRESS     : ""
-      TIMESCALEDB_PORT        : ""
+      TIMESCALEDB_USERNAME    : "postgres"
+      TIMESCALEDB_PASSWORD    : "pgpwd"
+      TIMESCALEDB_ADDRESS     : "algotrading-db"
+      TIMESCALEDB_PORT        : "5432"
+      ALGO_ANALYSIS_ADDRESS   : "http://algotrading-analysis-service:5000/"
     volumes:
-      - ./algoExchMgr/log:/app/zfiles/log
+      - /algotrading/algoExchMgr:/app/zfiles/log
+    logging:
+        driver: "json-file"
+        options:
+          max-file: "5"   # number of files or file count
+          max-size: "10m" # file size    
     
 # Use the below code to spawn TimescaleDB Container
 
-  timescaledb:
+  algotrading-db:
     image: 'timescale/timescaledb:latest-pg14'
-    container_name: timescaledb
+    container_name: algotrading-db
     restart: unless-stopped
+    networks:
+      - gatekeeper_nw         
     environment:
+      - TZ='Asia/Kolkata'
       - PUID=1000
       - PGID=1000
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_PASSWORD=pgpwd
     ports:
-      - "5432:5432"
+      - "5405:5432"
+    volumes:
+      - /algotrading/algotrading-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+        driver: "json-file"
+        options:
+          max-file: "5"   # number of files or file count
+          max-size: "10m" # file size          
+      
+  algotrading-analysis-service:
+    image: paragba/algotrading-analysis-service:v0.4.5
+    container_name: algotrading-analysis-service
+    depends_on:
+      algotrading-db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      TZ: 'Asia/Kolkata'
+      TIMESCALEDB_NAME        : "algotrading"
+      TIMESCALEDB_ADDRESS     : "algotrading-db"
+      TIMESCALEDB_USER        : "postgres"
+      TIMESCALEDB_PASSWORD    : "pgpwd"
+      TIMESCALEDB_PORT        : "5432"
+      DB_TBL_PREFIX_USER_ID   : "myname"
+      DB_TBL_INSTRUMENTS      : "ticks_instr"
+      DB_TBL_TICK_NSEFUT      : "ticks_nsefut"
+      DB_TBL_TICK_NSESTK      : "ticks_nsestk"
+      DB_TBL_USER_SETTING     : "_setting"
+      DB_TBL_USER_SYMBOLS     : "_symbols"
+      DB_TBL_ORDER_BOOK       : "_order_book"
+      DB_TBL_USER_STRATEGIES  : "_strategies"
+      DB_TBL_CDL_VIEW_STK     : "view_1min_cdl_stk"
+      DB_TBL_CDL_VIEW_FUT     : "view_1min_cdl_fut"
+      DB_TEST_POSTFIX         : "_test"
+    #ports:
+      #- "5001:5000"
+    networks:
+      - gatekeeper_nw          
+    volumes:
+      - /algotrading/algo-analysis-service/candle_creator:/usr/local/bin/Data/candle_converter
+        
+    logging:
+        driver: "json-file"
+        options:
+          max-file: "5"   # number of files or file count
+          max-size: "10m" # file size          
+  

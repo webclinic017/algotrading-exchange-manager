@@ -1,66 +1,147 @@
-# Algo Trading
-## [ algotrading-exchange-manager | *algotrading-analysis-service* | *algotrading-trade-manager* ]
+#### USE AT OWN RISK. FOR DEMO PURPOSE
 
-This container is first part of 3 micro-services to perform algo trading. This container currently supports **Zerodha Kite API for NSE EQ, NSE FUTs and MCX FUTs**.
-### Documentation
-https://parag-b.github.io/algotrading-exchange-manager/
+
+# Algo Trading
+
+*Complete algotrading architecture using micro-services*. 
+
+**algotrading-exchange-manager** - Connects to Zerodha API. For **Ticker & Trading**.
+
+**algotrading-analysis-service** - Python based data analysis, implements **Strategies**.
+
+**algotrading-user-portal** - User Interface
 
 ### Features
+- Supports Zerodha Kite for NSE EQ and NSE FUTs Ticker & Trading
 - Auto Login
-- Ticker service registers websocket connection at 9am and closes 4pm on weekdays
-- Subscribe to instruments as specified by Token file.
-- Ticks are saved in Timescable DB (Use the docker compose provided to spawn)
-- *-FUT : Attributes to identify Futures instruments in DB
-- Compression Policy applied - Data older than 30 days will be auto compressed. Saves up to 90% of disk space.
-    
+- Ticker service registers web-socket connection at 9am and closes 4pm on weekdays
+- Ticks and 1 Min candles are saved in database
+- 1 Min candle table separate created for faster back-testing
+- *-FUT - Attribute to identify Futures instruments
 
 # How to use
-1. Use the docker-compose file
-2. Setup the env variable Zerodha Kite and Database settings
-3. Ensure env variable {PRODUCTION: 'true'} & Timezone is set correctly
+**Documentation** - https://parag-b.github.io/algotrading-exchange-manager/
+
+**Source code**: https://github.com/parag-b/goTicker
+
 
 # Docker Compose
     version: '3.4'
 
+    networks:
+    gatekeeper_nw:
+        external: false
+        name: gatekeeper_nw
+
     services:
-    goticker:
-        image: paragba/algotrading-exchange-manager:latest
+    algotrading-exchange-manager:  # !!! This service need to start with delay after DB starts, else issues connecting to DB at init()
+        image: paragba/algotrading-exchange-manager:v0.5.4
         container_name: algotrading-exchange-manager
+        depends_on:
+        algotrading-db:
+            condition: service_healthy
         restart: unless-stopped
+        networks:
+        - gatekeeper_nw    
         environment:
-            TZ: 'Asia/Kolkata'
-            ZERODHA_USER_ID         : ""
-            ZERODHA_PASSWORD        : ""
-            ZERODHA_API_KEY         : ""
-            ZERODHA_API_SECRET      : ""
-            ZERODHA_PIN             : "" # Set ZERODHA_TOTP_SECRET_KEY = `NOT-USED` , to use ZERODHA_PIN for twauth
-            ZERODHA_TOTP_SECRET_KEY : "NOT-USED"
-            ZERODHA_REQ_TOKEN_URL   : "https://kite.zerodha.com/connect/login?v=3&api_key="
-            APP_LIVE_TRADING_MODE   : "TRUE"
-            TIMESCALEDB_USERNAME    : ""
-            TIMESCALEDB_PASSWORD    : ""
-            TIMESCALEDB_ADDRESS     : ""
-            TIMESCALEDB_PORT        : ""
+        TZ: 'Asia/Kolkata'
+        ZERODHA_LIVE_TEST       : "FALSE"                   # used for UnitTesting with Live trades placd on Zerodha
+        APP_LIVE_TRADING_MODE   : "TRUE"                    # not used 
+        DB_TBL_TICK_NSEFUT      : "ticks_nsefut"            # DB table names
+        DB_TBL_TICK_NSESTK      : "ticks_nsestk"
+        DB_TBL_USER_SYMBOLS     : "_symbols"
+        DB_TBL_USER_SETTING     : "_setting"
+        DB_TBL_USER_STRATEGIES  : "_strategies"
+        DB_TBL_ORDER_BOOK       : "_order_book"
+        DB_TBL_INSTRUMENTS      : "ticks_instr"
+        DB_TBL_CDL_VIEW_STK     : "view_1min_cdl_stk"
+        DB_TBL_CDL_VIEW_FUT     : "view_1min_cdl_fut"      
+        DB_TEST_PREFIX          : "_test"
+        DB_TBL_PREFIX_USER_ID   : "myname"    
+        ZERODHA_PASSWORD        : ""
+        ZERODHA_USER_ID         : ""
+        ZERODHA_API_KEY         : ""
+        ZERODHA_API_SECRET      : ""
+        ZERODHA_PIN             : ""
+        ZERODHA_TOTP_SECRET_KEY : ""                      # Key provided by Zerodha while enabling TOTP. Mandatory for trading API.
+        ZERODHA_REQ_TOKEN_URL   : "https://kite.zerodha.com/connect/login?v=3&api_key="
+        TIMESCALEDB_USERNAME    : "postgres"
+        TIMESCALEDB_PASSWORD    : "pgpwd"
+        TIMESCALEDB_ADDRESS     : "algotrading-db"
+        TIMESCALEDB_PORT        : "5432"
+        ALGO_ANALYSIS_ADDRESS   : "http://algotrading-analysis-service:5000/"
         volumes:
-        - ./dockerTest/config:/app/app/zfiles/config
-        - ./dockerTest/log:/app/app/zfiles/log
-        
+        - /algotrading/algoExchMgr:/app/zfiles/log
+        logging:
+            driver: "json-file"
+            options:
+            max-file: "5"   # number of files or file count
+            max-size: "10m" # file size    
+    
     # Use the below code to spawn TimescaleDB Container
-    timescaledb:
-        image: 'timescale/timescaledb:latest-pg12'
-        container_name: timescaledb
+
+    algotrading-db:
+        image: 'timescale/timescaledb:latest-pg14'
+        container_name: algotrading-db
         restart: unless-stopped
+        networks:
+        - gatekeeper_nw         
         environment:
+        - TZ='Asia/Kolkata'
         - PUID=1000
         - PGID=1000
-        - POSTGRES_PASSWORD=pgpwdChangeMe
+        - POSTGRES_PASSWORD=pgpwd
         ports:
-        - "5432:5432"
-
-
-Source code: https://github.com/parag-b/algotrading-exchange-manager
-`Visit github project page for documentation support `
-
+        - "5405:5432"
+        volumes:
+        - /algotrading/algotrading-db:/var/lib/postgresql/data
+        healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U postgres"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+        logging:
+            driver: "json-file"
+            options:
+            max-file: "5"   # number of files or file count
+            max-size: "10m" # file size          
+        
+    algotrading-analysis-service:
+        image: paragba/algotrading-analysis-service:v0.4.5
+        container_name: algotrading-analysis-service
+        depends_on:
+        algotrading-db:
+            condition: service_healthy
+        restart: unless-stopped
+        environment:
+        TZ: 'Asia/Kolkata'
+        TIMESCALEDB_NAME        : "algotrading"
+        TIMESCALEDB_ADDRESS     : "algotrading-db"
+        TIMESCALEDB_USER        : "postgres"
+        TIMESCALEDB_PASSWORD    : "pgpwd"
+        TIMESCALEDB_PORT        : "5432"
+        DB_TBL_PREFIX_USER_ID   : "myname"
+        DB_TBL_INSTRUMENTS      : "ticks_instr"
+        DB_TBL_TICK_NSEFUT      : "ticks_nsefut"
+        DB_TBL_TICK_NSESTK      : "ticks_nsestk"
+        DB_TBL_USER_SETTING     : "_setting"
+        DB_TBL_USER_SYMBOLS     : "_symbols"
+        DB_TBL_ORDER_BOOK       : "_order_book"
+        DB_TBL_USER_STRATEGIES  : "_strategies"
+        DB_TBL_CDL_VIEW_STK     : "view_1min_cdl_stk"
+        DB_TBL_CDL_VIEW_FUT     : "view_1min_cdl_fut"
+        DB_TEST_POSTFIX         : "_test"
+        #ports:
+        #- "5001:5000"
+        networks:
+        - gatekeeper_nw          
+        volumes:
+        - /algotrading/algo-analysis-service/candle_creator:/usr/local/bin/Data/candle_converter
+        logging:
+            driver: "json-file"
+            options:
+            max-file: "5"   # number of files or file count
+            max-size: "10m" # file size 
 
 ---
 ## Development
@@ -97,7 +178,12 @@ go tool cover -html=coverage.out
 - [x] API Signal structure modified. OrderBook table updated
 - [x] Order placement - setup for live trade
 
-## Version : v0.5.1
+
+## Version : v0.5.4
+- [x] 1Min Candles -API created. Copy from view to table. View updated @5pm, copy API invoked at 10pm every working day.
+
+
+## Version : v0.5.3
 - [x] Candles - 1 min candle timescaledb.view (3 day period) created. scheduled everyday @ 5pm
 - [x] Strategies - read live data
 - [x] Order placement - live testing

@@ -91,7 +91,7 @@ func DbInit() bool {
 		s = s && createTable("DB_TBL_CDL_VIEW_STK", DB_VIEW_CREATE_STK)
 		s = s && createTable("DB_TBL_CDL_VIEW_FUT", DB_VIEW_CREATE_FUT)
 
-		// schedule views to run @ 5pm everyday
+		// schedule views to run @ 5pm everyday, copy api called at 10pm
 		views_reschedule()
 
 		if s {
