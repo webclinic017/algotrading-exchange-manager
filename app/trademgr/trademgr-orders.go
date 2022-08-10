@@ -131,7 +131,13 @@ func tradeExit(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 	} else {
 
 		if order.Info.QtyFilledEntr > 0 { // check if order has been filled, only then place exit order
-			orderId := finalizeOrder(*order, ts, time.Now(), order.Info.QtyFilledEntr, 0, false)
+
+			sell := 1.0
+			if order.Info.QtyLotSymbol > 0 {
+				sell = order.Info.QtyFilledEntr / order.Info.QtyLotSymbol
+			}
+
+			orderId := finalizeOrder(*order, ts, time.Now(), sell, 0, false)
 
 			if orderId != 0 {
 				order.Info.OrderIdExit = orderId
@@ -196,12 +202,14 @@ func getLowestPrice(instr string, dir string) float64 {
 
 // #endif
 
+// BUG: handle when order is rejected
+
 /* option's at market price. equity and futures are limit order with limit value form Targets.Entry value */
 func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDate time.Time, qty float64, orderId uint64, enter bool) (orderID uint64) {
 
 	var orderParam kiteconnect.OrderParams
 
-	orderParam.Tag = ts.Strategy
+	orderParam.Tag = ts.Strategy[:20] // Kite - Max 20 characters allowed
 	orderParam.Product = ts.Parameters.Kite_Setting.Products
 	orderParam.Validity = ts.Parameters.Kite_Setting.Validities
 
@@ -256,6 +264,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 	orderParam.Tradingsymbol, symbolMinQty = deriveInstrumentsName(order, ts, time.Now())
 	orderParam.Quantity = int(symbolMinQty * qty)
 	order.Info.TradingSymbol = orderParam.Tradingsymbol
+	order.Info.QtyLotSymbol = symbolMinQty
 
 	if orderId == 0 { // new order
 		return kite.ExecOrder(orderParam, ts.Parameters.Kite_Setting.Varieties)

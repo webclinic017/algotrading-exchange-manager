@@ -166,6 +166,7 @@ type Info_S struct {
 	QtyReq            float64 `json:"qty_req"`
 	QtyFilledEntr     float64 `json:"qty_filled_entr"`
 	QtyFilledExit     float64 `json:"qty_filled_exit"`
+	QtyLotSymbol      float64 `json:"qty_lot_symbol"`
 	UserExitRequested bool    `json:"user_exit_requested"`
 	AvgPriceEnter     float64 `json:"avg_price_entr"`
 	AvgPriceExit      float64 `json:"avg_price_exit"`

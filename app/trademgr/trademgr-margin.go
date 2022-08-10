@@ -53,7 +53,7 @@ func getOrderMargin(order appdata.OrderBook_S, ts appdata.UserStrategies_S, tm t
 		deriveInstrumentsName(order, ts, tm)
 
 	OrderMargins, err := kite.FetchOrderMargins(marginParam)
-
+	// BUG: when values return err, cancel the order placement
 	if err != nil {
 		srv.ErrorLogger.Println(err)
 	}
