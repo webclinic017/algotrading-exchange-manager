@@ -272,6 +272,8 @@ var sqlCreateOrder = `INSERT INTO  %DB_TBL_ORDER_BOOK (
 	VALUES
 	($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);`
 
+var sqlLastInsertId = `SELECT LASTVAL();`
+
 var sqlUpdateOrder = ` UPDATE %DB_TBL_ORDER_BOOK SET
 	date = $1,
 	instr = $2,
@@ -288,23 +290,6 @@ var sqlUpdateApiEntr = `UPDATE %DB_TBL_ORDER_BOOK SET api_signal_entr = $1 	WHER
 var sqlUpdateApiExit = `UPDATE %DB_TBL_ORDER_BOOK SET api_signal_exit = $1 	WHERE id = $2;`
 var sqlUpdateOrdersEntr = `UPDATE %DB_TBL_ORDER_BOOK SET orders_entr = $1 	WHERE id = $2;`
 var sqlUpdateOrdersExit = `UPDATE %DB_TBL_ORDER_BOOK SET orders_exit = $1 	WHERE id = $2;`
-
-var sqlOrderCount = `SELECT COUNT(*) FROM %DB_TBL_ORDER_BOOK
-						WHERE  (
-							instr = $1
-						AND
-							date = $2
-						AND
-							strategy = $3)`
-
-var sqlOrderId = `
-	   SELECT id FROM %DB_TBL_ORDER_BOOK
-	   WHERE  (
-	   		instr = $1
-	   	AND
-	   		date = $2
-	   	AND
-	   		strategy = $3)`
 
 // ---------------------------------- query-resolver  ----------------------------------
 

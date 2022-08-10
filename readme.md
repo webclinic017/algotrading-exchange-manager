@@ -85,14 +85,17 @@ go tool cover -html=coverage.out
 
 
 ## Version : In-Development
-- [ ] API Signal structure modified. OrderBook table updated
 - [ ] Candle table - backtesting
 - [ ] Post candle cleanup
 - [ ] Evaluate movement of all *-FUT to ticks_nsefut table?
 - [ ] fast data (buffer) analysis. [tick based strategies]
 - [ ] DB buffer size optimisation
 - [ ] Loggin file creation - clean ups and new daily file logic
-- [ ] Order placement - local
+
+## Version : v0.5.3
+- [x] golang v1.18
+- [x] API Signal structure modified. OrderBook table updated
+- [x] Order placement - setup for live trade
 
 ## Version : v0.5.1
 - [x] Candles - 1 min candle timescaledb.view (3 day period) created. scheduled everyday @ 5pm

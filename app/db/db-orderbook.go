@@ -86,12 +86,12 @@ func ReadAllOrderBookFromDb(condition string, status string) []*appdata.OrderBoo
 	err = pgxscan.Select(ctx, dbPool, &order, sqlquery)
 
 	if err != nil {
-		srv.ErrorLogger.Printf("OrdereBook read error %v\n", err.Error())
+		srv.ErrorLogger.Printf("OrderBook read error %v\n", err.Error())
 		return nil
 	}
 
 	if len(order) == 0 {
-		srv.InfoLogger.Printf("OrdereBook 0 %v\n", err)
+		srv.InfoLogger.Printf("OrderBook 0 %v\n", err)
 		return nil
 	}
 	return order
@@ -163,7 +163,16 @@ func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {
 
 	if tr.Id == 0 {
 
-		_, err := myCon.Exec(ctx, dbSqlQuery(sqlCreateOrder),
+		var c uint16
+
+		tx, err := myCon.Begin(ctx)
+		if err != nil {
+			srv.ErrorLogger.Printf("Order Entry : Unable to create new order for strategy-symbol in DB: %v\n", err)
+			return 0
+		}
+
+		//
+		_, err = myCon.Exec(ctx, dbSqlQuery(sqlCreateOrder),
 			tr.Date,
 			tr.Instr,
 			tr.Strategy,
@@ -179,32 +188,18 @@ func StoreOrderBookInDb(tr appdata.OrderBook_S) uint16 {
 		)
 		if err != nil {
 			srv.ErrorLogger.Printf("Order Entry : Unable to create new order for strategy-symbol in DB: %v\n", err)
+			return 0
 		}
-
-		var c uint16
-		err = myCon.QueryRow(ctx, dbSqlQuery(sqlOrderCount),
-			tr.Instr,
-			tr.Date,
-			tr.Strategy).Scan(&c)
-		// RULE: Instrument, Date, Strategy (combined) must be unique
-
+		err = myCon.QueryRow(ctx, sqlLastInsertId).Scan(&c)
 		if err != nil {
-			srv.ErrorLogger.Printf("OrderBook DB store error %v\n", err)
+			srv.ErrorLogger.Printf("Order Entry : Unable to create new order for strategy-symbol in DB: %v\n", err)
 			return 0
 		}
 
-		if c == 1 {
-			err = myCon.QueryRow(ctx, dbSqlQuery(sqlOrderId),
-				tr.Instr,
-				tr.Date,
-				tr.Strategy).Scan(&c)
+		tx.Commit(ctx)
 
-			if err != nil {
-				srv.ErrorLogger.Printf("OrderBook DB store error %v\n", err)
-				return 0
-			}
-			return c
-		}
+		return c
+
 	} else {
 
 		_, err := myCon.Exec(ctx, dbSqlQuery(sqlUpdateOrder),
