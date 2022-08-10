@@ -12,12 +12,12 @@
 **algotrading-user-portal** - User Interface
 
 ### Features
-- Supports Zerodha Kite for NSE EQ and NSE FUTs Ticker & Trading
-- Auto Login
-- Ticker service registers web-socket connection at 9am and closes 4pm on weekdays
-- Ticks and 1 Min candles are saved in database
-- 1 Min candle table separate created for faster back-testing
+- Supports Zerodha Kite for NSE Equity, Futures and Options - For Ticker & Trading
+- Ticker service starts at 9am and closes 4pm on weekdays. Holiday/Spl days not conisidered
+- Ticks are saved in Timescale DB
+- 1 Min candle table separate created for faster back-testing and reduced RAM consumption
 - *-FUT - Attribute to identify Futures instruments
+- Complete auto login
 
 # How to use
 **Documentation** - https://parag-b.github.io/algotrading-exchange-manager/
@@ -171,17 +171,20 @@ go tool cover -html=coverage.out
 - [ ] Evaluate movement of all *-FUT to ticks_nsefut table?
 - [ ] fast data (buffer) analysis. [tick based strategies]
 - [ ] DB buffer size optimisation
-- [ ] Loggin file creation - clean ups and new daily file logic
+- [ ] Loggin file creation - clean ups and new daily/symbol wise file logic
+
+## Version : v0.5.5
+- [x] Sell Qty bug fix [Issue #40]
+- [x] Trades resumes in 2 states only - "AwaitSignal", "TradeMonitoring"
+- [x]  New Order creation in DB, replaced search logic with LASTVAL transaction/commit operation [Issue #36]
+
+## Version : v0.5.4
+- [x] 1Min Candles -API created. Copy from view to table. View updated @5pm, copy API invoked at 10pm every working day.
 
 ## Version : v0.5.3
 - [x] golang v1.18
 - [x] API Signal structure modified. OrderBook table updated
 - [x] Order placement - setup for live trade
-
-
-## Version : v0.5.4
-- [x] 1Min Candles -API created. Copy from view to table. View updated @5pm, copy API invoked at 10pm every working day.
-
 
 ## Version : v0.5.3
 - [x] Candles - 1 min candle timescaledb.view (3 day period) created. scheduled everyday @ 5pm
