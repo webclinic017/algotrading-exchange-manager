@@ -32,7 +32,7 @@ func InitTradeLogger() {
 	} else {
 		mwtl = io.MultiWriter(logFile, os.Stdout)
 	}
-	TradesLogger = log.New(mwtl, string(appdata.ColorInfo), log.Ltime)
+	TradesLogger = log.New(mwtl, string(appdata.ColorInfo), log.Ltime|log.Lshortfile)
 
 }
 
@@ -45,7 +45,7 @@ func InitLogger() {
 		mw = io.MultiWriter(logFile, os.Stdout)
 	}
 
-	InfoLogger = log.New(mw, string(appdata.ColorInfo)+" INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	WarningLogger = log.New(mw, string(appdata.ColorWarning)+"WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
-	ErrorLogger = log.New(mw, string(appdata.ColorError)+"ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	InfoLogger = log.New(mw, string(appdata.ColorInfo)+" INFO: ", log.Ltime|log.Lshortfile)
+	WarningLogger = log.New(mw, string(appdata.ColorWarning)+"WARNING: ", log.Ltime|log.Lshortfile)
+	ErrorLogger = log.New(mw, string(appdata.ColorError)+"ERROR: ", log.Ltime|log.Lshortfile)
 }

@@ -39,25 +39,27 @@ func StartTrader(daystart bool) {
 	tradeUserStrategies := db.ReadUserStrategiesFromDb()
 
 	// --------------------------------- Resume operations on restart or new day start
-	trSig := db.ReadAllOrderBookFromDb("!=", "Completed")
-	var s bool = false
-	for eachSymbol := range trSig {
-		s = false
-		for eachStrategy := range tradeUserStrategies {
-			if trSig[eachSymbol].Strategy == tradeUserStrategies[eachStrategy].Strategy {
+	resumeStates := [4]string{"AwaitSignal", "TradeMonitoring"}
+	for s := range resumeStates {
+		trSig := db.ReadAllOrderBookFromDb("=", resumeStates[s])
+		var s bool = false
+		for eachSymbol := range trSig {
+			s = false
+			for eachStrategy := range tradeUserStrategies {
+				if trSig[eachSymbol].Strategy == tradeUserStrategies[eachStrategy].Strategy {
 
-				wgTrademgr.Add(1)
-				srv.TradesLogger.Println(appdata.ColorPurple, "\n\nStrategy being resumed\n", trSig[eachSymbol])
-				go operateSymbol("nil", tradeUserStrategies[eachStrategy], trSig[eachSymbol].Id, wgTrademgr)
-				s = true
-				break
+					wgTrademgr.Add(1)
+					srv.TradesLogger.Println(appdata.ColorPurple, "\n\nStrategy being resumed\n", trSig[eachSymbol])
+					go operateSymbol("nil", tradeUserStrategies[eachStrategy], trSig[eachSymbol].Id, wgTrademgr)
+					s = true
+					break
+				}
+			}
+			if !s {
+				srv.TradesLogger.Println(appdata.ColorError, "\n\nStrategy could not be resumed\n", trSig[eachSymbol])
 			}
 		}
-		if !s {
-			srv.TradesLogger.Println(appdata.ColorError, "\n\nStrategy could not be resumed\n", trSig[eachSymbol])
-		}
 	}
-
 	// --------------------------------- Setup operators for each symbol in every strategy
 	if daystart {
 		for eachStrategy := range tradeUserStrategies {
