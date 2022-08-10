@@ -60,8 +60,84 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE." />
 </head>
 <body class="tc-body">
 <!--~~ Raw markup for the top of the body section ~~-->
+<div class="tc-remove-when-wiki-loaded">
+<style scoped>.tc-splash-text {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 16px;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+	margin: 20px auto 0;
+	width: 200px;
+	text-align: center;
+	color: rgba(0, 0, 0, 0.87);
+	fill: rgba(0, 0, 0, 0.87);
+}.tc-splash-text img {
+	width: 150px;
+	
+  -webkit-box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+     -moz-box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+          box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
 
-Loading...
+}html body.tc-body {
+	background: #f4f4f4;
+}/*
+Spinner from https://github.com/tobiasahlin/SpinKit/ by Tobias AhlinThe MIT License (MIT)Copyright (c) 2015 Tobias AhlinPermission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/.tc-splash-spinner {
+	margin: 20px auto 0;
+	width: 70px;
+	text-align: center;
+}.tc-splash-spinner > div {
+	width: 18px;
+	height: 18px;
+	border-radius: 100%;
+	display: inline-block;
+	-webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+	animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+	background-color: #f88;
+}.tc-splash-spinner .tc-splash-bounce-1 {
+	-webkit-animation-delay: -0.32s;
+	animation-delay: -0.32s;
+	background-color: #8f8;
+}.tc-splash-spinner .tc-splash-bounce-2 {
+	-webkit-animation-delay: -0.16s;
+	animation-delay: -0.16s;
+	background-color: #88f;
+}@-webkit-keyframes sk-bouncedelay {
+	0%, 80%, 100% { -webkit-transform: scale(0) }
+	40% { -webkit-transform: scale(1.0) }
+}@keyframes sk-bouncedelay {
+	0%, 80%, 100% { 
+	-webkit-transform: scale(0);
+	transform: scale(0);
+	} 40% { 
+	-webkit-transform: scale(1.0);
+	transform: scale(1.0);
+	}
+}
+</style><div class="tc-splash-spinner">
+  <div class="tc-splash-bounce-1"></div>
+  <div class="tc-splash-bounce-2"></div>
+  <div class="tc-splash-bounce-3"></div>
+</div><div class="tc-splash-text">
+Please wait while parag-b/algotrading is loading
+</div><!-- Demonstrating how to embed a bitmap graphic --> 
+<div class="tc-splash-text">
+<img src="data:image/jpeg;base64," width="100"/>
+</div><!-- Demonstrating how to embed a wikitext SVG graphic --> 
+<div class="tc-splash-text">
+<svg width="22pt" height="22pt" viewBox="0 0 128 128"><path d="M64 0l54.56 32v64L64 128 9.44 96V32L64 0zm21.127 95.408c-3.578-.103-5.15-.094-6.974-3.152l-1.42.042c-1.653-.075-.964-.04-2.067-.097-1.844-.07-1.548-1.86-1.873-2.8-.52-3.202.687-6.43.65-9.632-.014-1.14-1.593-5.17-2.157-6.61-1.768.34-3.546.406-5.34.497-4.134-.01-8.24-.527-12.317-1.183-.8 3.35-3.16 8.036-1.21 11.44 2.37 3.52 4.03 4.495 6.61 4.707 2.572.212 3.16 3.18 2.53 4.242-.55.73-1.52.864-2.346 1.04l-1.65.08c-1.296-.046-2.455-.404-3.61-.955-1.93-1.097-3.925-3.383-5.406-5.024.345.658.55 1.938.24 2.53-.878 1.27-4.665 1.26-6.4.47-1.97-.89-6.73-7.162-7.468-11.86 1.96-3.78 4.812-7.07 6.255-11.186-3.146-2.05-4.83-5.384-4.61-9.16l.08-.44c-3.097.59-1.49.37-4.82.628-10.608-.032-19.935-7.37-14.68-18.774.34-.673.664-1.287 1.243-.994.466.237.4 1.18.166 2.227-3.005 13.627 11.67 13.732 20.69 11.21.89-.25 2.67-1.936 3.905-2.495 2.016-.91 4.205-1.282 6.376-1.55 5.4-.63 11.893 2.276 15.19 2.37 3.3.096 7.99-.805 10.87-.615 2.09.098 4.143.483 6.16 1.03 1.306-6.49 1.4-11.27 4.492-12.38 1.814.293 3.213 2.818 4.25 4.167 2.112-.086 4.12.46 6.115 1.066 3.61-.522 6.642-2.593 9.833-4.203-3.234 2.69-3.673 7.075-3.303 11.127.138 2.103-.444 4.386-1.164 6.54-1.348 3.507-3.95 7.204-6.97 7.014-1.14-.036-1.805-.695-2.653-1.4-.164 1.427-.81 2.7-1.434 3.96-1.44 2.797-5.203 4.03-8.687 7.016-3.484 2.985 1.114 13.65 2.23 15.594 1.114 1.94 4.226 2.652 3.02 4.406-.37.58-.936.785-1.54 1.01l-.82.11zm-40.097-8.85l.553.14c.694-.27 2.09.15 2.83.353-1.363-1.31-3.417-3.24-4.897-4.46-.485-1.47-.278-2.96-.174-4.46l.02-.123c-.582 1.205-1.322 2.376-1.72 3.645-.465 1.71 2.07 3.557 3.052 4.615l.336.3z" fill-rule="evenodd"/></svg>
+</div></div>
 
 <!--~~ Static styles ~~-->
 <div id="styleArea">
@@ -861,7 +937,7 @@ Error message and password prompt
 {"created":"20220310065757028","creator":"parag-b","title":"$:/state/plugin-info-1680566216-$:/plugins/kookma/shiraz---1288778165","text":"contents","modified":"20220322074050708","modifier":"parag-b"},
 {"created":"20220810131040699","creator":"parag-b","title":"$:/state/shiraz/slider-macro/Algo Setup (how to use) guide/\u003C\u003Cmy_ids>>","text":"closed","modified":"20220810131312691","modifier":"parag-b"},
 {"created":"20220810131000100","creator":"parag-b","title":"$:/state/shiraz/slider-macro/Algo Setup (how to use) guide/Slider and custom classes","text":"open","modified":"20220810131023275","modifier":"parag-b"},
-{"created":"20220310064710165","creator":"parag-b","title":"$:/state/showeditpreview","text":"yes","modified":"20220810130838387","modifier":"parag-b"},
+{"created":"20220310064710165","creator":"parag-b","title":"$:/state/showeditpreview","text":"no","modified":"20220810151754742","modifier":"parag-b"},
 {"created":"20220322062703061","creator":"parag-b","title":"$:/state/sidebar","text":"yes","modified":"20220810150533064","modifier":"parag-b"},
 {"created":"20220322074058717","creator":"parag-b","title":"$:/state/tab--1498284803","text":"$:/core/ui/AdvancedSearch/Shadows","modified":"20220522030831440","modifier":"parag-b"},
 {"created":"20220309120117104","creator":"parag-b","title":"$:/state/tab--1963855381","text":"$:/core/ui/ControlPanel/StoryView","modified":"20220810063652642","modifier":"parag-b"},
@@ -978,7 +1054,7 @@ Error message and password prompt
 {"created":"20220319155200764","creator":"parag-b","title":"$:/state/toc/TableOfContents/tradeMgr-tm.db-settings-522754725","text":"open","modified":"20220319155200764","modifier":"parag-b"},
 {"title":"$:/status/RequireReloadDueToPluginChange","text":"no"},
 {"created":"20220310152751323","creator":"p","title":"$:/status/UserName","text":"parag-b","modified":"20220310152752633","modifier":"parag-"},
-{"title":"$:/StoryList","created":"20220810150920199","creator":"parag-b","text":"","list":"[[splash screen]] Menu","modified":"20220810151503161","modifier":"parag-b"},
+{"title":"$:/StoryList","text":"","list":"[[Urgent Issues]] [[splash screen]] Menu"},
 {"created":"20220411050124312","creator":"parag-b","title":"$:/tags/MenuBar","list":"$:/plugins/tiddlywiki/menubar/items/hamburger $:/plugins/tiddlywiki/menubar/items/topleftbar $:/plugins/tiddlywiki/menubar/items/search $:/plugins/tiddlywiki/menubar/items/contents $:/plugins/tiddlywiki/menubar/items/pagecontrols $:/plugins/tiddlywiki/menubar/items/server $:/plugins/tiddlywiki/menubar/items/toprightbar $:/plugins/tiddlywiki/menubar/items/sidebar","modified":"20220411050133955","modifier":"parag-b"},
 {"created":"20220411050401793","creator":"parag-b","title":"$:/tags/PageControls","list":"$:/core/ui/Buttons/home $:/core/ui/Buttons/refresh $:/core/ui/Buttons/close-all $:/core/ui/Buttons/fold-all $:/core/ui/Buttons/unfold-all $:/core/ui/Buttons/permaview $:/core/ui/Buttons/new-tiddler $:/core/ui/Buttons/new-journal $:/core/ui/Buttons/new-image $:/core/ui/Buttons/import $:/core/ui/Buttons/export-page $:/core/ui/Buttons/advanced-search $:/core/ui/Buttons/manager $:/core/ui/Buttons/tag-manager $:/core/ui/Buttons/language $:/core/ui/Buttons/palette $:/core/ui/Buttons/theme $:/core/ui/Buttons/storyview $:/core/ui/Buttons/encryption $:/core/ui/Buttons/timestamp $:/core/ui/Buttons/full-screen $:/core/ui/Buttons/print $:/core/ui/Buttons/save-wiki $:/core/ui/Buttons/more-page-actions $:/core/ui/Buttons/control-panel $:/plugins/kookma/shiraz/ui/Buttons/SwitchPalette","modified":"20220411050441982","modifier":"parag-b"},
 {"created":"20220309120111696","creator":"parag-b","title":"$:/theme","text":"$:/themes/tiddlywiki/vanilla","modified":"20220319153729166","modifier":"parag-b"},
@@ -1067,7 +1143,7 @@ Error message and password prompt
 {"created":"20220412150533872","creator":"parag-b","text":"\u003C\u003Ctable-csv header:no class:\"table-borderless\" format:\"todo transclude\">>\n\u003C!---\n-, Log file creation - clean ups and new daily file logic\n--->","title":"Overall","tags":"task","due-date":"2022-04-30","priority":"high","status":"not started","modified":"20220413070912419","modifier":"parag-b"},
 {"created":"20220522023454965","creator":"parag-b","text":"Pending","tags":"Status","title":"Pending","modified":"20220522023706460","modifier":"parag-b"},
 {"created":"20220404121623292","creator":"parag-b","text":"","tags":"TableOfContents","title":"References/Data","modified":"20220810122634065","modifier":"parag-b"},
-{"created":"20220810151527685","creator":"parag-b","text":"\u003Cdiv class=\"tc-remove-when-wiki-loaded\">\nLoading...\n\u003C/div>","tags":"$:/tags/RawMarkupWikified/TopBody","title":"splash screen","modified":"20220810151606945","modifier":"parag-b"},
+{"created":"20220810151527685","creator":"parag-b","text":"\\import [[$:/core/ui/PageMacros]] [all[shadows+tiddlers]tag[$:/tags/Macro]!has[draft.of]]\n\\rules only filteredtranscludeinline transcludeinline macrocallinline\n\u003Cdiv class=\"tc-remove-when-wiki-loaded\">\n\u003Cstyle scoped>\n\n.tc-splash-text {\n    font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\";\n    font-size: 16px;\n    text-rendering: optimizeLegibility;\n    -webkit-font-smoothing: antialiased;\n\tmargin: 20px auto 0;\n\twidth: 200px;\n\ttext-align: center;\n\tcolor: \u003C\u003Ccolour foreground>>;\n\tfill: \u003C\u003Ccolour foreground>>;\n}\n\n.tc-splash-text img {\n\twidth: 150px;\n\t\u003C\u003Cbox-shadow \"2px 2px 10px rgba(0, 0, 0, 0.5)\">>\n}\n\nhtml body.tc-body {\n\tbackground: \u003C\u003Ccolour page-background>>;\n}\n\n/*\nSpinner from https://github.com/tobiasahlin/SpinKit/ by Tobias Ahlin\n\nThe MIT License (MIT)\n\nCopyright (c) 2015 Tobias Ahlin\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n*/\n\n.tc-splash-spinner {\n\tmargin: 20px auto 0;\n\twidth: 70px;\n\ttext-align: center;\n}\n\n.tc-splash-spinner > div {\n\twidth: 18px;\n\theight: 18px;\n\tborder-radius: 100%;\n\tdisplay: inline-block;\n\t-webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;\n\tanimation: sk-bouncedelay 1.4s infinite ease-in-out both;\n\tbackground-color: #f88;\n}\n\n.tc-splash-spinner .tc-splash-bounce-1 {\n\t-webkit-animation-delay: -0.32s;\n\tanimation-delay: -0.32s;\n\tbackground-color: #8f8;\n}\n\n.tc-splash-spinner .tc-splash-bounce-2 {\n\t-webkit-animation-delay: -0.16s;\n\tanimation-delay: -0.16s;\n\tbackground-color: #88f;\n}\n\n@-webkit-keyframes sk-bouncedelay {\n\t0%, 80%, 100% { -webkit-transform: scale(0) }\n\t40% { -webkit-transform: scale(1.0) }\n}\n\n@keyframes sk-bouncedelay {\n\t0%, 80%, 100% { \n\t-webkit-transform: scale(0);\n\ttransform: scale(0);\n\t} 40% { \n\t-webkit-transform: scale(1.0);\n\ttransform: scale(1.0);\n\t}\n}\n\u003C/style>\n\n\u003Cdiv class=\"tc-splash-spinner\">\n  \u003Cdiv class=\"tc-splash-bounce-1\">\u003C/div>\n  \u003Cdiv class=\"tc-splash-bounce-2\">\u003C/div>\n  \u003Cdiv class=\"tc-splash-bounce-3\">\u003C/div>\n\u003C/div>\n\n\u003Cdiv class=\"tc-splash-text\">\nPlease wait while {{$:/SiteTitle}} is loading\n\u003C/div>\n\n\u003C!-- Demonstrating how to embed a bitmap graphic --> \n\u003Cdiv class=\"tc-splash-text\">\n\u003Cimg src=\"data:image/jpeg;base64,{{New Release Banner||$:/core/templates/plain-text-tiddler}}\" width=\"100\"/>\n\u003C/div>\n\n\u003C!-- Demonstrating how to embed a wikitext SVG graphic --> \n\u003Cdiv class=\"tc-splash-text\">\n{{$:/core/icon||$:/core/templates/plain-text-tiddler}}\n\u003C/div>\n\n\u003C/div>\n","tags":"$:/tags/RawMarkupWikified/TopBody","title":"splash screen","modified":"20220810151755663","modifier":"parag-b"},
 {"created":"20220522102442174","creator":"parag-b","text":"\u003C\u003Clist-links \"[tag[srv]]\">>","tags":"exchange-manager","title":"srv","modified":"20220810134539122","modifier":"parag-b"},
 {"created":"20220810121051108","creator":"parag-b","text":"\u003C\u003Calert info \"info alert\" width:100%>>\n","tags":"[[1. Live Trading Setup]]","title":"Step 1: Setup Dockers","modified":"20220810122557677","modifier":"parag-b"},
 {"created":"20220810121124692","creator":"parag-b","text":"","tags":"[[1. Live Trading Setup]]","title":"Step 2: Understand Tables","modified":"20220810121501410","modifier":"parag-b"},
