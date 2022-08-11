@@ -209,7 +209,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 
 	var orderParam kiteconnect.OrderParams
 
-	orderParam.Tag = ts.Strategy[:20] // Kite - Max 20 characters allowed
+	orderParam.Tag = ts.Strategy[0:20] // Kite - Max 20 characters allowed
 	orderParam.Product = ts.Parameters.Kite_Setting.Products
 	orderParam.Validity = ts.Parameters.Kite_Setting.Validities
 
