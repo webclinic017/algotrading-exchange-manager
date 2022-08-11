@@ -172,6 +172,13 @@ go tool cover -html=coverage.out
 - [ ] fast data (buffer) analysis. [tick based strategies]
 - [ ] DB buffer size optimisation
 - [ ] Loggin file creation - clean ups and new daily/symbol wise file logic
+- [ ] Resume strategy
+- [ ] Check is tagging from Kite is required?
+
+## Version : v0.5.8
+- [x] Resume disabled, to be evaluatede for all conditions.
+- [x] Bug fix - Sell qty issue for EQ, Trim length from 0:20 (tag for zerodha kite api)
+- [x] Qty requested is now the actual (multiplied with Lot size)
 
 ## Version : v0.5.5
 - [x] Sell Qty bug fix [Issue #40]

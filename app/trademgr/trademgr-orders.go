@@ -94,7 +94,7 @@ func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool {
 		entryTime := time.Now()
 
 		userMargin := kite.GetUserMargin()
-		orderMargin := getOrderMargin(*order, us, entryTime)
+		orderMargin, marginQty := getOrderMargin(*order, us, entryTime)
 
 		var odMargin float64 = 0
 		if len(orderMargin) != 0 {
@@ -108,7 +108,7 @@ func tradeEnter(order *appdata.OrderBook_S, us appdata.UserStrategies_S) bool {
 		if order.Info.QtyReq == 0 {
 			srv.TradesLogger.Print("Order size eval failed for ", order.Strategy, " Order Size : ", order.Info.QtyReq)
 		} else {
-
+			order.Info.QtyReq = order.Info.QtyReq * marginQty
 			orderId := finalizeOrder(*order, us, entryTime, order.Info.QtyReq, 0, true)
 
 			if orderId != 0 {
@@ -132,12 +132,7 @@ func tradeExit(order *appdata.OrderBook_S, ts appdata.UserStrategies_S) bool {
 
 		if order.Info.QtyFilledEntr > 0 { // check if order has been filled, only then place exit order
 
-			sell := 1.0
-			if order.Info.QtyLotSymbol > 0 {
-				sell = order.Info.QtyFilledEntr / order.Info.QtyLotSymbol
-			}
-
-			orderId := finalizeOrder(*order, ts, time.Now(), sell, 0, false)
+			orderId := finalizeOrder(*order, ts, time.Now(), order.Info.QtyFilledEntr, 0, false)
 
 			if orderId != 0 {
 				order.Info.OrderIdExit = orderId
@@ -209,7 +204,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 
 	var orderParam kiteconnect.OrderParams
 
-	orderParam.Tag = ts.Strategy[0:20] // Kite - Max 20 characters allowed
+	orderParam.Tag = "" // BUG: ts.Strategy[0:20] // Kite - Max 20 characters allowed - panic: runtime error: slice bounds out of range [:20] with length 17
 	orderParam.Product = ts.Parameters.Kite_Setting.Products
 	orderParam.Validity = ts.Parameters.Kite_Setting.Validities
 
@@ -262,7 +257,7 @@ func finalizeOrder(order appdata.OrderBook_S, ts appdata.UserStrategies_S, selDa
 	}
 	var symbolMinQty float64
 	orderParam.Tradingsymbol, symbolMinQty = deriveInstrumentsName(order, ts, time.Now())
-	orderParam.Quantity = int(symbolMinQty * qty)
+	orderParam.Quantity = int(qty)
 	order.Info.TradingSymbol = orderParam.Tradingsymbol
 	order.Info.QtyLotSymbol = symbolMinQty
 

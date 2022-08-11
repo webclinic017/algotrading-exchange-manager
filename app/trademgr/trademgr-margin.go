@@ -10,7 +10,7 @@ import (
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 )
 
-func getOrderMargin(order appdata.OrderBook_S, ts appdata.UserStrategies_S, tm time.Time) []kiteconnect.OrderMargins {
+func getOrderMargin(order appdata.OrderBook_S, ts appdata.UserStrategies_S, tm time.Time) ([]kiteconnect.OrderMargins, float64) {
 
 	var marginParam kiteconnect.GetMarginParams
 
@@ -57,6 +57,6 @@ func getOrderMargin(order appdata.OrderBook_S, ts appdata.UserStrategies_S, tm t
 	if err != nil {
 		srv.ErrorLogger.Println(err)
 	}
-	return OrderMargins
+	return OrderMargins, marginParam.OrderParams[0].Quantity
 
 }

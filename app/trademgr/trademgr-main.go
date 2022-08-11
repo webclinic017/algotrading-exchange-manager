@@ -41,6 +41,8 @@ func StartTrader(daystart bool) {
 	// --------------------------------- Resume operations on restart or new day start
 	resumeStates := [4]string{"AwaitSignal", "TradeMonitoring"}
 	for s := range resumeStates {
+		break //TODO: Check and evaluate resumption
+
 		trSig := db.ReadAllOrderBookFromDb("=", resumeStates[s])
 		var s bool = false
 		for eachSymbol := range trSig {
