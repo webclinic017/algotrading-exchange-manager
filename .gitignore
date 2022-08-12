@@ -10,3 +10,4 @@ app/zfiles/log
 
 docker-compose.yaml
 algoExchMgr/log/
+*.log
