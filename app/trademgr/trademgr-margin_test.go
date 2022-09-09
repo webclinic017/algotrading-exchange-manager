@@ -132,7 +132,7 @@ func TestCalOrderMargin_LIVE(t *testing.T) {
 
 		// expected := test.expected
 
-		actual := getOrderMargin(order, ts, test.argDate)
+		actual, _ := getOrderMargin(order, ts, test.argDate)
 
 		if len(actual) == 0 {
 			t.Errorf(appdata.ErrorColor, "\nderiveFuturesName() No data fetched - check dates/levels/Server Auth code. \nUT Condition needs to be updated with current market levels\n")
